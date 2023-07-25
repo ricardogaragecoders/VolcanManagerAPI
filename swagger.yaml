@@ -1,0 +1,520 @@
+openapi: 3.0.0
+info:
+  contact:
+    email: ricardo@garagecoders.net
+    name: API Support
+  description: This is a API DOC for VOLCAN MANAGER
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: VOLCAN MANAGER API
+  version: "1.0"
+security:
+  - bearerAuth: []
+paths:
+  /api/auth/token/:
+    post:
+      operationId: api_login_token
+      description: Login token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginToken"
+        required: true
+      summary: Login
+      responses:
+        '401':
+          description: 'Acceso no autorizado'
+        '200':
+          description: 'Return login token'
+      tags:
+        - VolcanManager::Auth
+    parameters: []
+  /api/auth/token/verify/:
+    post:
+      operationId: api_verify_token
+      description: Verify token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyToken"
+        required: true
+      summary: Verify token
+      responses:
+        '201':
+          description: 'Verify token'
+      tags:
+        - VolcanManager::Auth
+    parameters: []
+  /api/auth/token/refresh/:
+    post:
+      operationId: api_refresh_token
+      description: Refresh token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshToken"
+        required: true
+      summary: Refresh token
+      responses:
+        '201':
+          description: 'Refresh token'
+      tags:
+        - VolcanManager::Auth
+    parameters: []
+#  /api/users/logout/:
+#    post:
+#      operationId: api_logout_token
+#      description: Logout
+#      summary: Logout
+#      parameters: []
+#      responses:
+#        '200':
+#          description: 'Logout'
+#      tags:
+#        - VolcanManager::Auth
+#    parameters: []
+  /api/users/empty/:
+    post:
+      operationId: api_users_empty
+      description: Users empty
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EmptyUser"
+        required: true
+      summary: Logout, only superadmin
+      responses:
+        '200':
+          description: 'Logout user with username'
+      tags:
+        - VolcanManager::Superadmin
+    parameters: []
+  /api/users/reset/password/:
+    post:
+      operationId: api_users_reset_password
+      description: Users reset password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPassword"
+        required: true
+      summary: Reset password, only superadmin
+      responses:
+        '200':
+          description: 'User reset password'
+      tags:
+        - VolcanManager::Superadmin
+    parameters: []
+  /api/users/profile/:
+    get:
+      operationId: cacao_profile_read
+      description: Return profile user.
+      summary: Return profile user
+      parameters: []
+      responses:
+        '200':
+          description: 'Return my profile'
+      tags:
+        - VolcanManager::Users
+    parameters: []
+  /api/users/register/admin/:
+    post:
+      operationId: api_users_register_admin
+      description: Register users admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterAdmin"
+        required: true
+      summary: Register users admin, only superadmin
+      responses:
+        '201':
+          description: 'Create a new admin'
+      tags:
+        - VolcanManager::Superadmin
+    parameters: []
+  /api/users/verification/code/:
+    post:
+      operationId: api_verification_code
+      description: Verification code
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerificationCode"
+        required: true
+      summary: Verification code
+      responses:
+        '200':
+          description: 'Verify your code'
+      tags:
+        - VolcanManager::Users
+    parameters: []
+  /api/users/resend/code/:
+    post:
+      operationId: api_resend_code
+      description: Resend code
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResendCode"
+        required: true
+      summary: Resend code
+      responses:
+        '200':
+          description: 'Resend verification code'
+      tags:
+        - VolcanManager::Users
+    parameters: []
+  /api/users/recover/password/:
+    post:
+      operationId: api_recover_password
+      description: Recover password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecoverPassword"
+        required: true
+      summary: Recover password
+      responses:
+        '200':
+          description: 'Recover password'
+      tags:
+        - VolcanManager::Users
+    parameters: []
+  /api/users/change/password/:
+    post:
+      operationId: api_change_password
+      description: Change Password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePassword"
+        required: true
+      summary: Change password
+      responses:
+        '200':
+          description: 'Change Password'
+      tags:
+        - VolcanManager::Users
+    parameters: []
+#  /api/statements/companies/:
+#    get:
+#      operationId: volcan_magma_companies_get
+#      description: Return all companies.
+#      summary: Return all companies.
+#      parameters:
+#        - name: limit
+#          in: query
+#          description: Number of results to return per page.
+#          required: false
+#          schema:
+#            type: integer
+#        - name: offset
+#          in: query
+#          description: The initial index from which to return the results.
+#          required: false
+#          schema:
+#            type: integer
+#        - name: active
+#          in: query
+#          description: Active or inactive
+#          required: false
+#          schema:
+#            type: string
+#            enum: [all, true, false]
+#        - name: cId
+#          in: query
+#          description: ID Company
+#          required: false
+#          schema:
+#            type: string
+#        - name: q
+#          description: Search by Keyword
+#          in: query
+#          required: false
+#          schema:
+#            type: string
+#        - name: orderBy
+#          description: Order By field
+#          in: query
+#          required: false
+#          schema:
+#            type: string
+#            enum: ['name', 'created_at']
+#        - name: orderByDesc
+#          description: Order desc
+#          in: query
+#          schema:
+#            type: boolean
+#            enum: [true, false]
+#            default: false
+#        - name: export
+#          description: Type of export data
+#          in: query
+#          required: false
+#          schema:
+#            type: string
+#            enum: [ excel, pdf ]
+#      responses:
+#        '200':
+#          description: 'Return all companies'
+#      tags:
+#        - VolcanManager::Companies
+#    post:
+#      operationId: api_control_company_create
+#      description: Create a new company.
+#      requestBody:
+#        content:
+#          application/json:
+#            schema:
+#              $ref: "#/components/schemas/Company"
+#        required: true
+#      summary: Create a new company.
+#      responses:
+#        '201':
+#          description: 'Create a new company'
+#      tags:
+#        - VolcanManager::Companies
+#    parameters: []
+#  /api/statements/companies/{company_id}/:
+#    get:
+#      operationId: api_control_company_read
+#      description: Returns a company.
+#      summary: Returns a company.
+#      parameters:
+#        - name: simple
+#          description: Simple data company
+#          in: query
+#          schema:
+#            type: boolean
+#            enum: [true, false]
+#      responses:
+#        '200':
+#          description: 'Returns a company.'
+#      tags:
+#        - VolcanManager::Companies
+#    patch:
+#      operationId: api_control_company_update
+#      description: Update a company.
+#      requestBody:
+#        content:
+#          application/json:
+#            schema:
+#              $ref: "#/components/schemas/Company"
+#        required: true
+#      summary: Update a company.
+#      responses:
+#        '200':
+#          description: 'Update a company.'
+#      tags:
+#        - VolcanManager::Companies
+#    delete:
+#      operationId: api_control_company_delete
+#      description: Delete a company.
+#      summary: Delete a company.
+#      parameters: []
+#      responses:
+#        '200':
+#          description: 'Delete a company.'
+#      tags:
+#        - VolcanManager::Companies
+#    parameters:
+#      - name: company_id
+#        in: path
+#        required: true
+#        schema:
+#          type: string
+components:
+  schemas:
+    LoginToken:
+      type: object
+      properties:
+        username:
+          type: string
+          description: Username
+          maxLength: 45
+        password:
+          type: string
+          description: Password
+          maxLength: 45
+      required:
+      - username
+      - password
+    RefreshToken:
+      type: object
+      properties:
+        refresh:
+          type: string
+          description: Retresh Token
+      required:
+      - refresh
+    VerifyToken:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Verify access token
+      required:
+      - token
+    RegisterAdmin:
+      type: object
+      properties:
+        first_name:
+          type: string
+          description: First Name
+          maxLength: 45
+        last_name:
+          type: string
+          description: Last name
+          maxLength: 45
+        second_last_name:
+          type: string
+          description: Second last name
+          maxLength: 45
+        email:
+          type: string
+          description: Email
+          maxLength: 100
+        phone:
+          type: string
+          description: Phone
+          maxLength: 10
+        password:
+          type: string
+          description: Password
+          maxLength: 45
+        role:
+          type: integer
+          format: int64
+          description: Role
+          enum: [1,2,3,4]
+          default: 3
+      required:
+        - first_name
+        - last_name
+        - email
+        - password
+    VerificationCode:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Token with code and email
+        email:
+          type: string
+          format: email
+          description: Email
+          maxLength: 100
+        code:
+          type: string
+          description: Code
+          maxLength: 6
+    ResendCode:
+      type: object
+      properties:
+        email:
+          type: string
+          description: Email for resend verification code
+          maxLength: 100
+        code:
+          type: string
+          description: Type code to send
+          enum: [verification_2factor, verification_email, recover_password_email]
+          default: verification_2factor
+      required:
+        - email
+    RecoverPassword:
+      type: object
+      properties:
+        email:
+          type: string
+          description: Email
+          maxLength: 100
+      required:
+        - email
+    ChangePassword:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Token verification
+        password:
+          type: string
+          description: Password
+          maxLength: 45
+      required:
+        - token
+        - password
+    EmptyUser:
+      type: object
+      properties:
+        username:
+          type: string
+          description: Username
+          maxLength: 45
+    ResetPassword:
+      type: object
+      properties:
+        username:
+          type: string
+          description: Username
+          maxLength: 45
+        password:
+          type: string
+          description: Password
+          maxLength: 45
+#    image_file:
+#      type: object
+#      properties:
+#        file:
+#          type: string
+#          description: Data base64
+#      required:
+#        - file
+#    Company:
+#      type: object
+#      properties:
+#        name:
+#          type: string
+#          description: Company name
+#          maxLength: 40
+#        primary_color:
+#          type: string
+#          description: Company primary color
+#          maxLength: 20
+#        secondary_color:
+#          type: string
+#          description: Company secondary color
+#          maxLength: 20
+#        advise_color:
+#          type: string
+#          description: Company advise color
+#        font_family:
+#          type: string
+#          description: Company font family
+#          enum: [Montserrat, Lato, Roboto, 'Open Sans', Poppins]
+#          default: Montserrat
+#        image:
+#          $ref: '#/components/schemas/image_file'
+#        active:
+#          type: boolean
+#          description: Active company
+#      required:
+#        - name
+  securitySchemes:
+    bearerAuth:            # arbitrary name for the security scheme
+      type: http
+      scheme: bearer
+      bearerFormat: JWT    # optional, arbitrary value for documentation purposes

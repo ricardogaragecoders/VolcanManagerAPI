@@ -1,0 +1,255 @@
+{% extends "email/Email-Master.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block email_content %}
+<table border="0" width="100%" align="center" cellpadding="0" cellspacing="0" style="width:100%;max-width:100%;">
+        <tbody>
+            <tr>
+            <td class="marsemail-preface" align="center" valign="top">
+
+                <!-- body-bg-color -->
+                <table border="0" width="100%" align="center" cellpadding="0" cellspacing="0" class="row" style="width:100%;max-width:100%;">
+                    <tbody><tr>
+                        <td class="body-bg-color" align="center" valign="top" bgcolor="#DDDDDD">
+
+                            <!-- bg-color -->
+                            <table border="0" width="800" align="center" cellpadding="0" cellspacing="0" class="row" style="width:800px;max-width:800px;">
+                                <tbody><tr>
+                                    <td class="bg-color" align="center" valign="top" bgcolor="#FFFFFF">
+
+                                        <!-- preface-outlook-windows -->
+                                        <!--[if (gte mso 9)|(IE)]>
+                                        <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:800px;height:540px;">
+                                        <v:fill type="frame" src="https://www.psd2newsletters.com/templates/marsemail/img/preface-back.jpg" color="#FFFFFF"/>
+                                        <v:textbox style="v-text-anchor:middle;" inset="0,0,0,0">
+                                        <![endif]-->
+
+                                        <!-- preface-bg-image -->
+                                        <table border="0" width="100%" align="center" cellpadding="0" cellspacing="0" class="row" style="width:100%;max-width:100%;">
+                                            <tbody><tr>
+                                                <td align="center" valign="top" >
+
+                                                    <!-- container -->
+                                                    <table width="600" border="0" cellpadding="0" cellspacing="0" align="center" class="row" style="width:600px;max-width:600px;">
+                                                        <tbody><tr>
+                                                            <td align="center" valign="top" class="container-padding">
+
+                                                                <!-- space -->
+                                                                <table border="0" width="100%" align="center" cellpadding="0" cellspacing="0" style="width:100%;max-width:100%;">
+                                                                    <tbody><tr><td class="space-control-1" valign="middle" align="center" height="40">  &nbsp;  </td></tr></tbody>
+                                                                </table>
+                                                                <!-- space -->
+
+                                                                <!-- title main -->
+                                                                <table border="0" width="100%" cellpadding="0" cellspacing="0" align="center" style="width:100%; max-width:100%;">
+                                                                    <tbody>
+                                                                        <tr>
+                                                                            <td class="title center-text" valign="middle" align="center" style="font-family: 'Montserrat', sans-serif; font-size:35px; line-height:45px; font-weight:lighter;font-style:normal; color:#333333;text-decoration:none;letter-spacing: 0px;">
+                                                                                <strong style="color:#000040;font-weight:bolder; font-size: 37px;">{{data.headerText}}</strong>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+                                                                <!-- title main-->
+
+                                                                <!-- space -->
+                                                                <table border="0" width="100%" align="center" cellpadding="0" cellspacing="0" style="width:100%;max-width:100%;">
+                                                                    <tbody><tr><td valign="middle" align="center" height="60">  &nbsp;  </td></tr></tbody>
+                                                                </table>
+                                                                <!-- space -->
+
+                                                                <!-- title -->
+                                                                <table border="0" width="100%" cellpadding="0" cellspacing="0" align="left" style="width:100%; max-width:100%;">
+                                                                    <tbody>
+                                                                        <tr>
+                                                                            <td class="title left-text" valign="middle" align="left" style="font-family: 'Montserrat', sans-serif; font-size:35px; line-height:45px; font-weight:lighter;font-style:normal; color:#333333;text-decoration:none;letter-spacing: 0px;">
+                                                                                <strong style="color:#000040;font-weight:bolder; font-size: 19px;">{{data.titleText}}</strong>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+                                                                <!-- title -->
+
+                                                                <!-- space -->
+                                                                <table border="0" width="100%" align="center" cellpadding="0" cellspacing="0" style="width:100%;max-width:100%;">
+                                                                    <tbody><tr><td valign="middle" align="center" height="30">  &nbsp;  </td></tr></tbody>
+                                                                </table>
+                                                                <!-- space -->
+
+                                                                <!-- text -->
+                                                                <table border="0" width="100%" cellpadding="0" cellspacing="0" align="left" style="width:100%; max-width:100%;">
+                                                                    <tbody>
+                                                                        <tr>
+                                                                            <td class="text left-text" valign="middle" align="left" style="font-family: 'Montserrat', sans-serif; font-size:19px; line-height:19px; font-weight:normal;font-style:normal; color:#000040;text-decoration:none;letter-spacing: 0px;">
+                                                                                {{data.messageText}}
+                                                                            </td>
+                                                                        </tr>
+                                                                        {% if data.code|length > 0%}
+                                                                        <tr><td>&nbsp;</td></tr>
+													                    <tr>
+                                                                            <td class="text left-text" valign="middle" align="left" style="font-family: 'Montserrat', sans-serif; font-size:18px; line-height:18px; font-weight:normal;font-style:normal; color:#000040;text-decoration:none;letter-spacing: 0px;">
+                                                                                C&oacute;digo: <span style="color: #f9261a;">{{data.code}}</span>
+                                                                            </td>
+                                                                        </tr>
+                                                                        {% endif %}
+                                                                        {% if data.validityCode|length  > 0%}
+                                                                        <tr><td>&nbsp;</td></tr>
+													                    <tr>
+                                                                            <td class="text left-text" valign="middle" align="left" style="font-family: 'Montserrat', sans-serif; font-size:18px; line-height:18px; font-weight:normal;font-style:normal; color:#000040;text-decoration:none;letter-spacing: 0px;">
+                                                                                Vigencia: <span style="color: #f9261a;">{{data.validityCode}}</span>
+                                                                            </td>
+                                                                        </tr>
+                                                                        {% endif %}
+                                                                    </tbody>
+                                                                </table>
+                                                                <!-- text -->
+
+                                                                <!-- space -->
+                                                                <table border="0" width="100%" align="center" cellpadding="0" cellspacing="0" style="width:100%;max-width:100%;">
+                                                                    <tbody><tr><td valign="middle" align="center" height="30">  &nbsp;  </td></tr></tbody>
+                                                                </table>
+                                                                <!-- space -->
+
+                                                                {% if data.buttonTitleText|length > 0 %}
+                                                                <!-- Button-Bg -->
+                                                                <table border="0" cellpadding="0" cellspacing="0" align="center" class="center-float" style="display:inline-block;vertical-align:middle;">
+                                                                    <tbody><tr>
+                                                                        <td align="center" valign="top">
+                                                                            <!-- Container -->
+                                                                            <table border="0" cellpadding="0" cellspacing="0" align="center" class="center-float" style="display:inline-block;vertical-align:middle;">
+                                                                                <tbody><tr>
+                                                                                    <td class="button-bg" valign="middle" align="center" bgcolor="#000000" style="border-radius: 36px; border-top-right-radius: 0px;">
+                                                                                        <!-- Btn -->
+                                                                                        <table border="0" cellpadding="0" cellspacing="0" align="center" class="center-float">
+                                                                                            <tbody><tr>
+                                                                                                <td colspan="3" height="15" style="font-size:15px;line-height:15px;">&nbsp;</td>
+                                                                                            </tr>
+                                                                                            <tr>
+                                                                                                <td width="20"></td>
+                                                                                                <td valign="middle" align="center" style="font-family: 'Montserrat', sans-serif;font-size:24px;line-height:24px;font-weight:bolder;font-style:normal;color:#FFFFFF;text-decoration:none;letter-spacing:0px;">
+                                                                                                    <a href="{{data.urlText}}" target="_blank" style="color: #FFFFFF;text-decoration:none;">{{data.buttonTitleText}}</a>
+                                                                                                </td>
+                                                                                                <td width="20"></td>
+                                                                                            </tr>
+                                                                                            <tr>
+                                                                                                <td colspan="3" height="15" style="font-size:15px;line-height:15px;">&nbsp;</td>
+                                                                                            </tr>
+                                                                                        </tbody></table>
+                                                                                        <!-- Btn -->
+                                                                                    </td>
+                                                                                </tr>
+                                                                            </tbody></table>
+
+                                                                            <!-- space -->
+                                                                            <table border="0" width="100%" align="center" cellpadding="0" cellspacing="0" style="width:100%;max-width:100%;">
+                                                                                <tbody><tr><td valign="middle" align="center" height="10">  &nbsp;  </td></tr></tbody>
+                                                                            </table>
+                                                                            <!-- space -->
+
+                                                                            <!-- text -->
+                                                                            <table border="0" width="100%" cellpadding="0" cellspacing="0" align="center" style="width:100%; max-width:100%;">
+                                                                                <tbody>
+                                                                                    <tr>
+                                                                                        <td class="text center-text" valign="middle" align="center" style="font-family: 'Montserrat', sans-serif; font-size:12px; line-height:12px; font-weight:normal;font-style:normal; color:#000040;text-decoration:none;letter-spacing: 0px;">
+                                                                                            <strong>Sí el botón no funciona puedes dar clic </strong> <a href="{{data.urlText}}" target="_blank" style="color:#EA4E2A;font-weight:bolder; text-decoration: none;">aquí</a>
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                </tbody>
+                                                                            </table>
+                                                                            <!-- text -->
+
+                                                                            <!-- Container -->
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody></table>
+                                                                <!-- Button-Bg -->
+
+                                                                <!-- space -->
+                                                                <table border="0" width="100%" align="center" cellpadding="0" cellspacing="0" style="width:100%;max-width:100%;">
+                                                                    <tbody><tr><td class="space-control-2" valign="middle" align="center" height="50">  &nbsp;  </td></tr></tbody>
+                                                                </table>
+                                                                <!-- space -->
+                                                                {% endif %}
+
+                                                            </td>
+                                                        </tr>
+                                                    </tbody></table>
+                                                    <!-- container -->
+
+                                                </td>
+                                            </tr>
+                                        </tbody></table>
+                                        <!-- preface-bg-image -->
+
+                                        <!--[if (gte mso 9)|(IE)]></v:textbox></v:rect><![endif]-->
+
+                                    </td>
+                                </tr>
+                            </tbody></table>
+                            <!-- bg-color -->
+
+                        </td>
+                    </tr>
+                </tbody></table>
+                <!-- body-bg-color -->
+
+            </td>
+        </tr>
+    </tbody></table>
+{% endblock %}
+
+{% block title %}
+    {{ data.titleText }}
+{% endblock %}
+
+{% block logo %}
+    <img align="center" border="0"  src="{{data.host}}/static/images/rdl_logo.png" style="max-height: 200px;display: inline-block;"/>
+{% endblock %}
+
+{% block email_contact %}
+    {% if data.emailContact|length > 0 %}
+        <!-- text -->
+         <table border="0" width="100%" cellpadding="0" cellspacing="0" align="left" style="width:100%; max-width:100%;">
+            <tbody>
+                <tr>
+                    <td class="text left-text" valign="middle" align="left" style="font-family: 'Montserrat', sans-serif; font-size:16px; line-height:16px; font-weight:normal;font-style:normal; color:#000040;text-decoration:none;letter-spacing: 0px;">
+                        Si tienes alguna pregunta o necesitas nueva información puedes contactarnos a través del correo <strong><a href="mailto:{{data.emailContact}}" target="_blank" style="color: #000040;font-family: 'Montserrat', sans-serif; text-decoration: none;">{{data.emailContact}}</a></strong>
+                    </td>
+                </tr>
+            </tbody>
+         </table>
+        <!-- text -->
+
+        <!-- space-statements -->
+        <table border="0" width="100%" align="center" cellpadding="0" cellspacing="0" style="width:100%;max-width:100%;">
+            <tbody><tr>
+                <td class="space-control" valign="middle" align="center" height="40"></td>
+            </tr>
+        </tbody></table>
+        <!-- space-statements -->
+    {% endif %}
+
+    {% if data.urlHelpDesk|length > 0 %}
+        <!-- text -->
+         <table border="0" width="100%" cellpadding="0" cellspacing="0" align="left" style="width:100%; max-width:100%;">
+            <tbody>
+                <tr>
+                    <td class="text left-text" valign="middle" align="left" style="font-family: 'Montserrat', sans-serif; font-size:16px; line-height:16px; font-weight:normal;font-style:normal; color:#000040;text-decoration:none;letter-spacing: 0px;">
+                        Si tienes alguna pregunta o necesitas nueva información puedes contactarnos a través de nuestro <strong><a href="{{data.urlHelpDesk}}" target="_blank" style="color: #000040;font-family: 'Montserrat', sans-serif; text-decoration: none;">Help Desk</a></strong>
+                    </td>
+                </tr>
+            </tbody>
+         </table>
+        <!-- text -->
+
+        <!-- space-statements -->
+        <table border="0" width="100%" align="center" cellpadding="0" cellspacing="0" style="width:100%;max-width:100%;">
+            <tbody><tr>
+                <td class="space-control" valign="middle" align="center" height="40"></td>
+            </tr>
+        </tbody></table>
+        <!-- space-statements -->
+    {% endif %}
+
+{% endblock %}
