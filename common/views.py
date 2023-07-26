@@ -52,35 +52,51 @@ class CustomViewSet(viewsets.GenericViewSet):
         success = True if status == 200 or status == 201 else False
         message = data.pop('message') if 'message' in data else message
         code = data.pop('code') if 'code' in data else ''
-        response_data['success'] = success
+        enteid = 0
 
         if request and request.session:
             if 'code' in request.session:
                 code = request.session['code']
                 del request.session['code']
 
-        if not success:
-            if status == 404 and len(code) == 0:
+        if not success and len(code) == 0:
+            if status == 404:
                 code = 'not_found'
-            if status == 422 and len(code) == 0:
+            elif status == 422:
                 code = 'unprocessable_entity'
-            if len(code) == 0:
+            else:
                 code = 'bad_request'
 
-        if success:
-            if isinstance(data, list):
-                response_data['data'] = data
-            elif isinstance(data, dict) and len(data):
-                response_data['data'] = data
-        if len(code) > 0:
-            response_data['code'] = code
+        if isinstance(data, dict) and len(data) > 0:
+            if 'RSP_CODIGO' in data:
+                if int(data['RSP_CODIGO']) > 0:
+                    success = False
+                    code = str(int(data['RSP_CODIGO'])).zfill(2)
+                else:
+                    success = True
+                    code = '00'
+                del data['RSP_CODIGO']
+            if 'RSP_DESCRIPCION' in data:
+                message = data['RSP_DESCRIPCION']
+                del data['RSP_DESCRIPCION']
+            if 'RSP_ERROR' in data:
+                del data['RSP_ERROR']
+            if 'RSP_ENTEID' in data:
+                enteid = int(data['RSP_ENTEID'])
+                del data['RSP_ENTEID']
+
+        response_data['RSP_SUCCESS'] = success
+        response_data['RSP_CODIGO'] = code
+        if isinstance(message, str):
+            response_data['RSP_DESCRIPCION'] = message.strip() if message else ('ok' if success else 'error')
+        else:
+            response_data['RSP_DESCRIPCION'] = message
+        response_data['RSP_ENTEID'] = enteid
 
         if code == 'no_permissions':
             status = 403
-        if isinstance(message, str):
-            response_data['message'] = message.strip() if message else ('ok' if success else 'error')
-        else:
-            response_data['message'] = message
+        if success:
+            response_data['RSP_DATA'] = data
         return Response(response_data, status=status)
 
     def get_queryset_filters(self, *args, **kwargs):

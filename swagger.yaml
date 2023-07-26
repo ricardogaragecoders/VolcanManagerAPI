@@ -13,7 +13,7 @@ info:
 security:
   - bearerAuth: []
 paths:
-  /api/auth/token/:
+  /volcan/api/auth/token/:
     post:
       operationId: api_login_token
       description: Login token
@@ -32,7 +32,7 @@ paths:
       tags:
         - VolcanManager::Auth
     parameters: []
-  /api/auth/token/verify/:
+  /volcan/api/auth/token/verify/:
     post:
       operationId: api_verify_token
       description: Verify token
@@ -49,7 +49,7 @@ paths:
       tags:
         - VolcanManager::Auth
     parameters: []
-  /api/auth/token/refresh/:
+  /volcan/api/auth/token/refresh/:
     post:
       operationId: api_refresh_token
       description: Refresh token
@@ -66,7 +66,7 @@ paths:
       tags:
         - VolcanManager::Auth
     parameters: []
-#  /api/users/logout/:
+#  /volcan/api/users/logout/:
 #    post:
 #      operationId: api_logout_token
 #      description: Logout
@@ -78,7 +78,7 @@ paths:
 #      tags:
 #        - VolcanManager::Auth
 #    parameters: []
-#  /api/users/empty/:
+#  /volcan/api/users/empty/:
 #    post:
 #      operationId: api_users_empty
 #      description: Users empty
@@ -95,7 +95,7 @@ paths:
 #      tags:
 #        - VolcanManager::Superadmin
 #    parameters: []
-#  /api/users/reset/password/:
+#  /volcan/api/users/reset/password/:
 #    post:
 #      operationId: api_users_reset_password
 #      description: Users reset password
@@ -112,7 +112,7 @@ paths:
 #      tags:
 #        - VolcanManager::Superadmin
 #    parameters: []
-#  /api/users/profile/:
+#  /volcan/api/users/profile/:
 #    get:
 #      operationId: cacao_profile_read
 #      description: Return profile user.
@@ -124,7 +124,7 @@ paths:
 #      tags:
 #        - VolcanManager::Users
 #    parameters: []
-#  /api/users/register/admin/:
+#  /volcan/api/users/register/admin/:
 #    post:
 #      operationId: api_users_register_admin
 #      description: Register users admin
@@ -141,7 +141,7 @@ paths:
 #      tags:
 #        - VolcanManager::Superadmin
 #    parameters: []
-#  /api/users/verification/code/:
+#  /volcan/api/users/verification/code/:
 #    post:
 #      operationId: api_verification_code
 #      description: Verification code
@@ -158,7 +158,7 @@ paths:
 #      tags:
 #        - VolcanManager::Users
 #    parameters: []
-#  /api/users/resend/code/:
+#  /volcan/api/users/resend/code/:
 #    post:
 #      operationId: api_resend_code
 #      description: Resend code
@@ -175,7 +175,7 @@ paths:
 #      tags:
 #        - VolcanManager::Users
 #    parameters: []
-#  /api/users/recover/password/:
+#  /volcan/api/users/recover/password/:
 #    post:
 #      operationId: api_recover_password
 #      description: Recover password
@@ -192,7 +192,7 @@ paths:
 #      tags:
 #        - VolcanManager::Users
 #    parameters: []
-#  /api/users/change/password/:
+#  /volcan/api/users/change/password/:
 #    post:
 #      operationId: api_change_password
 #      description: Change Password
@@ -209,7 +209,7 @@ paths:
 #      tags:
 #        - VolcanManager::Users
 #    parameters: []
-#  /api/statements/companies/:
+#  /volcan/api/statements/companies/:
 #    get:
 #      operationId: volcan_magma_companies_get
 #      description: Return all companies.
@@ -288,7 +288,7 @@ paths:
 #      tags:
 #        - VolcanManager::Companies
 #    parameters: []
-#  /api/statements/companies/{company_id}/:
+#  /volcan/api/statements/companies/{company_id}/:
 #    get:
 #      operationId: api_control_company_read
 #      description: Returns a company.
@@ -336,6 +336,38 @@ paths:
 #        required: true
 #        schema:
 #          type: string
+  /volcan/api/CreacionEnte/:
+    post:
+      operationId: api_control_creacion_ente
+      description: Creacion Ente.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreacionEnte"
+        required: true
+      summary: Creacion Ente.
+      responses:
+        '200':
+          description: 'Creacion Ente'
+      tags:
+        - VolcanManager::CreacionEnte
+  /volcan/api/CreacionCtaTar/:
+    post:
+      operationId: api_control_creacion_cta_tar
+      description: Creacion Cta Tar.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreacionCtaTar"
+        required: true
+      summary: Creacion Cta Tar.
+      responses:
+        '201':
+          description: 'Creacion Cta Tar'
+      tags:
+        - VolcanManager::CreacionCtaTar
 components:
   schemas:
     LoginToken:
@@ -513,6 +545,200 @@ components:
 #          description: Active company
 #      required:
 #        - name
+    CreacionEnte:
+      type: object
+      properties:
+        cif:
+          type: string
+        personeria:
+          type: string
+        tipo_identificacion:
+          type: string
+        documento_identificacion:
+          type: string
+        primer_nombre:
+          type: string
+        segundo_nombre:
+          type: string
+        primer_apellido:
+          type: string
+        segundo_apellido:
+          type: string
+        apellido_casada:
+          type: string
+        fecha_nacimiento:
+          type: string
+        sexo:
+          type: string
+        estado_civil:
+          type: string
+        profesion:
+          type: string
+        seguro_social:
+          type: string
+        pais_nacimiento:
+          type: string
+        pais_residencia:
+          type: string
+        nacionalidad:
+          type: string
+        codigo_providencia:
+          type: string
+        codigo_canton:
+          type: string
+        codigo_distrito:
+          type: string
+        direccion_1:
+          type: string
+        direccion_2:
+          type: string
+        codigo_postal:
+          type: string
+        telefono_casa:
+          type: string
+        celular:
+          type: string
+        telefono_oficina:
+          type: string
+        email_personal:
+          type: string
+        email_oficina:
+          type: string
+        lugar_trabajo:
+          type: string
+        direccion_1_trabajo:
+          type: string
+        direccion_2_trabajo:
+          type: string
+        puesto:
+          type: string
+        ingreso_mensual:
+          type: string
+        fecha_ingreso_trabajo:
+          type: string
+        oficina_ext:
+          type: string
+        nombre_conyugue:
+          type: string
+        apellido_conyugue:
+          type: string
+        cedula_conyugue:
+          type: string
+        nombre_padre:
+          type: string
+        apellido_padre:
+          type: string
+        nombre_madre:
+          type: string
+        apellido_madre:
+          type: string
+        tipo_gestion:
+          type: string
+        usuario_atz:
+          type: string
+        acceso_atz:
+          type: string
+        emisor:
+          type: string
+      required:
+      - tipo_identificacion
+    CreacionCtaTar:
+      type: object
+      properties:
+        cif:
+          type: string
+        personeria:
+          type: string
+        tipo_identificacion:
+          type: string
+        documento_identificacion:
+          type: string
+        primer_nombre:
+          type: string
+        segundo_nombre:
+          type: string
+        primer_apellido:
+          type: string
+        segundo_apellido:
+          type: string
+        apellido_casada:
+          type: string
+        fecha_nacimiento:
+          type: string
+        sexo:
+          type: string
+        estado_civil:
+          type: string
+        profesion:
+          type: string
+        seguro_social:
+          type: string
+        pais_nacimiento:
+          type: string
+        pais_residencia:
+          type: string
+        nacionalidad:
+          type: string
+        codigo_providencia:
+          type: string
+        codigo_canton:
+          type: string
+        codigo_distrito:
+          type: string
+        direccion_1:
+          type: string
+        direccion_2:
+          type: string
+        codigo_postal:
+          type: string
+        telefono_casa:
+          type: string
+        celular:
+          type: string
+        telefono_oficina:
+          type: string
+        email_personal:
+          type: string
+        email_oficina:
+          type: string
+        lugar_trabajo:
+          type: string
+        direccion_1_trabajo:
+          type: string
+        direccion_2_trabajo:
+          type: string
+        puesto:
+          type: string
+        ingreso_mensual:
+          type: string
+        fecha_ingreso_trabajo:
+          type: string
+        oficina_ext:
+          type: string
+        nombre_conyugue:
+          type: string
+        apellido_conyugue:
+          type: string
+        cedula_conyugue:
+          type: string
+        nombre_padre:
+          type: string
+        apellido_padre:
+          type: string
+        nombre_madre:
+          type: string
+        apellido_madre:
+          type: string
+        tipo_gestion:
+          type: string
+        usuario_atz:
+          type: string
+        acceso_atz:
+          type: string
+        emisor:
+          type: string
+      required:
+      - tipo_identificacion
   securitySchemes:
     bearerAuth:            # arbitrary name for the security scheme
       type: http

@@ -1,0 +1,48 @@
+from django.shortcuts import render
+
+from common.views import CustomViewSet
+from rest_framework.permissions import IsAuthenticated
+
+from users.permissions import IsVerified, IsOperator
+
+
+# Create your views here.
+
+class ControlApiView(CustomViewSet):
+    permission_classes = (IsAuthenticated, IsVerified, IsOperator)
+    http_method_names = ['post', 'options', 'head']
+
+    def control_action(self, request, control_function, name_control_function):
+        response_message = ''
+        response_data = dict()
+        response_status = 200
+        try:
+            response_message, response_data, response_status = control_function(request)
+            if 'RSP_CODIGO' in response_data and int(response_data['RSP_CODIGO']) == 0:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.info(request.user.profile.get_full_name())
+                logger.info(response_data)
+            else:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(request.user.profile.get_full_name())
+                logger.error(response_data)
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.exception(e)
+            response_message = u"Error en applicación"
+            response_status = 500
+        finally:
+            return self.get_response(response_message, response_data, response_status)
+
+    def creation_ente(self, request, *args, **kwargs):
+        from control.utils import creation_ente
+        return self.control_action(request=request, control_function=creation_ente,
+                                   name_control_function="creation_ente")
+
+    def creation_cta_tar(self, request, *args, **kwargs):
+        from control.utils import creation_cta_tar
+        return self.control_action(request=request, control_function=creation_cta_tar,
+                                   name_control_function="creation_cta_tar")
