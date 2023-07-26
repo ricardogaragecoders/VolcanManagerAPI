@@ -550,96 +550,136 @@ components:
       properties:
         cif:
           type: string
+          enum: [""]
         personeria:
           type: string
+          enum: [""]
         tipo_identificacion:
           type: string
+          enum: [""]
         documento_identificacion:
           type: string
+          enum: [""]
         primer_nombre:
           type: string
+          enum: [""]
         segundo_nombre:
           type: string
+          enum: [""]
         primer_apellido:
           type: string
+          enum: [""]
         segundo_apellido:
           type: string
+          enum: [""]
         apellido_casada:
           type: string
+          enum: [""]
         fecha_nacimiento:
           type: string
+          enum: [""]
         sexo:
           type: string
+          enum: [""]
         estado_civil:
           type: string
+          enum: [""]
         profesion:
           type: string
+          enum: [""]
         seguro_social:
           type: string
+          enum: [""]
         pais_nacimiento:
           type: string
+          enum: [""]
         pais_residencia:
           type: string
+          enum: [""]
         nacionalidad:
           type: string
+          enum: [""]
         codigo_providencia:
           type: string
+          enum: [""]
         codigo_canton:
           type: string
+          enum: [""]
         codigo_distrito:
           type: string
+          enum: [""]
         direccion_1:
           type: string
+          enum: [""]
         direccion_2:
           type: string
+          enum: [""]
         codigo_postal:
           type: string
+          enum: [""]
         telefono_casa:
           type: string
+          enum: [""]
         celular:
           type: string
+          enum: [""]
         telefono_oficina:
           type: string
+          enum: [""]
         email_personal:
           type: string
+          enum: [""]
         email_oficina:
           type: string
+          enum: [""]
         lugar_trabajo:
           type: string
+          enum: [""]
         direccion_1_trabajo:
           type: string
+          enum: [""]
         direccion_2_trabajo:
           type: string
+          enum: [""]
         puesto:
           type: string
+          enum: [""]
         ingreso_mensual:
           type: string
+          enum: [""]
         fecha_ingreso_trabajo:
           type: string
+          enum: [""]
         oficina_ext:
           type: string
+          enum: [""]
         nombre_conyugue:
           type: string
+          enum: [""]
         apellido_conyugue:
           type: string
+          enum: [""]
         cedula_conyugue:
           type: string
+          enum: [""]
         nombre_padre:
           type: string
+          enum: [""]
         apellido_padre:
           type: string
+          enum: [""]
         nombre_madre:
           type: string
+          enum: [""]
         apellido_madre:
           type: string
+          enum: [""]
         tipo_gestion:
           type: string
-        usuario_atz:
-          type: string
-        acceso_atz:
-          type: string
+          enum: [""]
         emisor:
           type: string
+          enum: [""]
       required:
       - tipo_identificacion
     CreacionCtaTar:
@@ -647,56 +687,76 @@ components:
       properties:
         id_ente_owner:
           type: string
+          enum: [""]
         nombre_tarjeta:
           type: string
+          enum: [""]
         tipo_tarjeta:
           type: string
+          enum: [""]
         id_ente_additional:
           type: string
+          enum: [""]
         tarjeta_virtual:
           type: string
+          enum: [""]
         producto_bin:
           type: string
+          enum: [""]
         limite_cred_titular:
           type: string
+          enum: [""]
         limite_consumo_adicional:
           type: string
+          enum: [""]
         ciclo_corte_titular:
           type: string
+          enum: [""]
         plan_titular:
           type: string
+          enum: [""]
         codigo_lealtad_titular:
           type: string
+          enum: [""]
         envio_edc_titular:
           type: string
+          enum: [""]
         email_edc_titular:
           type: string
+          enum: [""]
         direccion_1_edc_titular:
           type: string
+          enum: [""]
         direccion_2_edc_titular:
           type: string
+          enum: [""]
         ciudad_edc_titular:
           type: string
+          enum: [""]
         provincia_edc_titular:
           type: string
+          enum: [""]
         codigo_postal_edc_titular:
           type: string
+          enum: [""]
         pais_edc_titular:
           type: string
+          enum: [""]
         iban_internacional:
           type: string
+          enum: [""]
         iban_local:
           type: string
+          enum: [""]
         vendedores_tc:
           type: string
+          enum: [""]
         indicador_poliza:
           type: string
+          enum: [""]
         emisor:
           type: string
-        usuario_atz:
-          type: string
-        acceso_atz:
-          type: string
+          enum: [""]
       required:
       - id_ente_owner
   securitySchemes:

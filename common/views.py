@@ -95,11 +95,11 @@ class CustomViewSet(viewsets.GenericViewSet):
                 for k, v in data.items():
                     if isinstance(v, dict):
                         internal_data = {}
-                        for ki,vi in v.items():
-                            internal_data[ki.capitalize()] = vi
-                        response_data[k.capitalize()] = internal_data
+                        for ki, vi in v.items():
+                            internal_data[ki] = vi
+                        response_data[k] = internal_data
                     else:
-                        response_data[k.capitalize()] = v
+                        response_data[k] = v
             else:
                 response_data['RSP_DATA'] = data
         return Response(response_data, status=status)

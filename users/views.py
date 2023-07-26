@@ -68,7 +68,7 @@ class CustomTokenRefreshView(TokenRefreshView):
             raise InvalidToken(e.args[0])
         response_data = {'RSP_SUCCESS': True, 'RSP_CODIGO': '00', 'RSP_DESCRIPCION': 'ok'}
         for k, v in serializer.validated_data.items():
-            response_data[k.capitalize()] = v
+            response_data[k] = v
         return Response(response_data, status=status.HTTP_200_OK)
 
 
@@ -84,7 +84,7 @@ class CustomTokenVerifyView(TokenVerifyView):
             raise InvalidToken(e.args[0])
         response_data = {'RSP_SUCCESS': True, 'RSP_CODIGO': '00', 'RSP_DESCRIPCION': 'ok'}
         for k, v in serializer.validated_data.items():
-            response_data[k.capitalize()] = v
+            response_data[k] = v
         return Response(response_data, status=status.HTTP_200_OK)
 
 

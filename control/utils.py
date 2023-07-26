@@ -11,6 +11,9 @@ def get_volcan_api_headers():
 
 def process_volcan_api_request(data, url, request, times=0):
     headers = get_volcan_api_headers()
+    # if settings.DEBUG:
+    #     print(data)
+    #     print(url)
     try:
         r = requests.post(url=url, data=json.dumps(data), headers=headers)
         response_status = r.status_code
@@ -52,6 +55,8 @@ def creation_ente(request, **kwargs):
         request_data = request.data
     else:
         request_data = kwargs['request_data']
+    request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
+    request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_URL
     api_url = url_server + '/web/services/Alta_Ente_1'
@@ -64,6 +69,8 @@ def creation_cta_tar(request, **kwargs):
         request_data = request.data
     else:
         request_data = kwargs['request_data']
+    request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
+    request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_URL
     api_url = url_server + '/web/services/Alta_Cuenta_1'

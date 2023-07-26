@@ -57,7 +57,7 @@ INSTALLED_APPS = [
     'corsheaders',
     # modules
     'users',
-    'common', 
+    'common',
     'control'
 ]
 
@@ -328,6 +328,8 @@ LOGGING = {
 URL_BACKEND = env.str('URL_BACKEND', 'http://localhost:8000')
 EMAIL_CONTACT = env.str('EMAIL_CONTACT')
 SERVER_VOLCAN_URL = env.str('SERVER_VOLCAN_URL', 'http://10.23.102.10:21005')
+VOLCAN_USUARIO_ATZ = env.str('USUARIO_ATZ', 'KLEWIS')
+VOLCAN_ACCESO_ATZ = env.str('ACCESO_ATZ', 'KLEWIS')
 
 # config
 ENABLE_SEND_EMAIL = env.bool('ENABLE_SEND_EMAIL', True)
