@@ -12,7 +12,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from common.utils import send_email, get_response_data_errors, get_data_email_general, code_generator, \
     handler_exception_general
 from common.views import CustomViewSet, CustomViewSetWithPagination
-from users.permissions import IsVerified, IsSuperadmin, IsChangePassword
+from users.permissions import IsVerified, IsSuperadmin, IsChangePassword, IsAdministrator
 from users.serializers import *
 from users.utils import logout_users_process, set_code_and_validity_code, send_verification_2factor, \
     send_recover_password
@@ -87,7 +87,7 @@ class CustomTokenVerifyView(TokenVerifyView):
 
 
 class RegisterAdminAPIView(CustomViewSet):
-    permission_classes = (IsAuthenticated, IsVerified, IsSuperadmin)
+    permission_classes = (IsAuthenticated, IsVerified, IsAdministrator)
     serializer_class = RegisterAdminSerializer
 
     def perform_create(self, request, *args, **kwargs):
@@ -97,9 +97,19 @@ class RegisterAdminAPIView(CustomViewSet):
         response_data = dict()
         profile = self.serializer.save()
         user = profile.user
-        verification_email = ProfileVerification.objects.get(profile=profile,
-                                                             type_verification=ProfileVerification.VERIFICATION_EMAIL)
-        verification_email = set_code_and_validity_code(verification_email, True)
+        try:
+            verification = ProfileVerification.objects.get(profile=profile,
+                                                           data_verification=profile.user.email,
+                                                           type_verification=ProfileVerification.VERIFICATION_EMAIL)
+        except ProfileVerification.DoesNotExist:
+            data = {
+                'profile': profile,
+                'type_verification': ProfileVerification.VERIFICATION_EMAIL,
+                'data_verification': profile.user.email
+            }
+            verification = ProfileVerification.objects.create(**data)
+
+        verification = set_code_and_validity_code(verification, True)
 
         d = get_data_email_general()
 
@@ -108,20 +118,21 @@ class RegisterAdminAPIView(CustomViewSet):
             "subheaderText": "",
             "titleText": f"¡Hola, {user.get_full_name()}!",
             "messageText": "Has sido registrado como administrador, "
-                           "inicia sesión en Estrato Volcan con las siguientes credenciales:",
+                           "inicia sesión en Volcan Manager API con las siguientes credenciales:",
             "usernameText": user.username,
             "passwordText": request.data['password'],
             "host": settings.URL_BACKEND,
-            "urlText": '{0}/auth/verification-code/?code={1}'.format(settings.URL_FRONTEND,
-                                                                     verification_email.code),
-            "buttonTitleText": "Continuar",
+            "urlText": '',
+            "code": verification.code if len(verification.code) <= 10 else '',
+            'validityCode': timezone.localtime(verification.validity_code).strftime("%Y-%m-%d %H:%M:%S"),
+            "buttonTitleText": "",
         })
-        sending_response = send_email(None, [verification_email.data_verification, ], u'Registro en Estrato Volcan',
-                                      'email/Email-general.html', {'data': d})
-        if sending_response and verification_email and verification_email.validity_code:
-            response_data['validity_code'] = verification_email.validity_code.isoformat()
+        sending_response = send_email(None, [verification.data_verification, ], u'Registro en Volcan Manager API',
+                                      'email/Email-General.html', {'data': d})
+        if sending_response and verification and verification.validity_code:
+            response_data['validity_code'] = verification.validity_code.isoformat()
             if settings.DEBUG:
-                response_data['push_code'] = verification_email.code
+                response_data['push_code'] = verification.code
 
         self.make_response_success(data=response_data)
 

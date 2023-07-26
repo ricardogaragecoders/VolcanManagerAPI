@@ -28,9 +28,11 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 class RegisterAdminSerializer(serializers.Serializer):
     first_name = serializers.CharField(max_length=100, required=True)
     last_name = serializers.CharField(max_length=100, required=True)
-    second_last_name = serializers.CharField(max_length=100, required=False, default='')
+    second_last_name = serializers.CharField(max_length=100, required=False,
+                                             default='', allow_blank=True, allow_null=True)
     email = serializers.EmailField(max_length=100, required=True)
-    phone = serializers.CharField(max_length=10, validators=[_mobile_regex_validator], required=False, default='')
+    phone = serializers.CharField(max_length=10, validators=[_mobile_regex_validator], required=False,
+                                  default='', allow_blank=True, allow_null=True)
     role = serializers.IntegerField(default=2, required=False)
     password = serializers.CharField(
         min_length=8,
@@ -49,7 +51,7 @@ class RegisterAdminSerializer(serializers.Serializer):
             if User.objects.filter(username=email).exists():
                 raise CustomValidationError(detail=_(u'El correo electrónico ya estaba registrado'),
                                             code='email_exists')
-        if role < Profile.SUPERADMIN:
+        if role >= Profile.SUPERADMIN and not request.user.profile.isSuperadmin():
             raise CustomValidationError(detail=_(u'Solo personal de autorizado.'),
                                         code='no_permissions')
 
@@ -82,7 +84,7 @@ class RegisterAdminSerializer(serializers.Serializer):
             profile.phone = phone
             profile.email = email
             profile.role = role
-            profile.status = Status.objects.get(id=1)
+            profile.verification_email = True
             profile.save()
             user.set_password(password)
             user.save()

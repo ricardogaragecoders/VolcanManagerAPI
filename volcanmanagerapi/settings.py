@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
+    'django.contrib.humanize',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.postgres',
@@ -329,7 +330,7 @@ EMAIL_CONTACT = env.str('EMAIL_CONTACT')
 ENABLE_SEND_EMAIL = env.bool('ENABLE_SEND_EMAIL', True)
 ENABLE_2FACTOR_AUTHENTICATION = env.bool('ENABLE_2FACTOR_AUTHENTICATION', False)
 PASSWORD_DEFAULT = env.str('PASSWORD_DEFAULT', '')
-VERIFICATION_ADMINISTRATOR_DEFAULT = env.bool('VERIFICATION_ADMINISTRATOR_DEFAULT', False)
+VERIFICATION_ADMINISTRATOR_DEFAULT = env.bool('VERIFICATION_ADMINISTRATOR_DEFAULT', True)
 PATH_IMAGE_LOGO = env.str('PATH_IMAGE_LOGO')
 
 
