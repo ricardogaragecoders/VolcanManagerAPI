@@ -28,11 +28,7 @@ def get_letter_from_number(number):
 def custom_exception_handler(exception, context):
     if isinstance(exception, APIException):
         headers = {}
-        response_data = {
-            'success': False,
-            'data': {},
-            'message': ''
-        }
+        response_data = {}
 
         if getattr(exception, 'auth_header', None):
             headers['WWW-Authenticate'] = exception.auth_header
@@ -42,7 +38,7 @@ def custom_exception_handler(exception, context):
 
         data = exception.get_full_details()
         message = ''
-        code = ''
+        code = '00'
 
         if 'detail' in data:
             if 'code' in data['detail']:
@@ -72,24 +68,24 @@ def custom_exception_handler(exception, context):
                 message = u"Error en la petición"
             else:
                 key = list(data.keys())[0]
-                if key == 'non_field_errors':
-                    key = 'error'
-                message = response_data['data'][key]
+                # if key == 'non_field_errors':
+                message = response_data['data'][key] if key in response_data['data'] else response_data['data']
 
-        response_data['message'] = message
-        response_data['code'] = code
+        response_data['RSP_SUCCESS'] = False
+        response_data['RSP_CODIGO'] = code
+        response_data['RSP_DESCRIPCION'] = message
 
         # response_data['data']['code'] = code
         if 'data' in response_data:
             del response_data['data']
 
         if code == "parse_error":
-            response_data['message'] = 'Error en los valores recibidos'
+            response_data['RSP_DESCRIPCION'] = 'Error en los valores recibidos'
 
         if code != "not_authenticated" and code != "token_not_valid":
             import logging
             logger = logging.getLogger(__name__)
-            logger.exception({'code': code, 'message': str(message)})
+            logger.exception({'RSP_CODIGO': code, 'RSP_DESCRIPCION': str(message)})
 
             return Response(response_data, status=exception.status_code, headers=headers)
         else:

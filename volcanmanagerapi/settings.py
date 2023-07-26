@@ -57,7 +57,8 @@ INSTALLED_APPS = [
     'corsheaders',
     # modules
     'users',
-    'common'
+    'common', 
+    'control'
 ]
 
 MIDDLEWARE = [
@@ -304,6 +305,10 @@ LOGGING = {
         },
     },
     'loggers': {
+        'control': {
+            'handlers': ['console', 'logfile'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'ERROR'),
+        },
         'users': {
             'handlers': ['console', 'logfile'],
             'level': os.getenv('DJANGO_LOG_LEVEL', 'ERROR'),

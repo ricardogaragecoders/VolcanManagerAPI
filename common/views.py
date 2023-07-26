@@ -52,7 +52,6 @@ class CustomViewSet(viewsets.GenericViewSet):
         success = True if status == 200 or status == 201 else False
         message = data.pop('message') if 'message' in data else message
         code = data.pop('code') if 'code' in data else ''
-        enteid = 0
 
         if request and request.session:
             if 'code' in request.session:
@@ -81,9 +80,6 @@ class CustomViewSet(viewsets.GenericViewSet):
                 del data['RSP_DESCRIPCION']
             if 'RSP_ERROR' in data:
                 del data['RSP_ERROR']
-            if 'RSP_ENTEID' in data:
-                enteid = int(data['RSP_ENTEID'])
-                del data['RSP_ENTEID']
 
         response_data['RSP_SUCCESS'] = success
         response_data['RSP_CODIGO'] = code
@@ -91,12 +87,21 @@ class CustomViewSet(viewsets.GenericViewSet):
             response_data['RSP_DESCRIPCION'] = message.strip() if message else ('ok' if success else 'error')
         else:
             response_data['RSP_DESCRIPCION'] = message
-        response_data['RSP_ENTEID'] = enteid
 
         if code == 'no_permissions':
             status = 403
-        if success:
-            response_data['RSP_DATA'] = data
+        if len(data) > 0:
+            if isinstance(data, dict):
+                for k, v in data.items():
+                    if isinstance(v, dict):
+                        internal_data = {}
+                        for ki,vi in v.items():
+                            internal_data[ki.capitalize()] = vi
+                        response_data[k.capitalize()] = internal_data
+                    else:
+                        response_data[k.capitalize()] = v
+            else:
+                response_data['RSP_DATA'] = data
         return Response(response_data, status=status)
 
     def get_queryset_filters(self, *args, **kwargs):

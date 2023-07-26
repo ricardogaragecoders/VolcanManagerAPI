@@ -66,9 +66,10 @@ class CustomTokenRefreshView(TokenRefreshView):
             serializer.is_valid(raise_exception=True)
         except TokenError as e:
             raise InvalidToken(e.args[0])
-
-        return Response({'success': True, 'data': serializer.validated_data, 'message': 'ok'},
-                        status=status.HTTP_200_OK)
+        response_data = {'RSP_SUCCESS': True, 'RSP_CODIGO': '00', 'RSP_DESCRIPCION': 'ok'}
+        for k, v in serializer.validated_data.items():
+            response_data[k.capitalize()] = v
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
 class CustomTokenVerifyView(TokenVerifyView):
@@ -81,9 +82,10 @@ class CustomTokenVerifyView(TokenVerifyView):
             serializer.is_valid(raise_exception=True)
         except TokenError as e:
             raise InvalidToken(e.args[0])
-
-        return Response({'success': True, 'data': serializer.validated_data, 'message': 'ok'},
-                        status=status.HTTP_200_OK)
+        response_data = {'RSP_SUCCESS': True, 'RSP_CODIGO': '00', 'RSP_DESCRIPCION': 'ok'}
+        for k, v in serializer.validated_data.items():
+            response_data[k.capitalize()] = v
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
 class RegisterAdminAPIView(CustomViewSet):
@@ -194,7 +196,7 @@ class ResendCodeAPIView(CustomViewSet):
                         self.resp = ['La solicitud no pudo ser procesada', {'code': 'unknown'}, 400]
                 else:
                     self.resp[0] = 'El sistema de envios de correos se encuentra desactivado. ' \
-                                       'Favor de comunicarse con el administrador'
+                                   'Favor de comunicarse con el administrador'
                     self.resp[1] = {'code': 'do_not_send_email', 'send_email': False}
                     self.resp[2] = 401
             else:

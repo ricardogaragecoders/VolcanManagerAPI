@@ -364,7 +364,7 @@ paths:
         required: true
       summary: Creacion Cta Tar.
       responses:
-        '201':
+        '200':
           description: 'Creacion Cta Tar'
       tags:
         - VolcanManager::CreacionCtaTar
@@ -645,100 +645,60 @@ components:
     CreacionCtaTar:
       type: object
       properties:
-        cif:
+        id_ente_owner:
           type: string
-        personeria:
+        nombre_tarjeta:
           type: string
-        tipo_identificacion:
+        tipo_tarjeta:
           type: string
-        documento_identificacion:
+        id_ente_additional:
           type: string
-        primer_nombre:
+        tarjeta_virtual:
           type: string
-        segundo_nombre:
+        producto_bin:
           type: string
-        primer_apellido:
+        limite_cred_titular:
           type: string
-        segundo_apellido:
+        limite_consumo_adicional:
           type: string
-        apellido_casada:
+        ciclo_corte_titular:
           type: string
-        fecha_nacimiento:
+        plan_titular:
           type: string
-        sexo:
+        codigo_lealtad_titular:
           type: string
-        estado_civil:
+        envio_edc_titular:
           type: string
-        profesion:
+        email_edc_titular:
           type: string
-        seguro_social:
+        direccion_1_edc_titular:
           type: string
-        pais_nacimiento:
+        direccion_2_edc_titular:
           type: string
-        pais_residencia:
+        ciudad_edc_titular:
           type: string
-        nacionalidad:
+        provincia_edc_titular:
           type: string
-        codigo_providencia:
+        codigo_postal_edc_titular:
           type: string
-        codigo_canton:
+        pais_edc_titular:
           type: string
-        codigo_distrito:
+        iban_internacional:
           type: string
-        direccion_1:
+        iban_local:
           type: string
-        direccion_2:
+        vendedores_tc:
           type: string
-        codigo_postal:
+        indicador_poliza:
           type: string
-        telefono_casa:
-          type: string
-        celular:
-          type: string
-        telefono_oficina:
-          type: string
-        email_personal:
-          type: string
-        email_oficina:
-          type: string
-        lugar_trabajo:
-          type: string
-        direccion_1_trabajo:
-          type: string
-        direccion_2_trabajo:
-          type: string
-        puesto:
-          type: string
-        ingreso_mensual:
-          type: string
-        fecha_ingreso_trabajo:
-          type: string
-        oficina_ext:
-          type: string
-        nombre_conyugue:
-          type: string
-        apellido_conyugue:
-          type: string
-        cedula_conyugue:
-          type: string
-        nombre_padre:
-          type: string
-        apellido_padre:
-          type: string
-        nombre_madre:
-          type: string
-        apellido_madre:
-          type: string
-        tipo_gestion:
+        emisor:
           type: string
         usuario_atz:
           type: string
         acceso_atz:
           type: string
-        emisor:
-          type: string
       required:
-      - tipo_identificacion
+      - id_ente_owner
   securitySchemes:
     bearerAuth:            # arbitrary name for the security scheme
       type: http

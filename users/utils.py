@@ -53,7 +53,7 @@ def get_role_and_data(user, data={}):
     from .serializers import ProfileSerializer
     data['role'] = user.profile.role
     profile = ProfileSerializer(user.profile).data
-    data['data'] = {'profile': profile}
+    data['profile'] = profile
     return data
 
 
