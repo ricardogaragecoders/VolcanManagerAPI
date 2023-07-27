@@ -61,7 +61,10 @@ def creation_ente(request, **kwargs):
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_URL
     api_url = url_server + '/web/services/Alta_Ente_1'
-    return process_volcan_api_request(data=data, url=api_url, request=request, times=times)
+    resp = process_volcan_api_request(data=data, url=api_url, request=request, times=times)
+    if 'RSP_ERROR' in resp[1] and resp[1]['RSP_ERROR'].upper() == 'OK':
+        resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
+    return resp
 
 
 def creation_cta_tar(request, **kwargs):
@@ -75,4 +78,10 @@ def creation_cta_tar(request, **kwargs):
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_URL
     api_url = url_server + '/web/services/Alta_Cuenta_1'
-    return process_volcan_api_request(data=data, url=api_url, request=request, times=times)
+    resp = process_volcan_api_request(data=data, url=api_url, request=request, times=times)
+    if 'RSP_ERROR' in resp[1]:
+        if resp[1]['RSP_ERROR'].upper() == 'OK':
+            resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
+        elif 'RSP_TARJETA' in resp[1]:
+            del resp[1]['RSP_TARJETA']
+    return resp
