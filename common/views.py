@@ -102,7 +102,10 @@ class CustomViewSet(viewsets.GenericViewSet):
                         response_data[k] = v
             else:
                 response_data['RSP_DATA'] = data
-        return Response(response_data, status=status)
+        response_data_2 = {}
+        for k, v in response_data.items():
+            response_data_2[k.lower()] = v
+        return Response(response_data_2, status=status)
 
     def get_queryset_filters(self, *args, **kwargs):
         return {}

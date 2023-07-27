@@ -11,9 +11,9 @@ def get_volcan_api_headers():
 
 def process_volcan_api_request(data, url, request, times=0):
     headers = get_volcan_api_headers()
-    # if settings.DEBUG:
-    #     print(data)
-    #     print(url)
+    if settings.DEBUG:
+        print(data)
+        print(url)
     try:
         r = requests.post(url=url, data=json.dumps(data), headers=headers)
         response_status = r.status_code
@@ -22,6 +22,7 @@ def process_volcan_api_request(data, url, request, times=0):
         elif response_status == 404:
             response_data = {'RSP_CODIGO': '404', 'RSP_DESCRIPCION': 'Recurso no disponible'}
         else:
+            print(r.text)
             response_data = {'RSP_CODIGO': str(response_status), 'RSP_DESCRIPCION': 'Error desconocido'}
         response_message = ''
     except requests.exceptions.Timeout:
@@ -59,7 +60,7 @@ def creation_ente(request, **kwargs):
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_URL
-    api_url = url_server + '/web/services/Alta_Ente_1'
+    api_url = url_server + '/api/web/services/Alta_Ente_1'
     return process_volcan_api_request(data=data, url=api_url, request=request, times=times)
 
 
@@ -73,5 +74,5 @@ def creation_cta_tar(request, **kwargs):
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_URL
-    api_url = url_server + '/web/services/Alta_Cuenta_1'
+    api_url = url_server + '/api/web/services/Alta_Cuenta_1'
     return process_volcan_api_request(data=data, url=api_url, request=request, times=times)

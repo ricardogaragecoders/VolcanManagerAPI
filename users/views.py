@@ -66,7 +66,7 @@ class CustomTokenRefreshView(TokenRefreshView):
             serializer.is_valid(raise_exception=True)
         except TokenError as e:
             raise InvalidToken(e.args[0])
-        response_data = {'RSP_SUCCESS': True, 'RSP_CODIGO': '00', 'RSP_DESCRIPCION': 'ok'}
+        response_data = {'RSP_SUCCESS'.lower(): True, 'RSP_CODIGO'.lower(): '00', 'RSP_DESCRIPCION'.lower(): 'ok'}
         for k, v in serializer.validated_data.items():
             response_data[k] = v
         return Response(response_data, status=status.HTTP_200_OK)
@@ -82,7 +82,7 @@ class CustomTokenVerifyView(TokenVerifyView):
             serializer.is_valid(raise_exception=True)
         except TokenError as e:
             raise InvalidToken(e.args[0])
-        response_data = {'RSP_SUCCESS': True, 'RSP_CODIGO': '00', 'RSP_DESCRIPCION': 'ok'}
+        response_data = {'RSP_SUCCESS'.lower(): True, 'RSP_CODIGO'.lower(): '00', 'RSP_DESCRIPCION'.lower(): 'ok'}
         for k, v in serializer.validated_data.items():
             response_data[k] = v
         return Response(response_data, status=status.HTTP_200_OK)

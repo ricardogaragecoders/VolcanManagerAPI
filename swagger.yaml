@@ -599,7 +599,7 @@ components:
         nacionalidad:
           type: string
           enum: [""]
-        codigo_providencia:
+        codigo_provincia:
           type: string
           enum: [""]
         codigo_canton:
