@@ -135,6 +135,8 @@ def get_response_data_errors(data):
     if len(data) > 0:
         key = list(data.keys())[0]
         message = data[key]
+        if 'non_field_errors' in data:
+            del data['non_field_errors']
     else:
         message = u"Error en la petición"
     return message, data, 422

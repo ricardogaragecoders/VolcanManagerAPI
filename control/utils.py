@@ -2,6 +2,9 @@ import json
 import requests
 from django.conf import settings
 
+from common.utils import get_response_data_errors
+from control.serializers import ConsultaCuentaSerializer
+
 
 def get_volcan_api_headers():
     return {
@@ -19,6 +22,8 @@ def process_volcan_api_request(data, url, request, times=0):
         response_status = r.status_code
         if 200 <= response_status <= 299:
             response_data = r.json()
+            if len(response_data) == 0:
+                response_data = {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}
         elif response_status == 404:
             response_data = {'RSP_CODIGO': '404', 'RSP_DESCRIPCION': 'Recurso no disponible'}
         else:
@@ -85,3 +90,32 @@ def creation_cta_tar(request, **kwargs):
         elif 'RSP_TARJETA' in resp[1]:
             del resp[1]['RSP_TARJETA']
     return resp
+
+
+def consulta_cuenta(request, **kwargs):
+    times = kwargs.get('times', 0)
+    if 'request_data' not in kwargs:
+        request_data = request.data
+    else:
+        request_data = kwargs['request_data']
+    request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
+    request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
+    data = {k.upper(): v for k, v in request_data.items()}
+    url_server = settings.SERVER_VOLCAN_URL
+    api_url = url_server + '/web/services/Consulta_Cuenta_1'
+    serializer = ConsultaCuentaSerializer(data=data)
+    if serializer.is_valid():
+        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        if 'RSP_ERROR' in resp[1]:
+            if resp[1]['RSP_ERROR'].upper() == 'OK':
+                resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
+                if 'RSP_CUENTAS' in resp[1]:
+                    accounts = []
+                    for account in resp[1]['RSP_CUENTAS']:
+                        if 'RSP_CUENTA' in account and len(account['RSP_CUENTA']) > 0:
+                            accounts.append({k.lower():v for k, v in account.items()})
+                    resp[1]['RSP_CUENTAS'] = accounts
+    else:
+        resp = get_response_data_errors(serializer.errors)
+    return resp
+

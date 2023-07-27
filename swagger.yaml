@@ -368,6 +368,22 @@ paths:
           description: 'Creacion Cta Tar'
       tags:
         - VolcanManager::CreacionCtaTar
+  /volcan/api/Cuentas/:
+    post:
+      operationId: api_control_consulta_cuenta
+      description: Consulta cuenta.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsultaCuenta"
+        required: true
+      summary: Consulta cuenta.
+      responses:
+        '200':
+          description: 'Consulta cuenta'
+      tags:
+        - VolcanManager::ConsultaCuenta
 components:
   schemas:
     LoginToken:
@@ -759,6 +775,36 @@ components:
           enum: [""]
       required:
       - id_ente_owner
+    ConsultaCuenta:
+      type: object
+      properties:
+        cuenta:
+          type: string
+          enum: [""]
+        cif:
+          type: string
+          enum: [""]
+        id_owner:
+          type: string
+          enum: [""]
+        tipo_identificacion:
+          type: string
+          enum: [""]
+        doc_identificacion:
+          type: string
+          enum: [""]
+        moneda:
+          type: string
+          enum: [""]
+        emisor:
+          type: string
+          enum: [""]
+      required:
+      - cuenta
+      - cif
+      - id_owner
+      - tipo_identificacion
+      - doc_identificacion
   securitySchemes:
     bearerAuth:            # arbitrary name for the security scheme
       type: http

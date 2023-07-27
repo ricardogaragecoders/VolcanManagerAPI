@@ -18,11 +18,12 @@ class ControlApiView(CustomViewSet):
         response_status = 200
         try:
             response_message, response_data, response_status = control_function(request)
-            if 'RSP_CODIGO' in response_data and int(response_data['RSP_CODIGO']) == 0:
-                import logging
-                logger = logging.getLogger(__name__)
-                logger.info(request.user.profile.get_full_name())
-                logger.info(response_data)
+            if 'RSP_CODIGO' in response_data:
+                if (response_data['RSP_CODIGO'].isnumeric() and int(response_data['RSP_CODIGO']) == 0) or response_data['RSP_CODIGO'] == '':
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.info(request.user.profile.get_full_name())
+                    logger.info(response_data)
             else:
                 import logging
                 logger = logging.getLogger(__name__)
@@ -46,3 +47,9 @@ class ControlApiView(CustomViewSet):
         from control.utils import creation_cta_tar
         return self.control_action(request=request, control_function=creation_cta_tar,
                                    name_control_function="creation_cta_tar")
+
+    def consulta_cuenta(self, request, *args, **kwargs):
+        from control.utils import consulta_cuenta
+        return self.control_action(request=request, control_function=consulta_cuenta,
+                                   name_control_function="consulta_cuenta")
+

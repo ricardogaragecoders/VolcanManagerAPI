@@ -68,13 +68,22 @@ class CustomViewSet(viewsets.GenericViewSet):
 
         if isinstance(data, dict) and len(data) > 0:
             if 'RSP_CODIGO' in data:
-                if int(data['RSP_CODIGO']) > 0:
-                    success = False
-                    code = str(int(data['RSP_CODIGO'])).zfill(2)
-                else:
+                if data['RSP_CODIGO'].isnumeric():
+                    if int(data['RSP_CODIGO']) > 0:
+                        success = False
+                        code = str(int(data['RSP_CODIGO'])).zfill(2)
+                    else:
+                        success = True
+                        code = '00'
+                    del data['RSP_CODIGO']
+                elif data['RSP_CODIGO'] == '':
                     success = True
                     code = '00'
-                del data['RSP_CODIGO']
+                    del data['RSP_CODIGO']
+                else:
+                    success = False
+                    code = data['RSP_CODIGO']
+                    del data['RSP_CODIGO']
             if 'RSP_DESCRIPCION' in data:
                 message = data['RSP_DESCRIPCION']
                 del data['RSP_DESCRIPCION']
