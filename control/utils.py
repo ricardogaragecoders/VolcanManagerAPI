@@ -24,6 +24,8 @@ def process_volcan_api_request(data, url, request, times=0):
             response_data = r.json()
             if len(response_data) == 0:
                 response_data = {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}
+            else:
+                print(response_data)
         elif response_status == 404:
             response_data = {'RSP_CODIGO': '404', 'RSP_DESCRIPCION': 'Recurso no disponible'}
         else:
@@ -113,9 +115,8 @@ def consulta_cuenta(request, **kwargs):
                     accounts = []
                     for account in resp[1]['RSP_CUENTAS']:
                         if 'RSP_CUENTA' in account and len(account['RSP_CUENTA']) > 0:
-                            accounts.append({k.lower():v for k, v in account.items()})
+                            accounts.append({k.lower(): v for k, v in account.items()})
                     resp[1]['RSP_CUENTAS'] = accounts
     else:
         resp = get_response_data_errors(serializer.errors)
     return resp
-
