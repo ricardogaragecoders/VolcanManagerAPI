@@ -447,7 +447,7 @@ paths:
         '200':
           description: 'Cambio de PIN.'
       tags:
-        - VolcanManager::CambioNIP
+        - VolcanManager::CambioPIN
 components:
   schemas:
     LoginToken:
