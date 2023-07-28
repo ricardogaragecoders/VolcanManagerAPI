@@ -53,3 +53,22 @@ class ControlApiView(CustomViewSet):
         return self.control_action(request=request, control_function=consulta_cuenta,
                                    name_control_function="consulta_cuenta")
 
+    def extrafinanciamientos(self, request, *args, **kwargs):
+        from control.utils import extrafinanciamientos
+        return self.control_action(request=request, control_function=extrafinanciamientos,
+                                   name_control_function="extrafinanciamientos")
+
+    def intrafinanciamientos(self, request, *args, **kwargs):
+        from control.utils import intrafinanciamientos
+        return self.control_action(request=request, control_function=intrafinanciamientos,
+                                   name_control_function="intrafinanciamientos")
+
+    def consulta_tarjetas(self, request, *args, **kwargs):
+        from control.utils import consulta_tarjetas
+        return self.control_action(request=request, control_function=consulta_tarjetas,
+                                   name_control_function="consulta_tarjetas")
+
+    def cambio_pin(self, request, *args, **kwargs):
+        from control.utils import cambio_pin
+        return self.control_action(request=request, control_function=cambio_pin,
+                                   name_control_function="cambio_pin")

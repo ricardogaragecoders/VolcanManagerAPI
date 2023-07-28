@@ -6,4 +6,8 @@ urlpatterns = [
     path('CreacionEnte/', ControlApiView.as_view({'post': 'creation_ente'})),
     path('CreacionCtaTar/', ControlApiView.as_view({'post': 'creation_cta_tar'})),
     path('Cuentas/', ControlApiView.as_view({'post': 'consulta_cuenta'})),
+    path('Extrafinanciamientos/', ControlApiView.as_view({'post': 'extrafinanciamientos'})),
+    path('Intrafinanciamientos/', ControlApiView.as_view({'post': 'intrafinanciamientos'})),
+    path('ConsultaTarjetas/', ControlApiView.as_view({'post': 'consulta_tarjetas'})),
+    path('CambioPIN/', ControlApiView.as_view({'post': 'cambio_pin'})),
 ]

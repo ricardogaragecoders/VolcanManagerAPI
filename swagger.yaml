@@ -384,6 +384,70 @@ paths:
           description: 'Consulta cuenta'
       tags:
         - VolcanManager::ConsultaCuenta
+  /volcan/api/Extrafinanciamientos/:
+    post:
+      operationId: api_control_extrafinanciamientos
+      description: Extrafinanciamientos.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Extrafinanciamiento"
+        required: true
+      summary: Extrafinanciamientos.
+      responses:
+        '200':
+          description: 'Extrafinanciamientos'
+      tags:
+        - VolcanManager::Extrafinanciamientos
+  /volcan/api/Intrafinanciamientos/:
+    post:
+      operationId: api_control_intrafinanciamientos
+      description: Intrafinanciamientos.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Intrafinanciamiento"
+        required: true
+      summary: Intrafinanciamientos.
+      responses:
+        '200':
+          description: 'Intrafinanciamientos'
+      tags:
+        - VolcanManager::Intrafinanciamientos
+  /volcan/api/ConsultaTarjetas/:
+    post:
+      operationId: api_control_consulta_tarjetas
+      description: Consulta tarjetas.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsultaTarjetas"
+        required: true
+      summary: ConsultaTarjetas.
+      responses:
+        '200':
+          description: 'ConsultaTarjetas'
+      tags:
+        - VolcanManager::ConsultaTarjetas
+  /volcan/api/CambioPIN/:
+    post:
+      operationId: api_control_cambio_pin
+      description: Cambio de PIN.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CambioPIN"
+        required: true
+      summary: Cambio de PIN.
+      responses:
+        '200':
+          description: 'Cambio de PIN.'
+      tags:
+        - VolcanManager::CambioNIP
 components:
   schemas:
     LoginToken:
@@ -805,6 +869,108 @@ components:
       - id_owner
       - tipo_identificacion
       - doc_identificacion
+    Extrafinanciamiento:
+      type: object
+      properties:
+        tarjeta:
+          type: string
+          enum: [ "" ]
+        moneda:
+          type: string
+          enum: [ "" ]
+        importe:
+          type: string
+          enum: [ "" ]
+        tasa:
+          type: string
+          enum: [ "" ]
+        plazo:
+          type: string
+          enum: [ "" ]
+        referencia:
+          type: string
+          enum: [ "" ]
+        tipo:
+          type: string
+          enum: [ "" ]
+        comercio:
+          type: string
+          enum: [""]
+        emisor:
+          type: string
+          enum: [""]
+      required:
+        - tarjeta
+    Intrafinanciamiento:
+      type: object
+      properties:
+        tarjeta:
+          type: string
+          enum: [ "" ]
+        moneda:
+          type: string
+          enum: [ "" ]
+        importe:
+          type: string
+          enum: [ "" ]
+        tasa:
+          type: string
+          enum: [ "" ]
+        plazo:
+          type: string
+          enum: [ "" ]
+        referencia:
+          type: string
+          enum: [ "" ]
+        tipo:
+          type: string
+          enum: [ "" ]
+        comercio:
+          type: string
+          enum: [""]
+        emisor:
+          type: string
+          enum: [""]
+      required:
+        - tarjeta
+    ConsultaTarjetas:
+      type: object
+      properties:
+        tarjeta:
+          type: string
+          enum: [ "" ]
+        cif:
+          type: string
+          enum: [ "" ]
+        id_owner:
+          type: string
+          enum: [ "" ]
+        tipo_identificacion:
+          type: string
+          enum: [ "" ]
+        doc_identificacion:
+          type: string
+          enum: [ "" ]
+        emisor:
+          type: string
+          enum: [ "" ]
+      required:
+        - tarjeta
+    CambioPIN:
+      type: object
+      properties:
+        tarjeta:
+          type: string
+          enum: [ "" ]
+        pin:
+          type: string
+          enum: [ "" ]
+        emisor:
+          type: string
+          enum: [ "" ]
+      required:
+        - tarjeta
+        - pin
   securitySchemes:
     bearerAuth:            # arbitrary name for the security scheme
       type: http
