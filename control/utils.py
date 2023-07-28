@@ -118,8 +118,7 @@ def consulta_cuenta(request, **kwargs):
                             accounts.append({k.lower(): v for k, v in account.items()})
                     resp[1]['RSP_CUENTAS'] = accounts
             else:
-                resp = dict(resp)
-                resp[1] = {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
     else:
         resp = get_response_data_errors(serializer.errors)
     return resp
