@@ -326,7 +326,7 @@ LOGGING = {
 
 # URLs
 URL_BACKEND = env.str('URL_BACKEND', 'http://localhost:8000')
-EMAIL_CONTACT = env.str('EMAIL_CONTACT')
+EMAIL_CONTACT = env.str('EMAIL_CONTACT', 'info@volcangroup.io')
 SERVER_VOLCAN_URL = env.str('SERVER_VOLCAN_URL', 'http://10.23.102.10:21005')
 VOLCAN_USUARIO_ATZ = env.str('USUARIO_ATZ', 'KLEWIS')
 VOLCAN_ACCESO_ATZ = env.str('ACCESO_ATZ', 'KLEWIS')

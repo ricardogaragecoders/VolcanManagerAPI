@@ -87,9 +87,11 @@ def custom_exception_handler(exception, context):
             logger = logging.getLogger(__name__)
             logger.exception({'RSP_CODIGO': code, 'RSP_DESCRIPCION': str(message)})
 
-            return Response(response_data, status=exception.status_code, headers=headers)
+            return Response({k.lower(): v for k, v, in response_data.items()},
+                            status=exception.status_code, headers=headers)
         else:
-            return Response(response_data, status=status.HTTP_401_UNAUTHORIZED, headers=headers)
+            return Response({k.lower(): v for k, v, in response_data.items()},
+                            status=status.HTTP_401_UNAUTHORIZED, headers=headers)
 
     return exception_handler(exception, context)
 
@@ -364,6 +366,7 @@ def get_token_from_json(data):
 
 def get_json_from_token(token):
     return jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+
 
 def is_valid_uuid(value):
     import uuid
