@@ -15,39 +15,46 @@ def get_volcan_api_headers():
 
 def process_volcan_api_request(data, url, request, times=0):
     headers = get_volcan_api_headers()
+    data_json = json.dumps(data)
     if settings.DEBUG:
-        print(data)
-        print(url)
+        print(f"Request: {url}")
+        print(f"Data json: {data_json}")
     try:
-        r = requests.post(url=url, data=json.dumps(data), headers=headers)
+        r = requests.post(url=url, data=data_json, headers=headers)
         response_status = r.status_code
         if 200 <= response_status <= 299:
             response_data = r.json()
             if len(response_data) == 0:
+                print(f"Response: empty")
                 response_data = {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}
             else:
-                print(response_data)
+                print(f"Response: {response_data}")
         elif response_status == 404:
             response_data = {'RSP_CODIGO': '404', 'RSP_DESCRIPCION': 'Recurso no disponible'}
+            print(f"Response: 404 Recurso no disponible")
         else:
-            print(r.text)
             response_data = {'RSP_CODIGO': str(response_status), 'RSP_DESCRIPCION': 'Error desconocido'}
+            print(f"Response: {str(response_status)} Error desconocido")
+            print(f"Data server: {str(r.text)}")
         response_message = ''
     except requests.exceptions.Timeout:
         response_data = {'RSP_CODIGO': "408",
                          'RSP_DESCRIPCION': 'Error de conexion con servidor VOLCAN (Timeout)'}
         response_status = 408
         response_message = 'Error de conexion con servidor VOLCAN (Timeout)'
+        print(response_message)
     except requests.exceptions.TooManyRedirects:
         response_data = {'RSP_CODIGO': "429",
                          'RSP_DESCRIPCION': 'Error de conexion con servidor VOLCAN (TooManyRedirects)'}
         response_status = 429
         response_message = 'Error de conexion con servidor VOLCAN (TooManyRedirects)'
+        print(response_message)
     except requests.exceptions.RequestException as e:
         response_data = {'RSP_CODIGO': "400",
                          'RSP_DESCRIPCION': 'Error de conexion con servidor VOLCAN (RequestException)'}
         response_status = 400
         response_message = 'Error de conexion con servidor VOLCAN (RequestException)'
+        print(response_message)
     except Exception as e:
         print("Error peticion")
         print(e.args.__str__())
