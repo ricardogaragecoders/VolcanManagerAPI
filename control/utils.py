@@ -81,10 +81,10 @@ def creation_ente(request, **kwargs):
         if resp[1]['RSP_ERROR'].upper() == 'OK':
             resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
         else:
-            resp_copy = dict()
+            resp_copy = resp[1].copy()
             for k in resp[1].keys():
-                if k in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION', 'RSP_ENTEID']:
-                    resp_copy[k] = resp[1][k]
+                if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION', 'RSP_ENTEID']:
+                    del resp_copy[k]
             return resp[0], resp_copy, resp[2]
     return resp
 
@@ -105,10 +105,10 @@ def creation_cta_tar(request, **kwargs):
         if resp[1]['RSP_ERROR'].upper() == 'OK':
             resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
         else:
-            resp_copy = dict()
+            resp_copy = resp[1].copy()
             for k in resp[1].keys():
-                if k in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION', 'RSP_CUENTA']:
-                    resp_copy[k] = resp[1][k]
+                if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION', 'RSP_CUENTA']:
+                    del resp_copy[k]
             return resp[0], resp_copy, resp[2]
     return resp
 
@@ -139,10 +139,10 @@ def consulta_cuenta(request, **kwargs):
             elif resp[1]['RSP_ERROR'] == '':
                 return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
             else:
-                resp_copy = dict()
+                resp_copy = resp[1].copy()
                 for k in resp[1].keys():
-                    if k in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
-                        resp_copy[k] = resp[1][k]
+                    if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
+                        del resp_copy[k]
                 return resp[0], resp_copy, resp[2]
     else:
         resp = get_response_data_errors(serializer.errors)
@@ -167,10 +167,10 @@ def extrafinanciamientos(request, **kwargs):
         elif resp[1]['RSP_ERROR'] == '':
             return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
         else:
-            resp_copy = dict()
+            resp_copy = resp[1].copy()
             for k in resp[1].keys():
-                if k in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
-                    resp_copy[k] = resp[1][k]
+                if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
+                    del resp_copy[k]
             return resp[0], resp_copy, resp[2]
     return resp
 
@@ -195,8 +195,8 @@ def intrafinanciamientos(request, **kwargs):
         else:
             resp_copy = dict()
             for k in resp[1].keys():
-                if k in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
-                    resp_copy[k] = resp[1][k]
+                if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
+                    del resp_copy[k]
             return resp[0], resp_copy, resp[2]
     return resp
 
@@ -227,10 +227,10 @@ def consulta_tarjetas(request, **kwargs):
             elif resp[1]['RSP_ERROR'] == '':
                 return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
             else:
-                resp_copy = dict()
+                resp_copy = resp[1].copy()
                 for k in resp[1].keys():
-                    if k in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
-                        resp_copy[k] = resp[1][k]
+                    if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
+                        del resp_copy[k]
                 return resp[0], resp_copy, resp[2]
     else:
         resp = get_response_data_errors(serializer.errors)
@@ -257,10 +257,10 @@ def cambio_pin(request, **kwargs):
             elif resp[1]['RSP_ERROR'] == '':
                 return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
             else:
-                resp_copy = dict()
+                resp_copy = resp[1].copy()
                 for k in resp[1].keys():
-                    if k in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
-                        resp_copy[k] = resp[1][k]
+                    if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
+                        del resp_copy[k]
                 return resp[0], resp_copy, resp[2]
     else:
         resp = get_response_data_errors(serializer.errors)
