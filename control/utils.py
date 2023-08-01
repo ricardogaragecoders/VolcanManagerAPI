@@ -4,7 +4,7 @@ from django.conf import settings
 
 from common.utils import get_response_data_errors
 from control.serializers import ConsultaCuentaSerializer, ConsultaTarjetaSerializer, \
-    CambioPINSerializer
+    CambioPINSerializer, ExtrafinanciamientoSerializer
 
 
 def get_volcan_api_headers():
@@ -160,18 +160,28 @@ def extrafinanciamientos(request, **kwargs):
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_URL
     api_url = f'{url_server}/web/services/Extrafinanciamiento_1'
-    resp = process_volcan_api_request(data=data, url=api_url, request=request, times=times)
-    if 'RSP_ERROR' in resp[1]:
-        if resp[1]['RSP_ERROR'].upper() == 'OK':
-            resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
-        elif resp[1]['RSP_ERROR'] == '':
-            return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
-        else:
-            resp_copy = resp[1].copy()
-            for k in resp[1].keys():
-                if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
-                    del resp_copy[k]
-            return resp[0], resp_copy, resp[2]
+    serializer = ExtrafinanciamientoSerializer(data=data)
+    if serializer.is_valid():
+        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        if 'RSP_ERROR' in resp[1]:
+            if resp[1]['RSP_ERROR'].upper() == 'OK' or (resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
+                resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
+                if 'RSP_IMPORTE' in resp[1]:
+                    resp[1]['RSP_IMPORTE'] = str(int(resp[1]['RSP_IMPORTE'])).zfill(2)
+                if 'RSP_CUOTA' in resp[1]:
+                    resp[1]['RSP_CUOTA'] = str(int(resp[1]['RSP_CUOTA'])).zfill(2)
+                if 'RSP_TASA' in resp[1]:
+                    resp[1]['RSP_TASA'] = resp[1]['RSP_TASA'][0:2] + '.' + resp[1]['RSP_TASA'][2:4]
+            elif resp[1]['RSP_ERROR'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
+            else:
+                resp_copy = resp[1].copy()
+                for k in resp[1].keys():
+                    if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
+                        del resp_copy[k]
+                return resp[0], resp_copy, resp[2]
+    else:
+        resp = get_response_data_errors(serializer.errors)
     return resp
 
 
@@ -186,18 +196,29 @@ def intrafinanciamientos(request, **kwargs):
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_URL
     api_url = f'{url_server}/web/services/Intrafinanciamiento_1'
-    resp = process_volcan_api_request(data=data, url=api_url, request=request, times=times)
-    if 'RSP_ERROR' in resp[1]:
-        if resp[1]['RSP_ERROR'].upper() == 'OK':
-            resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
-        elif resp[1]['RSP_ERROR'] == '':
-            return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
-        else:
-            resp_copy = dict()
-            for k in resp[1].keys():
-                if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
-                    del resp_copy[k]
-            return resp[0], resp_copy, resp[2]
+    serializer = ExtrafinanciamientoSerializer(data=data)
+    if serializer.is_valid():
+        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        if 'RSP_ERROR' in resp[1]:
+            if resp[1]['RSP_ERROR'].upper() == 'OK' or (resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
+                resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
+                if 'RSP_IMPORTE' in resp[1]:
+                    resp[1]['RSP_IMPORTE'] = str(int(resp[1]['RSP_IMPORTE'])).zfill(2)
+                if 'RSP_CUOTA' in resp[1]:
+                    resp[1]['RSP_CUOTA'] = str(int(resp[1]['RSP_CUOTA'])).zfill(2)
+                if 'RSP_TASA' in resp[1]:
+                    resp[1]['RSP_TASA'] = resp[1]['RSP_TASA'][0:2] + '.' + resp[1]['RSP_TASA'][2:4]
+                # return resp[0], resp_copy, resp[2]
+            elif resp[1]['RSP_ERROR'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
+            else:
+                resp_copy = resp[1].copy()
+                for k in resp[1].keys():
+                    if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
+                        del resp_copy[k]
+                return resp[0], resp_copy, resp[2]
+    else:
+        resp = get_response_data_errors(serializer.errors)
     return resp
 
 
@@ -252,7 +273,7 @@ def cambio_pin(request, **kwargs):
     if serializer.is_valid():
         resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
-            if resp[1]['RSP_ERROR'].upper() == 'OK':
+            if resp[1]['RSP_ERROR'].upper() == 'OK' and int(resp[1]['RSP_CODIGO']) == 0:
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
             elif resp[1]['RSP_ERROR'] == '':
                 return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
