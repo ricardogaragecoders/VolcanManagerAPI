@@ -104,7 +104,7 @@ class CambioPINSerializer(serializers.Serializer):
 class ExtrafinanciamientoSerializer(serializers.Serializer):
     TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
     MONEDA = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
-    IMPORTE = serializers.CharField(max_length=19, required=False, default="", allow_blank=True)
+    IMPORTE = serializers.FloatField(min_value=0.0, required=False, default=0.0)
     TASA = serializers.FloatField(min_value=0.0, required=False, default=0.0)
     PLAZO = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
     REFERENCIA = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
@@ -120,19 +120,19 @@ class ExtrafinanciamientoSerializer(serializers.Serializer):
 
     def validate(self, data):
         data = super(ExtrafinanciamientoSerializer, self).validate(data)
-        tarjeta = data.get('TARJETA', "").strip()
-        importe = data.get('IMPORTE', "0").strip()
-        tasa = float(data.get('TASA', 0.0))
-        tasas = ("%.2f" % tasa).split('.')
+        card = data.get('TARJETA', "").strip()
+        amount = float(data.get('IMPORTE', 0.0))
+        amounts = ("%.2f" % amount).split('.')
+        tax = float(data.get('TASA', 0.0))
+        taxes = ("%.2f" % tax).split('.')
 
-        data['TARJETA'] = tarjeta
-        if len(tarjeta) == 0:
-            raise CustomValidationError(detail=u'El numbero de tarjeta es requerido',
+        data['TARJETA'] = card
+        if len(card) == 0:
+            raise CustomValidationError(detail=u'El numero de tarjeta es requerido',
                                         code='400')
-        if not importe.isnumeric():
-            raise CustomValidationError(detail=u'El importe no es numerico',
-                                        code='400')
-        else:
-            data['IMPORTE'] = importe.zfill(19)
-        data['TASA'] = tasas[0].zfill(2) + tasas[1].zfill(2)
+        # if not importe.isnumeric():
+        #     raise CustomValidationError(detail=u'El importe no es numerico',
+        #                                 code='400')
+        data['TASA'] = taxes[0].zfill(2) + taxes[1].zfill(2)
+        data['IMPORTE'] = amounts[0].zfill(17) + amounts[1].zfill(2)
         return data

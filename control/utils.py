@@ -7,6 +7,18 @@ from control.serializers import ConsultaCuentaSerializer, ConsultaTarjetaSeriali
     CambioPINSerializer, ExtrafinanciamientoSerializer
 
 
+def get_float_from_numeric_str(value: str) -> str:
+    from decimal import Decimal
+    length = len(value)
+    assert length >= 4, "El valor no tiene el minimo de largo"
+    value_s = "%s.%s" % (value[0:length-2], value[length-2:length])
+    value_f = Decimal(value_s)
+    if value_f > Decimal('0'):
+        return '%04.2f' % value_f
+    else:
+        return '%05.2f' % value_f
+
+
 def get_volcan_api_headers():
     return {
         'Content-Type': 'application/json'
@@ -134,7 +146,13 @@ def consulta_cuenta(request, **kwargs):
                     accounts = []
                     for account in resp[1]['RSP_CUENTAS']:
                         if 'RSP_CUENTA' in account and len(account['RSP_CUENTA']) > 0:
-                            accounts.append({k.lower(): v for k, v in account.items()})
+                            data_item = {k.lower(): v for k, v in account.items()}
+                            for k2, v2 in data_item.items():
+                                length = len(v2)
+                                if (length == 4 or length == 19) and v2.isnumeric():
+                                    v2 = get_float_from_numeric_str(v2)
+                                    data_item[k2] = v2
+                            accounts.append(data_item)
                     resp[1]['RSP_CUENTAS'] = accounts
             elif resp[1]['RSP_ERROR'] == '':
                 return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
@@ -167,11 +185,11 @@ def extrafinanciamientos(request, **kwargs):
             if resp[1]['RSP_ERROR'].upper() == 'OK' or (resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
                 if 'RSP_IMPORTE' in resp[1]:
-                    resp[1]['RSP_IMPORTE'] = str(int(resp[1]['RSP_IMPORTE'])).zfill(2)
+                    resp[1]['RSP_IMPORTE'] = get_float_from_numeric_str(resp[1]['RSP_IMPORTE'])
                 if 'RSP_CUOTA' in resp[1]:
-                    resp[1]['RSP_CUOTA'] = str(int(resp[1]['RSP_CUOTA'])).zfill(2)
+                    resp[1]['RSP_CUOTA'] = get_float_from_numeric_str(resp[1]['RSP_CUOTA'])
                 if 'RSP_TASA' in resp[1]:
-                    resp[1]['RSP_TASA'] = resp[1]['RSP_TASA'][0:2] + '.' + resp[1]['RSP_TASA'][2:4]
+                    resp[1]['RSP_TASA'] = get_float_from_numeric_str(resp[1]['RSP_TASA'])
             elif resp[1]['RSP_ERROR'] == '':
                 return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
             else:
@@ -203,12 +221,11 @@ def intrafinanciamientos(request, **kwargs):
             if resp[1]['RSP_ERROR'].upper() == 'OK' or (resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
                 if 'RSP_IMPORTE' in resp[1]:
-                    resp[1]['RSP_IMPORTE'] = str(int(resp[1]['RSP_IMPORTE'])).zfill(2)
+                    resp[1]['RSP_IMPORTE'] = get_float_from_numeric_str(resp[1]['RSP_IMPORTE'])
                 if 'RSP_CUOTA' in resp[1]:
-                    resp[1]['RSP_CUOTA'] = str(int(resp[1]['RSP_CUOTA'])).zfill(2)
+                    resp[1]['RSP_CUOTA'] = get_float_from_numeric_str(resp[1]['RSP_CUOTA'])
                 if 'RSP_TASA' in resp[1]:
-                    resp[1]['RSP_TASA'] = resp[1]['RSP_TASA'][0:2] + '.' + resp[1]['RSP_TASA'][2:4]
-                # return resp[0], resp_copy, resp[2]
+                    resp[1]['RSP_TASA'] = get_float_from_numeric_str(resp[1]['RSP_TASA'])
             elif resp[1]['RSP_ERROR'] == '':
                 return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
             else:
