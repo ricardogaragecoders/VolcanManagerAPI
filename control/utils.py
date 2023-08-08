@@ -94,7 +94,7 @@ def creation_ente(request, **kwargs):
             resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
         elif resp[1]['RSP_ERROR'] == '':
             return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
-        elif resp[1]['RSP_ERROR'] == 'RC' and resp[1]['RSP_CODIGO'] == '':
+        elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':
             return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Transaccion erronea'}, resp[2]
         else:
             resp_copy = resp[1].copy()
@@ -122,7 +122,7 @@ def creation_cta_tar(request, **kwargs):
             resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
         elif resp[1]['RSP_ERROR'] == '':
             return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
-        elif resp[1]['RSP_ERROR'] == 'RC' and resp[1]['RSP_CODIGO'] == '':
+        elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':
             return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Transaccion erronea'}, resp[2]
         else:
             resp_copy = resp[1].copy()
@@ -164,7 +164,7 @@ def consulta_cuenta(request, **kwargs):
                     resp[1]['RSP_CUENTAS'] = accounts
             elif resp[1]['RSP_ERROR'] == '':
                 return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
-            elif resp[1]['RSP_ERROR'] == 'RC' and resp[1]['RSP_CODIGO'] == '':
+            elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':
                 return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Transaccion erronea'}, resp[2]
             else:
                 resp_copy = resp[1].copy()
@@ -202,7 +202,7 @@ def extrafinanciamientos(request, **kwargs):
                     resp[1]['RSP_TASA'] = get_float_from_numeric_str(resp[1]['RSP_TASA'])
             elif resp[1]['RSP_ERROR'] == '':
                 return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
-            elif resp[1]['RSP_ERROR'] == 'RC' and resp[1]['RSP_CODIGO'] == '':
+            elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':
                 return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Transaccion erronea'}, resp[2]
             else:
                 resp_copy = resp[1].copy()
@@ -240,7 +240,7 @@ def intrafinanciamientos(request, **kwargs):
                     resp[1]['RSP_TASA'] = get_float_from_numeric_str(resp[1]['RSP_TASA'])
             elif resp[1]['RSP_ERROR'] == '':
                 return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
-            elif resp[1]['RSP_ERROR'] == 'RC' and resp[1]['RSP_CODIGO'] == '':
+            elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':
                 return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Transaccion erronea'}, resp[2]
             else:
                 resp_copy = resp[1].copy()
@@ -278,7 +278,7 @@ def consulta_tarjetas(request, **kwargs):
                     resp[1]['RSP_TARJETAS'] = cards
             elif resp[1]['RSP_ERROR'] == '':
                 return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
-            elif resp[1]['RSP_ERROR'] == 'RC' and resp[1]['RSP_CODIGO'] == '':
+            elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':
                 return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Transaccion erronea'}, resp[2]
             else:
                 resp_copy = resp[1].copy()
@@ -310,7 +310,7 @@ def cambio_pin(request, **kwargs):
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
             elif resp[1]['RSP_ERROR'] == '':
                 return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
-            elif resp[1]['RSP_ERROR'] == 'RC' and resp[1]['RSP_CODIGO'] == '':
+            elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':
                 return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Transaccion erronea'}, resp[2]
             else:
                 resp_copy = resp[1].copy()
