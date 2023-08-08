@@ -448,6 +448,22 @@ paths:
           description: 'Cambio de PIN.'
       tags:
         - VolcanManager::CambioPIN
+  /volcan/api/Webhooks/:
+    post:
+      operationId: api_control_webhooks
+      description: Create webhook by emisor.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Webhook"
+        required: true
+      summary: Create webhook by emisor
+      responses:
+        '200':
+          description: 'Create webhook by emisor'
+      tags:
+        - VolcanManager::Webhook
 components:
   schemas:
     LoginToken:

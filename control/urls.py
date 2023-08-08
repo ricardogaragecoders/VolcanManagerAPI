@@ -10,4 +10,6 @@ urlpatterns = [
     path('Intrafinanciamientos/', ControlApiView.as_view({'post': 'intrafinanciamientos'})),
     path('ConsultaTarjetas/', ControlApiView.as_view({'post': 'consulta_tarjetas'})),
     path('CambioPIN/', ControlApiView.as_view({'post': 'cambio_pin'})),
+
+    path('Webhooks/', WebHookApiView.as_view({'post': 'post'})),
 ]

@@ -3,6 +3,8 @@ from django.shortcuts import render
 from common.views import CustomViewSet
 from rest_framework.permissions import IsAuthenticated
 
+from control.models import Webhook
+from control.serializers import WebhookSerializer
 from users.permissions import IsVerified, IsOperator
 
 
@@ -72,3 +74,16 @@ class ControlApiView(CustomViewSet):
         from control.utils import cambio_pin
         return self.control_action(request=request, control_function=cambio_pin,
                                    name_control_function="cambio_pin")
+
+
+class WebHookApiView(CustomViewSet):
+    """
+    get:
+        Return all status
+    """
+    serializer_class = WebhookSerializer
+    model_class = Webhook
+    permission_classes = (IsAuthenticated, IsVerified, IsOperator)
+    http_method_names = ['get', 'post', 'options', 'head']
+
+

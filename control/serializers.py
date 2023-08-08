@@ -1,6 +1,8 @@
 from rest_framework import serializers
 
 from common.exceptions import CustomValidationError
+from common.utils import code_generator
+from control.models import Webhook
 
 
 class ConsultaCuentaSerializer(serializers.Serializer):
@@ -135,4 +137,36 @@ class ExtrafinanciamientoSerializer(serializers.Serializer):
         #                                 code='400')
         data['TASA'] = taxes[0].zfill(2) + taxes[1].zfill(2)
         data['IMPORTE'] = amounts[0].zfill(17) + amounts[1].zfill(2)
+        return data
+
+
+class WebhookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Webhook
+        fields = ('id', 'emisor', 'url_webhook', 'key_webhook', 'deleted_at', 'active')
+
+    def validate(self, data):
+        data = super(WebhookSerializer, self).validate(data)
+        emisor = data.get('emisor', None if not self.instance else self.instance.emisor)
+        url_webhook = data.get('url_webhook', '' if not self.instance else self.instance.url_webhook)
+        key_webhook = data.get('key_webhook', '' if not self.instance else self.instance.key_webhook)
+
+        if not self.instance:
+            if Webhook.objects.filter(emisor=emisor, deleted_at__isnull=False).exists():
+                raise CustomValidationError(detail={'name': f'Existe un endpoint del emisor: {emisor}.'},
+                                            code='emisor_exists')
+        elif emisor and Webhook.objects.filter(emisor=emisor, deleted_at__isnull=False).exclude(id=self.instance.id).exists():
+            raise CustomValidationError(detail={'emisor': f'Existe un endpoint del emisor: {emisor}.'},
+                                        code='emisor_exists')
+
+        if len(url_webhook) == 0:
+            raise CustomValidationError(detail={'url_webhook': f'La url del webhook es requerido.'},
+                                        code='url_webhook_is_required')
+
+        if len(key_webhook) == 0:
+            key_webhook = code_generator(32)
+
+        data['emisor'] = emisor
+        data['url_webhook'] = url_webhook
+        data['key_webhook'] = key_webhook
         return data
