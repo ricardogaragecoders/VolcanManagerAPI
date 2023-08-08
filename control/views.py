@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from control.models import Webhook
 from control.serializers import WebhookSerializer, WebhookListSerializer
-from users.permissions import IsVerified, IsOperator
+from users.permissions import IsVerified, IsOperator, IsAdministrator
 from django.db.models import Q, F, Value, Avg
 
 
@@ -88,7 +88,7 @@ class WebHookApiView(CustomViewSet):
     response_serializer_class = WebhookListSerializer
     one_serializer_class = WebhookListSerializer
     model_class = Webhook
-    permission_classes = (IsAuthenticated, IsVerified, IsOperator)
+    permission_classes = (IsAuthenticated, IsVerified, IsAdministrator)
     field_pk = 'webhook_id'
 
     def get_queryset_filters(self, *args, **kwargs):
