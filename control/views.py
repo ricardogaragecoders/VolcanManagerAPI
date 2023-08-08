@@ -1,11 +1,12 @@
 from django.shortcuts import render
 
-from common.views import CustomViewSet
+from common.views import CustomViewSet, CustomViewSetWithPagination
 from rest_framework.permissions import IsAuthenticated
 
 from control.models import Webhook
-from control.serializers import WebhookSerializer
+from control.serializers import WebhookSerializer, WebhookListSerializer
 from users.permissions import IsVerified, IsOperator
+from django.db.models import Q, F, Value, Avg
 
 
 # Create your views here.
@@ -21,7 +22,8 @@ class ControlApiView(CustomViewSet):
         try:
             response_message, response_data, response_status = control_function(request)
             if 'RSP_CODIGO' in response_data:
-                if (response_data['RSP_CODIGO'].isnumeric() and int(response_data['RSP_CODIGO']) == 0) or response_data['RSP_CODIGO'] == '':
+                if (response_data['RSP_CODIGO'].isnumeric() and int(response_data['RSP_CODIGO']) == 0) \
+                        or response_data['RSP_CODIGO'] == '':
                     import logging
                     logger = logging.getLogger(__name__)
                     logger.info(request.user.profile.get_full_name())
@@ -79,11 +81,90 @@ class ControlApiView(CustomViewSet):
 class WebHookApiView(CustomViewSet):
     """
     get:
-        Return all status
+        Return all webhooks
     """
     serializer_class = WebhookSerializer
+    list_serializer_class = WebhookListSerializer
+    response_serializer_class = WebhookListSerializer
+    one_serializer_class = WebhookListSerializer
     model_class = Webhook
     permission_classes = (IsAuthenticated, IsVerified, IsOperator)
-    http_method_names = ['get', 'post', 'options', 'head']
+    field_pk = 'webhook_id'
 
+    def get_queryset_filters(self, *args, **kwargs):
+        active = self.request.query_params.get('active', 'all')
+        account_issuer = self.request.query_params.get('ai', '')
+        filters = {'deleted_at__isnull': True}
 
+        if len(account_issuer) > 0:
+            filters['account_issuer'] = account_issuer
+
+        if active != 'all':
+            filters['active'] = active == 'true'
+        return filters
+
+    def get_queryset(self, *args, **kwargs):
+        filters = self.get_queryset_filters(*args, **kwargs)
+        q = self.request.query_params.get('q', None)
+        order_by = self.request.query_params.get('orderBy', 'id')
+        order_by_desc = self.request.query_params.get('orderByDesc', 'false')
+        queryset = self.model_class.objects.filter(**filters).distinct()
+
+        if q:
+            queryset = queryset.filter(
+                Q(account_issuer__icontains=q) |
+                Q(url_webhook__icontains=q)
+            ).distinct()
+
+        order_by_filter = '{0}'.format(order_by if order_by_desc == 'false' else "-%s" % order_by)
+
+        return queryset.order_by(order_by_filter)
+
+    def perform_list(self, request, *args, **kwargs):
+        response_data = dict()
+        print(response_data)
+        response_data['rsp_codigo'] = '200'
+        response_data['rsp_descripcion'] = u'ok'
+        response_data['rsp_data'] = self.serializer.data
+        self.make_response_success(data=response_data)
+
+    def perform_retrieve(self, request, *args, **kwargs):
+        register = self.get_object(pk=self.pk)
+        self.serializer = self.get_one_serializer(register)
+        response_data = self.serializer.data
+        response_data['rsp_codigo'] = '200'
+        response_data['rsp_descripcion'] = u'Detalle de webhook'
+        self.make_response_success(data=response_data)
+
+    def perform_create(self, request, *args, **kwargs):
+        register = self.serializer.save()
+        if not self.response_serializer_class:
+            response_data = self.serializer.data
+        else:
+            response_data = self.response_serializer_class(register).data
+        response_data['rsp_codigo'] = '201'
+        response_data['rsp_descripcion'] = u'Creación de webhook realizada'
+        self.make_response_success(data=response_data, status=201)
+
+    def perform_update(self, request, *args, **kwargs):
+        register = self.serializer.save()
+        if not self.response_serializer_class:
+            response_data = self.serializer.data
+        else:
+            response_data = self.response_serializer_class(register).data
+        response_data['rsp_codigo'] = '200'
+        response_data['rsp_descripcion'] = u'Actualización de webhook realizada'
+        self.make_response_success(data=response_data, status=200)
+
+    def perform_destroy(self, request, *args, **kwargs):
+        register = kwargs['register']
+        if hasattr(register, 'active'):
+            register.active = False
+            if hasattr(register, 'deleted_at'):
+                from django.utils import timezone
+                register.deleted_at = timezone.now()
+            register.save()
+        response_data = dict()
+        response_data['rsp_codigo'] = '204'
+        response_data['rsp_descripcion'] = u'Webhook borrado'
+        self.make_response_success('Webhook borrado', response_data, 204)

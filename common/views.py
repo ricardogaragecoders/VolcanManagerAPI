@@ -40,6 +40,7 @@ class CustomViewSet(viewsets.GenericViewSet):
     authentication_classes = (SessionAuthentication, BasicAuthentication, JWTAuthentication)
     field_pk = 'id'
     lookup_field = 'id'
+    pk = None
 
     def get_response(self, message: str = '', data: Union[dict, list] = {}, status: int = 200):
         request = get_request()
@@ -132,12 +133,15 @@ class CustomViewSet(viewsets.GenericViewSet):
     def list(self, request, *args, **kwargs):
         try:
             queryset = self.get_queryset(*args, **kwargs)
-            serializer = self.get_list_serializer(queryset, many=True)
-            self.make_response_success(data=serializer.data)
+            self.serializer = self.get_list_serializer(queryset, many=True)
+            self.perform_list(request, *args, **kwargs)
         except Exception as e:
             self.resp = handler_exception_general(__name__, e)
         finally:
             return self.get_response()
+
+    def perform_list(self, request, *args, **kwargs):
+        self.make_response_success(data=self.serializer.data)
 
     def get_select_related_one(self):
         return []
@@ -159,14 +163,8 @@ class CustomViewSet(viewsets.GenericViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         try:
-            pk = kwargs.pop(self.field_pk)
-            simple = request.query_params.get('simple', 'false')
-            register = self.get_object(pk=pk)
-            if simple == 'false':
-                self.serializer = self.get_one_serializer(register)
-            else:
-                self.serializer = self.get_serializer(register)
-            self.make_response_success(data=self.serializer.data)
+            self.pk = kwargs.pop(self.field_pk)
+            self.perform_retrieve(request, *args, **kwargs)
         except self.model_class.DoesNotExist:
             self.make_response_not_found()
         except exceptions.ValidationError as e:
@@ -176,7 +174,16 @@ class CustomViewSet(viewsets.GenericViewSet):
         finally:
             return self.get_response()
 
-    def post(self, request, *args, **kwargs):
+    def perform_retrieve(self, request, *args, **kwargs):
+        simple = request.query_params.get('simple', 'false')
+        register = self.get_object(pk=self.pk)
+        if simple == 'false':
+            self.serializer = self.get_one_serializer(register)
+        else:
+            self.serializer = self.get_serializer(register)
+        self.make_response_success(data=self.serializer.data)
+
+    def create(self, request, *args, **kwargs):
         try:
             request_data = request.data if 'request_data' not in kwargs else kwargs['request_data']
             self.serializer = self.get_create_serializer(data=request_data)

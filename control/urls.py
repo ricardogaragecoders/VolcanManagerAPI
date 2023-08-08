@@ -11,5 +11,9 @@ urlpatterns = [
     path('ConsultaTarjetas/', ControlApiView.as_view({'post': 'consulta_tarjetas'})),
     path('CambioPIN/', ControlApiView.as_view({'post': 'cambio_pin'})),
 
-    path('Webhooks/', WebHookApiView.as_view({'post': 'post'})),
+    path('Webhooks/',
+         WebHookApiView.as_view({'get': 'list', 'post': 'create'})),
+    path('Webhooks/<str:webhook_id>/',
+         WebHookApiView.as_view({'get': 'retrieve', 'patch': 'update', 'delete': 'destroy'})),
+
 ]
