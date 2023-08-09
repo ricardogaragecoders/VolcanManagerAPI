@@ -2,7 +2,7 @@ from django.shortcuts import render
 
 from common.views import CustomViewSet
 from rest_framework.permissions import IsAuthenticated
-
+from rest_framework.exceptions import ParseError
 from users.permissions import IsVerified, IsOperator
 
 
@@ -29,6 +29,13 @@ class ControlApiView(CustomViewSet):
                 logger = logging.getLogger(__name__)
                 logger.error(request.user.profile.get_full_name())
                 logger.error(response_data)
+        except ParseError as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.exception(e)
+            response_data = {'RSP_CODIGO': '-1', 'RSP_DESCRIPCION': "%s" % e}
+            response_message = "%s" % e
+            response_status = 400
         except Exception as e:
             import logging
             logger = logging.getLogger(__name__)
