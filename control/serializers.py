@@ -171,3 +171,29 @@ class CambioLimitesSerializer(serializers.Serializer):
         data['LIMITE_CON'] = limits_con[0].zfill(17) + limits_con[1].zfill(2)
         data['LIMITE_EXTRA'] = limits_extra[0].zfill(17) + limits_extra[1].zfill(2)
         return data
+
+
+class CambioEstatusTDCSerializer(serializers.Serializer):
+    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    CUENTA = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    ESTATUS = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
+    MOTIVO = serializers.CharField(max_length=40, required=False, default="", allow_blank=True)
+    REFERENCIA = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('TARJETA', 'CUENTA', 'MOTIVO', 'REFERENCIA', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+
+    def validate(self, data):
+        data = super(CambioEstatusTDCSerializer, self).validate(data)
+        card = data.get('TARJETA', "").strip()
+        account = data.get('CUENTA', "").strip()
+
+        data['TARJETA'] = card
+        data['CUENTA'] = account
+        if len(card) == 0 and len(account) == 0:
+            raise CustomValidationError(detail=u'El numero de tarjeta o cuenta es requerido',
+                                        code='400')
+        return data

@@ -4,7 +4,7 @@ from django.conf import settings
 
 from common.utils import get_response_data_errors
 from control.serializers import ConsultaCuentaSerializer, ConsultaTarjetaSerializer, \
-    CambioPINSerializer, ExtrafinanciamientoSerializer, CambioLimitesSerializer
+    CambioPINSerializer, ExtrafinanciamientoSerializer, CambioLimitesSerializer, CambioEstatusTDCSerializer
 
 
 def get_float_from_numeric_str(value: str) -> str:
@@ -346,6 +346,38 @@ def cambio_limites(request, **kwargs):
                     resp[1]['RSP_LIMITE_CON'] = get_float_from_numeric_str(resp[1]['RSP_LIMITE_CON'])
                 if 'RSP_LIMITE_EXTRA' in resp[1]:
                     resp[1]['RSP_LIMITE_EXTRA'] = get_float_from_numeric_str(resp[1]['RSP_LIMITE_EXTRA'])
+            elif resp[1]['RSP_ERROR'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
+            elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Transaccion erronea'}, resp[2]
+            else:
+                resp_copy = resp[1].copy()
+                for k in resp[1].keys():
+                    if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
+                        del resp_copy[k]
+                return resp[0], resp_copy, resp[2]
+    else:
+        resp = get_response_data_errors(serializer.errors)
+    return resp
+
+
+def cambio_estatus_tdc(request, **kwargs):
+    times = kwargs.get('times', 0)
+    if 'request_data' not in kwargs:
+        request_data = request.data
+    else:
+        request_data = kwargs['request_data']
+    request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
+    request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
+    data = {k.upper(): v for k, v in request_data.items()}
+    url_server = settings.SERVER_VOLCAN_URL
+    api_url = f'{url_server}/web/services/Cambio_estatus_TDC_1'
+    serializer = CambioEstatusTDCSerializer(data=data)
+    if serializer.is_valid():
+        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        if 'RSP_ERROR' in resp[1]:
+            if resp[1]['RSP_ERROR'].upper() == 'OK' and int(resp[1]['RSP_CODIGO']) == 0:
+                resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
             elif resp[1]['RSP_ERROR'] == '':
                 return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
             elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':

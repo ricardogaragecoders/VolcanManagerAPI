@@ -464,6 +464,22 @@ paths:
           description: 'Cambio limites.'
       tags:
         - VolcanManager::Acciones
+  /volcan/api/CambioEstatusTDC/:
+    post:
+      operationId: api_control_cambio_estatus_tdc
+      description: Cambio Estatus TDC
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CambioEstatusTDC"
+        required: true
+      summary: Cambio estatus TDC
+      responses:
+        '200':
+          description: 'Cambio estatus TDC.'
+      tags:
+        - VolcanManager::Acciones
 components:
   schemas:
     LoginToken:
@@ -1024,6 +1040,38 @@ components:
           enum: [""]
       required:
         - tarjeta
+        - cuenta
+        - emisor
+    CambioEstatusTDC:
+      type: object
+      properties:
+        tarjeta:
+          type: string
+          maxLength: 16
+          enum: [""]
+        cuenta:
+          type: string
+          maxLength: 15
+          enum: [ "" ]
+        estatus:
+          type: string
+          maxLength: 2
+          enum: [""]
+        motivo:
+          type: string
+          maxLength: 40
+          enum: [ "" ]
+        referencia:
+          type: string
+          maxLength: 12
+          enum: [""]
+        emisor:
+          type: string
+          maxLength: 3
+          enum: [""]
+      required:
+        - tarjeta
+        - cuenta
         - emisor
   securitySchemes:
     bearerAuth:            # arbitrary name for the security scheme

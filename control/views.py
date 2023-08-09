@@ -84,3 +84,8 @@ class ControlApiView(CustomViewSet):
         from control.utils import cambio_limites
         return self.control_action(request=request, control_function=cambio_limites,
                                    name_control_function="cambio_limites")
+
+    def cambio_estatus_tdc(self, request, *args, **kwargs):
+        from control.utils import cambio_estatus_tdc
+        return self.control_action(request=request, control_function=cambio_estatus_tdc,
+                                   name_control_function="cambio_estatus_tdc")
