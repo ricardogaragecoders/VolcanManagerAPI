@@ -1,7 +1,7 @@
 import uuid
 from django.db import models
 
-from common.models import BaseModelWithDeleted
+from common.models import BaseModelWithDeleted, MonitorCollection
 
 
 class Webhook(BaseModelWithDeleted):
@@ -18,3 +18,17 @@ class Webhook(BaseModelWithDeleted):
 
     def __str__(self):
         return f'({self.account_issuer}) {self.url_webhook}'
+
+
+class TransactionCollection(MonitorCollection):
+
+    def __init__(self):
+        super(TransactionCollection, self).__init__()
+        self.get_collection('transactions')
+
+
+class TransactionErrorCollection(MonitorCollection):
+
+    def __init__(self):
+        super(TransactionErrorCollection, self).__init__()
+        self.get_collection('transactions_error')

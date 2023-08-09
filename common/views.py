@@ -168,7 +168,7 @@ class CustomViewSet(viewsets.GenericViewSet):
         except self.model_class.DoesNotExist:
             self.make_response_not_found()
         except exceptions.ValidationError as e:
-            self.resp = handler_exception_404(__name__, self.lookup_field, pk, e)
+            self.resp = handler_exception_404(__name__, self.lookup_field, self.pk, e)
         except Exception as e:
             self.resp = handler_exception_general(__name__, e)
         finally:
@@ -217,8 +217,8 @@ class CustomViewSet(viewsets.GenericViewSet):
     def update(self, request, *args, **kwargs):
         try:
             request_data = request.data if 'request_data' not in kwargs else kwargs['request_data']
-            pk = kwargs.pop(self.field_pk)
-            register = self.get_object(pk=pk)
+            self.pk = kwargs.pop(self.field_pk)
+            register = self.get_object(pk=self.pk)
             self.serializer = self.get_update_serializer(register, data=request_data, partial=True)
             if self.serializer.is_valid():
                 self.perform_update(request, *args, **kwargs)
@@ -227,7 +227,7 @@ class CustomViewSet(viewsets.GenericViewSet):
         except self.model_class.DoesNotExist:
             self.make_response_not_found()
         except exceptions.ValidationError as e:
-            self.resp = handler_exception_404(__name__, self.lookup_field, pk, e)
+            self.resp = handler_exception_404(__name__, self.lookup_field, self.pk, e)
         except Exception as e:
             self.resp = handler_exception_general(__name__, e)
         finally:
@@ -247,8 +247,8 @@ class CustomViewSet(viewsets.GenericViewSet):
 
     def destroy(self, request, *args, **kwargs):
         try:
-            pk = kwargs.pop(self.field_pk)
-            register = self.get_object(pk=pk)
+            self.pk = kwargs.pop(self.field_pk)
+            register = self.get_object(pk=self.pk)
             if hasattr(register, 'status') or hasattr(register, 'active'):
                 self.perform_destroy(request, register=register, *args, **kwargs)
             else:
@@ -256,7 +256,7 @@ class CustomViewSet(viewsets.GenericViewSet):
         except self.model_class.DoesNotExist:
             self.make_response_not_found()
         except exceptions.ValidationError as e:
-            self.resp = handler_exception_404(__name__, self.lookup_field, pk, e)
+            self.resp = handler_exception_404(__name__, self.lookup_field, self.pk, e)
         except Exception as e:
             self.resp = handler_exception_general(__name__, e)
         finally:

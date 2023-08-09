@@ -3,6 +3,7 @@ from rest_framework import serializers
 from common.exceptions import CustomValidationError
 from common.utils import model_code_generator
 from control.models import Webhook
+from django.conf import settings
 
 
 class ConsultaCuentaSerializer(serializers.Serializer):
@@ -187,3 +188,32 @@ class WebhookListSerializer(serializers.ModelSerializer):
         model = Webhook
         fields = ('rsp_webhook_id', 'rsp_emisor', 'rsp_url_webhook', 'rsp_key_webhook', 'rsp_activo')
         read_only_fields = fields
+
+
+class TransactionSerializer(serializers.Serializer):
+    monto = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    moneda = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    emisor = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    estatus = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    tipo_transaccion = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    tarjeta = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    id_movimiento = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    fecha_transaccion = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    hora_transaccion = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    referencia = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    numero_autorizacion = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    codigo_autorizacion = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    comercio = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    user = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    password = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+
+    def validate(self, data):
+        data = super(TransactionSerializer, self).validate(data)
+        user = data.pop('user', settings.VOLCAN_USER_TRANSACTION)
+        password = data.pop('password', settings.VOLCAN_PASSWORD_TRANSACTION)
+
+        if user != settings.VOLCAN_USER_TRANSACTION or password != settings.VOLCAN_PASSWORD_TRANSACTION:
+            raise CustomValidationError(detail=f'Prueba de usuario y password incorrectos.',
+                                        code='422')
+
+        return data

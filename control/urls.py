@@ -16,4 +16,9 @@ urlpatterns = [
     path('Webhooks/<str:webhook_id>/',
          WebHookApiView.as_view({'get': 'retrieve', 'patch': 'update', 'delete': 'destroy'})),
 
+    path('Transacciones/',
+         TransactionCollectionApiView.as_view({'get': 'list', 'post': 'create'})),
+    path('Transacciones/<str:transaction_id>/',
+         TransactionCollectionApiView.as_view({'get': 'retrieve', 'patch': 'update', 'delete': 'destroy'})),
+
 ]

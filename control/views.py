@@ -1,12 +1,14 @@
-from django.shortcuts import render
-
-from common.views import CustomViewSet, CustomViewSetWithPagination
+import pymongo
+from django.db.models import Q
+from django.utils import timezone
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import ParseError
 
-from control.models import Webhook
-from control.serializers import WebhookSerializer, WebhookListSerializer
+from common.utils import get_date_from_querystring, make_day_start, make_day_end, get_response_data_errors
+from common.views import CustomViewSet, CustomViewSetWithPagination
+from control.models import Webhook, TransactionCollection, TransactionErrorCollection
+from control.serializers import WebhookSerializer, WebhookListSerializer, TransactionSerializer
 from users.permissions import IsVerified, IsOperator, IsAdministrator
-from django.db.models import Q, F, Value, Avg
 
 
 # Create your views here.
@@ -88,12 +90,18 @@ class WebHookApiView(CustomViewSet):
     response_serializer_class = WebhookListSerializer
     one_serializer_class = WebhookListSerializer
     model_class = Webhook
-    permission_classes = (IsAuthenticated, IsVerified, IsAdministrator)
+    permission_classes = (IsAuthenticated, IsVerified, IsOperator)
     field_pk = 'webhook_id'
 
     def get_queryset_filters(self, *args, **kwargs):
         active = self.request.query_params.get('active', 'all')
-        account_issuer = self.request.query_params.get('ai', '')
+        profile = self.request.user.profile
+        if profile.isAdminProgram():
+            account_issuer = self.request.query_params.get('ai', '')
+        elif profile.isOperator(equal=True):
+            account_issuer = profile.user.first_name
+        else:
+            account_issuer = 'sin_emision'
         filters = {'deleted_at__isnull': True}
 
         if len(account_issuer) > 0:
@@ -122,7 +130,6 @@ class WebHookApiView(CustomViewSet):
 
     def perform_list(self, request, *args, **kwargs):
         response_data = dict()
-        print(response_data)
         response_data['rsp_codigo'] = '200'
         response_data['rsp_descripcion'] = u'ok'
         response_data['rsp_data'] = self.serializer.data
@@ -168,3 +175,222 @@ class WebHookApiView(CustomViewSet):
         response_data['rsp_codigo'] = '204'
         response_data['rsp_descripcion'] = u'Webhook borrado'
         self.make_response_success('Webhook borrado', response_data, 204)
+
+
+class TransactionCollectionApiView(CustomViewSetWithPagination):
+    """
+    get:
+        Return all transactions from mongodb.
+    post:
+        Create a transaction and save to mongodb.
+    retrieve:
+        Return a transaction from mongodb.
+    update:
+        Update a transaction and save to mongodb.
+    delete:
+        Delete a transaction from mongodb.
+    """
+    serializer_class = None
+    model_class = TransactionCollection
+    field_pk = 'transaction_id'
+    permission_classes = (IsAuthenticated, IsVerified, IsAdministrator)
+    http_method_names = ['get', 'post', 'options', 'head']
+    _limit = 20
+    _offset = 0
+    _page = 0
+    _order_by = 'action'
+    _total = 0
+
+    def get_results(self):
+        profile = self.request.user.profile
+        if profile.isAdminProgram():
+            account_issuer = self.request.query_params.get('ai', '')
+        elif profile.isOperator(equal=True):
+            account_issuer = profile.user.first_name
+        else:
+            account_issuer = 'sin_emision'
+
+        self._limit = int(self.request.query_params.get('limit', 20))
+        self._offset = int(self.request.query_params.get('offset', 0))
+        self._page = int(self._offset / self._limit) if self._offset > 0 else 0
+        self._order_by = self.request.query_params.get('orderBy', 'action')
+        order_by_desc = self.request.query_params.get('orderByDesc', 'false')
+        q = self.request.query_params.get('q', None)
+        # export = self.request.query_params.get('export', None)
+
+        filters = dict()
+        sort = self._order_by
+        direction = pymongo.ASCENDING if order_by_desc == 'false' else pymongo.DESCENDING
+
+        s_from_date = self.request.query_params.get('from_date', None)
+        s_to_date = self.request.query_params.get('to_date', None)
+        from_date = get_date_from_querystring(self.request, 'from_date', timezone.localtime(timezone.now()))
+        to_date = get_date_from_querystring(self.request, 'to_date', timezone.localtime(timezone.now()))
+        from_date = make_day_start(from_date)
+        to_date = make_day_end(to_date)
+        if s_from_date and s_to_date:
+            filters['updated_at'] = {
+                "$gte": from_date,
+                "$lt": to_date
+            }
+        elif s_from_date:
+            filters['updated_at'] = {
+                "$gte": from_date
+            }
+        elif s_to_date:
+            filters['updated_at'] = {
+                "$lt": to_date
+            }
+
+        if len(account_issuer) > 0:
+            filters['emisor'] = account_issuer.upper()
+
+        if q:
+            filters['$or'] = [
+                {'tarjeta': {'$regex': q, '$options': 'i'}},
+                {'referencia': {'$regex': q, '$options': 'i'}},
+                {'numero_autorizacion': {'$regex': q, '$options': 'i'}},
+                {'codigo_autorizacion': {'$regex': q, '$options': 'i'}},
+                {'comercio': {'$regex': q, '$options': 'i'}}
+            ]
+
+        db = TransactionCollection()
+        self._total = db.find(filters).count()
+
+        return db.find(filters, sort, direction, self._limit, self._page)
+
+    def create(self, request, *args, **kwargs):
+        try:
+            self.serializer = TransactionSerializer(data=request.data)
+            if self.serializer.is_valid():
+                db = TransactionCollection()
+                data = self.serializer.validated_data
+                data['entregado'] = False
+                data['fecha_entregado'] = None
+                data['codigo_error'] = ''
+                data['mensaje_error'] = ''
+                db.insert_one(data=data)
+                self.make_response_success(data={'RSP_CODIGO': '00', 'RSP_DESCRIPTION': 'Aprobado'})
+            else:
+                self.resp = get_response_data_errors(self.serializer.errors)
+                db = TransactionErrorCollection()
+                data = {
+                    'request_data': request.data,
+                    'error': self.resp[0],
+                    'created_at': timezone.localtime(timezone.now()),
+                }
+                db.insert_one(data=data)
+        except ParseError as e:
+            from common.utils import handler_exception_general
+            db = TransactionErrorCollection()
+            data = {
+                'request_data': request.data,
+                'error': "%s" % e,
+                'created_at': timezone.localtime(timezone.now()),
+            }
+            db.insert_one(data=data)
+            self.resp = ["%s" % e, {'code': 'error'}, 400]
+        except Exception as e:
+            from common.utils import handler_exception_general
+            db = TransactionErrorCollection()
+            data = {
+                'request_data': request.data,
+                'error': self.resp[0],
+                'created_at': timezone.localtime(timezone.now()),
+            }
+            db.insert_one(data=data)
+            self.resp = ["%s" % e, {'code': 'error'}, 500]
+        finally:
+            return self.get_response()
+
+    def list(self, request, *args, **kwargs):
+        try:
+            from bson.json_util import dumps
+            # import pytz
+            query = self.get_results()
+            results = []
+            # local_tz = pytz.timezone('America/Mexico_City')
+            for item in query:
+                # updated_at = local_tz.localize(item['updated_at'], is_dst=None)
+                results.append({
+                    'rsp_id': '{}'.format(item['_id']),
+                    'rsp_emisor': item['emisor'],
+                    'rsp_monto': item['monto'],
+                    'rsp_moneda': item['moneda'],
+                    'rsp_fecha_transaccion': item['fecha_transaccion'],
+                    'rsp_hora_transaccion': item['hora_transaccion'],
+                    'rsp_tarjeta': item['tarjeta'],
+                    # 'rsp_estatus': item['estatus'],
+                    # 'rsp_tipo_transaccion': item['tipo_transaccion'],
+                    # 'rsp_id_movimiento': item['id_movimiento'],
+                    # 'rsp_referencia': item['referencia'],
+                    # 'rsp_numero_autorizacion': item['numero_autorizacion'],
+                    # 'rsp_codigo_autorizacion': item['codigo_autorizacion'],
+                    # 'rsp_comercio': item['comercio'],
+                    'rsp_entregado': item['entregado'],
+                    # 'rsp_fecha_entregado': item['fecha_entregado'],
+                    'rsp_codigo_error': item['codigo_error'],
+                    # 'rsp_mensaje_error': item['mensaje_error']
+                })
+            pages = int(self._total / self._limit)
+            current_page = self._offset / self._limit
+            response_data = {
+                'rsp_paginas': pages,
+                'rsp_pagina_actual': current_page,
+                'rsp_registros_totales': self._total,
+                'rsp_registros': results
+            }
+            self.make_response_success(data=response_data)
+        except Exception as e:
+            from common.utils import handler_exception_general
+            self.resp = handler_exception_general(__name__, e)
+        finally:
+            return self.get_response()
+
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            from control.models import TransactionCollection
+            db = TransactionCollection()
+            pk = kwargs.pop(self.field_pk)
+            query = None
+            if len(pk) > 10:
+                from bson.objectid import ObjectId
+                query = db.find({'_id': ObjectId(pk)})
+            else:
+                query = db.find({'_id': int(pk)})
+
+            if query:
+                # import pytz
+                results = []
+                # local_tz = pytz.timezone('America/Mexico_City')
+                for item in query:
+                    # updated_at = local_tz.localize(item['updated_at'], is_dst=None)
+                    results.append({
+                        'rsp_id': '{}'.format(item['_id']),
+                        'rsp_monto': item['monto'],
+                        'rsp_moneda': item['moneda'],
+                        'rsp_emisor': item['emisor'],
+                        'rsp_estatus': item['estatus'],
+                        'rsp_tipo_transaccion': item['tipo_transaccion'],
+                        'rsp_tarjeta': item['tarjeta'],
+                        'rsp_id_movimiento': item['id_movimiento'],
+                        'rsp_fecha_transaccion': item['fecha_transaccion'],
+                        'rsp_hora_transaccion': item['hora_transaccion'],
+                        'rsp_referencia': item['referencia'],
+                        'rsp_numero_autorizacion': item['numero_autorizacion'],
+                        'rsp_codigo_autorizacion': item['codigo_autorizacion'],
+                        'rsp_comercio': item['comercio'],
+                        'rsp_entregado': item['entregado'],
+                        'rsp_fecha_entregado': item['fecha_entregado'],
+                        'rsp_codigo_error': item['codigo_error'],
+                        'rsp_mensaje_error': item['mensaje_error'],
+                    })
+                response_data = results[0] if len(results) > 0 else []
+                self.make_response_success(data=response_data)
+            else:
+                self.make_response_not_found()
+        except Exception as e:
+            from common.utils import handler_exception_general
+            self.resp = handler_exception_general(__name__, e)
+        finally:
+            return self.get_response()
