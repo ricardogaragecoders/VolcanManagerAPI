@@ -79,3 +79,8 @@ class ControlApiView(CustomViewSet):
         from control.utils import cambio_pin
         return self.control_action(request=request, control_function=cambio_pin,
                                    name_control_function="cambio_pin")
+
+    def cambio_limites(self, request, *args, **kwargs):
+        from control.utils import cambio_limites
+        return self.control_action(request=request, control_function=cambio_limites,
+                                   name_control_function="cambio_limites")

@@ -351,7 +351,7 @@ paths:
         '200':
           description: 'Creacion Ente'
       tags:
-        - VolcanManager::CreacionEnte
+        - VolcanManager::Acciones
   /volcan/api/CreacionCtaTar/:
     post:
       operationId: api_control_creacion_cta_tar
@@ -367,7 +367,7 @@ paths:
         '200':
           description: 'Creacion Cta Tar'
       tags:
-        - VolcanManager::CreacionCtaTar
+        - VolcanManager::Acciones
   /volcan/api/Cuentas/:
     post:
       operationId: api_control_consulta_cuenta
@@ -383,7 +383,7 @@ paths:
         '200':
           description: 'Consulta cuenta'
       tags:
-        - VolcanManager::ConsultaCuenta
+        - VolcanManager::Acciones
   /volcan/api/Extrafinanciamientos/:
     post:
       operationId: api_control_extrafinanciamientos
@@ -399,7 +399,7 @@ paths:
         '200':
           description: 'Extrafinanciamientos'
       tags:
-        - VolcanManager::Extrafinanciamientos
+        - VolcanManager::Acciones
   /volcan/api/Intrafinanciamientos/:
     post:
       operationId: api_control_intrafinanciamientos
@@ -415,7 +415,7 @@ paths:
         '200':
           description: 'Intrafinanciamientos'
       tags:
-        - VolcanManager::Intrafinanciamientos
+        - VolcanManager::Acciones
   /volcan/api/ConsultaTarjetas/:
     post:
       operationId: api_control_consulta_tarjetas
@@ -431,7 +431,7 @@ paths:
         '200':
           description: 'ConsultaTarjetas'
       tags:
-        - VolcanManager::ConsultaTarjetas
+        - VolcanManager::Acciones
   /volcan/api/CambioPIN/:
     post:
       operationId: api_control_cambio_pin
@@ -447,7 +447,23 @@ paths:
         '200':
           description: 'Cambio de PIN.'
       tags:
-        - VolcanManager::CambioPIN
+        - VolcanManager::Acciones
+  /volcan/api/CambioLimites/:
+    post:
+      operationId: api_control_cambio_limites
+      description: Cambio Limites.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CambioLimites"
+        required: true
+      summary: Cambio limites.
+      responses:
+        '200':
+          description: 'Cambio limites.'
+      tags:
+        - VolcanManager::Acciones
 components:
   schemas:
     LoginToken:
@@ -971,6 +987,44 @@ components:
       required:
         - tarjeta
         - pin
+    CambioLimites:
+      type: object
+      properties:
+        cuenta:
+          type: string
+          maxLength: 15
+          enum: [""]
+        tarjeta:
+          type: string
+          maxLength: 16
+          enum: [""]
+        limite_cr:
+          type: string
+          maxLength: 19
+          enum: [""]
+        limite_con:
+          type: string
+          maxLength: 19
+          enum: [""]
+        limite_extra:
+          type: string
+          maxLength: 19
+          enum: [""]
+        moneda:
+          type: string
+          maxLength: 3
+          enum: [""]
+        referencia:
+          type: string
+          maxLength: 12
+          enum: [""]
+        emisor:
+          type: string
+          maxLength: 3
+          enum: [""]
+      required:
+        - tarjeta
+        - emisor
   securitySchemes:
     bearerAuth:            # arbitrary name for the security scheme
       type: http

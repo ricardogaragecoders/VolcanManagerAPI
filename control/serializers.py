@@ -75,10 +75,10 @@ class ConsultaTarjetaSerializer(serializers.Serializer):
 
 
 class CambioPINSerializer(serializers.Serializer):
-    TARJETA = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
-    PIN = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
-    EMISOR = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
-    USUARIO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    PIN = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
     ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
 
     class Meta:
@@ -135,4 +135,39 @@ class ExtrafinanciamientoSerializer(serializers.Serializer):
         #                                 code='400')
         data['TASA'] = taxes[0].zfill(2) + taxes[1].zfill(2)
         data['IMPORTE'] = amounts[0].zfill(17) + amounts[1].zfill(2)
+        return data
+
+
+class CambioLimitesSerializer(serializers.Serializer):
+    CUENTA = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    LIMITE_CR = serializers.FloatField(min_value=0.0, required=False, default=0.0)
+    LIMITE_CON = serializers.FloatField(min_value=0.0, required=False, default=0.0)
+    LIMITE_EXTRA = serializers.FloatField(min_value=0.0, required=False, default=0.0)
+    MONEDA = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    REFERENCIA = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('CUENTA', 'TARJETA', 'LIMITE_CR', 'LIMITE_CON', 'LIMITE_EXTRA', 'MONEDA', 'REFERENCIA',
+                  'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+
+    def validate(self, data):
+        data = super(CambioLimitesSerializer, self).validate(data)
+        account = data.get('CUENTA', "").strip()
+        card = data.get('TARJETA', "").strip()
+        limits_cr = ("%.2f" % float(data.get('LIMITE_CR', 0.0))).split('.')
+        limits_con = ("%.2f" % float(data.get('LIMITE_CON', 0.0))).split('.')
+        limits_extra = ("%.2f" % float(data.get('LIMITE_EXTRA', 0.0))).split('.')
+
+        data['TARJETA'] = card
+        data['CUENTA'] = account
+        if len(card) == 0 and len(account) == 0:
+            raise CustomValidationError(detail=u'El numero de tarjeta o cuenta es requerido',
+                                        code='400')
+        data['LIMITE_CR'] = limits_cr[0].zfill(17) + limits_cr[1].zfill(2)
+        data['LIMITE_CON'] = limits_con[0].zfill(17) + limits_con[1].zfill(2)
+        data['LIMITE_EXTRA'] = limits_extra[0].zfill(17) + limits_extra[1].zfill(2)
         return data
