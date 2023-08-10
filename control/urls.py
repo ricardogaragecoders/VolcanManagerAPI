@@ -14,4 +14,15 @@ urlpatterns = [
     path('CambioEstatusTDC/', ControlApiView.as_view({'post': 'cambio_estatus_tdc'})),
     path('ReposicionTarjetas/', ControlApiView.as_view({'post': 'reposicion_tarjetas'})),
 
+
+    path('Webhooks/',
+         WebHookApiView.as_view({'get': 'list', 'post': 'create'})),
+    path('Webhooks/<str:webhook_id>/',
+         WebHookApiView.as_view({'get': 'retrieve', 'patch': 'update', 'delete': 'destroy'})),
+
+    path('Transacciones/',
+         TransactionCollectionApiView.as_view({'get': 'list', 'post': 'create'})),
+    path('Transacciones/<str:transaction_id>/',
+         TransactionCollectionApiView.as_view({'get': 'retrieve', 'patch': 'update', 'delete': 'destroy'})),
+
 ]

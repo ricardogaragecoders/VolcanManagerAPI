@@ -496,6 +496,219 @@ paths:
           description: 'Reposicion Tarjetas'
       tags:
         - VolcanManager::Acciones
+        - VolcanManager::CambioPIN
+  /volcan/api/Webhooks/:
+    get:
+      operationId: api_webhooks_read
+      description: Return all webhooks.
+      summary: Return all webhooks
+      parameters:
+        - name: limit
+          in: query
+          description: Number of results to return per page.
+          required: false
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          description: The initial index from which to return the results.
+          required: false
+          schema:
+            type: integer
+        - name: isIn
+          description: Is internal. Programs
+          in: query
+          schema:
+            type: boolean
+            enum: [ true, false ]
+        - name: q
+          description: Find by program name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: orderBy
+          description: Order By field
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ 'account_issuer', 'updated_at' ]
+            default: account_issuer
+        - name: orderByDesc
+          description: Order desc
+          in: query
+          schema:
+            type: boolean
+            enum: [ true, false ]
+            default: false
+      responses:
+        '200':
+          description: 'Return all webhooks'
+      tags:
+        - VolcanManager::Webhook
+    post:
+      operationId: api_control_webhooks
+      description: Create webhook by emisor.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Webhook"
+        required: true
+      summary: Create webhook by emisor
+      responses:
+        '200':
+          description: 'Create webhook by emisor'
+      tags:
+        - VolcanManager::Webhook
+    parameters: []
+  /volcan/api/Webhooks/{webhook_id}/:
+    get:
+      operationId: api_webhook_read
+      description: Return a webhook.
+      summary: Return a webhook.
+      parameters: []
+      responses:
+        '200':
+          description: 'Returns a webhook.'
+      tags:
+        - VolcanManager::Webhook
+    patch:
+      operationId: api_webhook_update
+      description: Update a webhook.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Webhook"
+        required: true
+      summary: Update a loyalty program.
+      responses:
+        '200':
+          description: 'Update a loyalty program.'
+      tags:
+        - VolcanManager::Webhook
+    delete:
+      operationId: api_webhook_delete
+      description: Delete a webhook.
+      summary: Delete a webhook.
+      parameters: []
+      responses:
+        '200':
+          description: 'Delete a webhook.'
+      tags:
+        - VolcanManager::Webhook
+    parameters:
+      - name: webhook_id
+        in: path
+        required: true
+        description: ID Webhook
+        schema:
+          type: string
+  /volcan/api/Transacciones/:
+    get:
+      operationId: api_transactions_read
+      description: Return all transactions.
+      summary: Return all transactions
+      parameters:
+        - name: limit
+          in: query
+          description: Number of results to return per page.
+          required: false
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          description: The initial index from which to return the results.
+          required: false
+          schema:
+            type: integer
+        - name: q
+          description: Find by program name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: orderBy
+          description: Order By field
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ 'emisor', 'updated_at' ]
+            default: emisor
+        - name: orderByDesc
+          description: Order desc
+          in: query
+          schema:
+            type: boolean
+            enum: [ true, false ]
+            default: false
+      responses:
+        '200':
+          description: 'Return all transactions'
+      tags:
+        - VolcanManager::Transacciones
+    post:
+      operationId: api_control_transaction
+      description: Create a transactions.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Transaction"
+        required: true
+      summary: Create a transaction
+      responses:
+        '200':
+          description: 'Create a transaction'
+      tags:
+        - VolcanManager::Transacciones
+    parameters: []
+  /volcan/api/Transacciones/{transaction_id}/:
+    get:
+      operationId: api_transaction_read
+      description: Return a transaction.
+      summary: Return a transaction.
+      parameters: []
+      responses:
+        '200':
+          description: 'Returns a transaction.'
+      tags:
+        - VolcanManager::Transacciones
+#    patch:
+#      operationId: api_webhook_update
+#      description: Update a webhook.
+#      requestBody:
+#        content:
+#          application/json:
+#            schema:
+#              $ref: "#/components/schemas/Webhook"
+#        required: true
+#      summary: Update a loyalty program.
+#      responses:
+#        '200':
+#          description: 'Update a loyalty program.'
+#      tags:
+#        - VolcanManager::Transacciones
+#    delete:
+#      operationId: api_webhook_delete
+#      description: Delete a webhook.
+#      summary: Delete a webhook.
+#      parameters: []
+#      responses:
+#        '200':
+#          description: 'Delete a webhook.'
+#      tags:
+#        - VolcanManager::Transacciones
+    parameters:
+      - name: transaction_id
+        in: path
+        required: true
+        description: ID Transaction
+        schema:
+          type: string
 components:
   schemas:
     LoginToken:
@@ -1131,6 +1344,84 @@ components:
         - tarjeta
         - tarjeta_asignada
         - emisor
+    Webhook:
+      type: object
+      properties:
+        emisor:
+          type: string
+          enum: [ "" ]
+        url_webhook:
+          type: string
+          enum: [ "" ]
+        activo:
+          type: boolean
+          enum: [true, false]
+      required:
+        - emisor
+        - url_webhook
+    Transaction:
+      type: object
+      properties:
+        monto:
+          type: string
+          enum: [ "" ]
+        moneda:
+          type: string
+          enum: [ "" ]
+        emisor:
+          type: string
+          enum: [ "" ]
+        estatus:
+          type: string
+          enum: [ "" ]
+        tipo_transaccion:
+          type: string
+          enum: [ "" ]
+        tarjeta:
+          type: string
+          enum: [ "" ]
+        id_movimiento:
+          type: string
+          enum: [ "" ]
+        fecha_transaccion:
+          type: string
+          enum: [ "" ]
+        hora_transaccion:
+          type: string
+          enum: [ "" ]
+        referencia:
+          type: string
+          enum: [ "" ]
+        numero_autorizacion:
+          type: string
+          enum: [ "" ]
+        codigo_autorizacion:
+          type: string
+          enum: [ "" ]
+        comercio:
+          type: string
+          enum: [ "" ]
+        user:
+          type: string
+          enum: [""]
+        password:
+          type: string
+          enum: [""]
+      required:
+        - monto
+        - moneda
+        - emisor
+        - estatus
+        - tipo_transaccion
+        - tarjeta
+        - id_movimiento
+        - fecha_transaccion
+        - referencia
+        - numero_autorizacion
+        - codigo_autorizacion
+        - comercio
+        - user
+        - password
   securitySchemes:
     bearerAuth:            # arbitrary name for the security scheme
       type: http

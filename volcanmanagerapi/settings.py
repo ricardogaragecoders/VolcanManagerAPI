@@ -100,6 +100,13 @@ DATABASES = {
     'default': env.db()
 }
 
+# mongodb
+MONGO_DB = {
+    'volcanmanagerapidb': {
+        'URL': env.str('MONGODB_URL')
+    }
+}
+
 # Backend login
 AUTH_AUTHENTICATION_TYPE = 'both'
 AUTHENTICATION_BACKENDS = (
@@ -330,6 +337,8 @@ EMAIL_CONTACT = env.str('EMAIL_CONTACT', 'info@volcangroup.io')
 SERVER_VOLCAN_URL = env.str('SERVER_VOLCAN_URL', 'http://10.23.102.10:21005')
 VOLCAN_USUARIO_ATZ = env.str('USUARIO_ATZ', 'KLEWIS')
 VOLCAN_ACCESO_ATZ = env.str('ACCESO_ATZ', 'KLEWIS')
+VOLCAN_USER_TRANSACTION = env.str('VOLCAN_USER_TRANSACTION')
+VOLCAN_PASSWORD_TRANSACTION = env.str('VOLCAN_PASSWORD_TRANSACTION')
 
 # config
 ENABLE_SEND_EMAIL = env.bool('ENABLE_SEND_EMAIL', True)

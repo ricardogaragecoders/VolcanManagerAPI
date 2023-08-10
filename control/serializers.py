@@ -1,6 +1,9 @@
 from rest_framework import serializers
 
 from common.exceptions import CustomValidationError
+from common.utils import model_code_generator
+from control.models import Webhook
+from django.conf import settings
 
 
 class ConsultaCuentaSerializer(serializers.Serializer):
@@ -94,10 +97,10 @@ class CambioPINSerializer(serializers.Serializer):
 
         if len(tarjeta) == 0:
             raise CustomValidationError(detail=u'El numbero de tarjeta es requerido',
-                                        code='400')
+                                        code='422')
         if len(pin) == 0:
             raise CustomValidationError(detail=u'El nuevo PIN es requerido',
-                                        code='400')
+                                        code='422')
         return data
 
 
@@ -129,7 +132,7 @@ class ExtrafinanciamientoSerializer(serializers.Serializer):
         data['TARJETA'] = card
         if len(card) == 0:
             raise CustomValidationError(detail=u'El numero de tarjeta es requerido',
-                                        code='400')
+                                        code='422')
         # if not importe.isnumeric():
         #     raise CustomValidationError(detail=u'El importe no es numerico',
         #                                 code='400')
@@ -226,4 +229,82 @@ class ReposicionTarjetasSerializer(serializers.Serializer):
         if len(card) == 0 or len(card_assigned) == 0:
             raise CustomValidationError(detail=u'El numero de tarjeta o tarjeta asignada es requerido',
                                         code='400')
+        return data
+
+
+class WebhookSerializer(serializers.ModelSerializer):
+    emisor = serializers.CharField(source='account_issuer', required=True, write_only=True)
+    activo = serializers.BooleanField(source='active', required=False, default=True, write_only=True)
+
+    class Meta:
+        model = Webhook
+        fields = ('emisor', 'url_webhook', 'activo')
+
+    def validate(self, data):
+        data = super(WebhookSerializer, self).validate(data)
+        account_issuer = data.get('account_issuer', '' if not self.instance else self.instance.account_issuer)
+        url_webhook = data.get('url_webhook', '' if not self.instance else self.instance.url_webhook)
+        key_webhook = data.get('key_webhook', '' if not self.instance else self.instance.key_webhook)
+
+        if not self.instance:
+            if Webhook.objects.filter(account_issuer=account_issuer, deleted_at__isnull=True).exists():
+                raise CustomValidationError(detail={'emisor': f'Existe un endpoint del emisor: {account_issuer.upper()}.'},
+                                            code='422')
+        elif account_issuer and Webhook.objects.filter(account_issuer=account_issuer,
+                                                       deleted_at__isnull=True).exclude(id=self.instance.id).exists():
+            raise CustomValidationError(detail={'emisor': f'Existe un endpoint del emisor: {account_issuer.upper()}.'},
+                                        code='422')
+
+        if len(url_webhook) == 0:
+            raise CustomValidationError(detail={'url_webhook': f'La url del webhook es requerido.'},
+                                        code='422')
+
+        if len(key_webhook) == 0:
+            key_webhook = model_code_generator(model=Webhook, digits=32, code='key_webhook')
+
+        data['account_issuer'] = account_issuer
+        data['url_webhook'] = url_webhook
+        data['key_webhook'] = key_webhook
+        return data
+
+
+class WebhookListSerializer(serializers.ModelSerializer):
+    rsp_webhook_id = serializers.CharField(source='id')
+    rsp_emisor = serializers.CharField(source='account_issuer')
+    rsp_url_webhook = serializers.CharField(source='url_webhook')
+    rsp_key_webhook = serializers.CharField(source='key_webhook')
+    rsp_activo = serializers.BooleanField(source='active')
+
+    class Meta:
+        model = Webhook
+        fields = ('rsp_webhook_id', 'rsp_emisor', 'rsp_url_webhook', 'rsp_key_webhook', 'rsp_activo')
+        read_only_fields = fields
+
+
+class TransactionSerializer(serializers.Serializer):
+    monto = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    moneda = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    emisor = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    estatus = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    tipo_transaccion = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    tarjeta = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    id_movimiento = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    fecha_transaccion = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    hora_transaccion = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    referencia = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    numero_autorizacion = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    codigo_autorizacion = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    comercio = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    user = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+    password = serializers.CharField(max_length=100, default='', required=False, allow_null=True, allow_blank=True)
+
+    def validate(self, data):
+        data = super(TransactionSerializer, self).validate(data)
+        user = data.pop('user', settings.VOLCAN_USER_TRANSACTION)
+        password = data.pop('password', settings.VOLCAN_PASSWORD_TRANSACTION)
+
+        if user != settings.VOLCAN_USER_TRANSACTION or password != settings.VOLCAN_PASSWORD_TRANSACTION:
+            raise CustomValidationError(detail=f'Prueba de usuario y password incorrectos.',
+                                        code='422')
+
         return data

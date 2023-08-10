@@ -22,7 +22,7 @@ class CustomTokenObtainPairView(CustomViewSet, TokenObtainPairView):
     permission_classes = (AllowAny,)
     serializer_class = CustomTokenObtainPairSerializer
 
-    def post(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):
         """
             Send code 2factor verification
         """
@@ -57,7 +57,7 @@ class CustomTokenObtainPairView(CustomViewSet, TokenObtainPairView):
 
 
 class CustomTokenRefreshView(TokenRefreshView):
-    def post(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):
         """
             With custom response
         """
@@ -73,7 +73,7 @@ class CustomTokenRefreshView(TokenRefreshView):
 
 
 class CustomTokenVerifyView(TokenVerifyView):
-    def post(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):
         """
             With custom response
         """
@@ -175,7 +175,7 @@ class ResendCodeAPIView(CustomViewSet):
     permission_classes = (AllowAny,)
     serializer_class = ResendCodeSerializer
 
-    def post(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):
         """
         Resend Code
         """
@@ -211,7 +211,7 @@ class RecoverPasswordApiView(CustomViewSet):
     permission_classes = (AllowAny,)
     serializer_class = RecoverPasswordSerializer
 
-    def post(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):
         """
         Recover password
         """
@@ -238,7 +238,7 @@ class ChangePasswordApiView(CustomViewSet):
     permission_classes = (AllowAny,)
     serializer_class = ChangePasswordSerializer
 
-    def post(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):
         """
         Change password
         """
@@ -258,7 +258,7 @@ class ChangePasswordApiView(CustomViewSet):
 class LogoutApiView(CustomViewSet):
     permission_classes = (IsAuthenticated, IsVerified)
 
-    def post(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):
         """
         Logout
         """
@@ -292,7 +292,7 @@ class LogoutApiView(CustomViewSet):
 class EmptyApiView(CustomViewSet):
     permission_classes = (IsAuthenticated, IsVerified, IsSuperadmin)
 
-    def post(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):
         """
         Empty user
         """
