@@ -480,6 +480,22 @@ paths:
           description: 'Cambio estatus TDC.'
       tags:
         - VolcanManager::Acciones
+  /volcan/api/ReposicionTarjetas/:
+    post:
+      operationId: api_control_reposicion_tarjetas
+      description: Reposicion Tarjetas
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReposicionTarjetas"
+        required: true
+      summary: Reposicion Tarjetas
+      responses:
+        '200':
+          description: 'Reposicion Tarjetas'
+      tags:
+        - VolcanManager::Acciones
 components:
   schemas:
     LoginToken:
@@ -1072,6 +1088,48 @@ components:
       required:
         - tarjeta
         - cuenta
+        - emisor
+    ReposicionTarjetas:
+      type: object
+      properties:
+        tarjeta:
+          type: string
+          maxLength: 16
+          enum: [""]
+        tipo_uso:
+          type: string
+          maxLength: 1
+          enum: [ "" ]
+        emision:
+          type: string
+          maxLength: 1
+          enum: [""]
+        tarjeta_asignada:
+          type: string
+          maxLength: 16
+          enum: [""]
+        motivo_repo:
+          type: string
+          maxLength: 30
+          enum: [ "" ]
+        oficina_entrega:
+          type: string
+          maxLength: 8
+          enum: [""]
+        nombre_tarjeta:
+          type: string
+          maxLength: 30
+        referencia:
+          type: string
+          maxLength: 12
+          enum: [""]
+        emisor:
+          type: string
+          maxLength: 3
+          enum: [""]
+      required:
+        - tarjeta
+        - tarjeta_asignada
         - emisor
   securitySchemes:
     bearerAuth:            # arbitrary name for the security scheme

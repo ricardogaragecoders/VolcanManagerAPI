@@ -6,8 +6,6 @@ from rest_framework.exceptions import ParseError
 from users.permissions import IsVerified, IsOperator
 
 
-# Create your views here.
-
 class ControlApiView(CustomViewSet):
     permission_classes = (IsAuthenticated, IsVerified, IsOperator)
     http_method_names = ['post', 'options', 'head']
@@ -89,3 +87,8 @@ class ControlApiView(CustomViewSet):
         from control.utils import cambio_estatus_tdc
         return self.control_action(request=request, control_function=cambio_estatus_tdc,
                                    name_control_function="cambio_estatus_tdc")
+
+    def reposicion_tarjetas(self, request, *args, **kwargs):
+        from control.utils import reposicion_tarjetas
+        return self.control_action(request=request, control_function=reposicion_tarjetas,
+                                   name_control_function="reposicion_tarjetas")

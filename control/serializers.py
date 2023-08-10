@@ -197,3 +197,33 @@ class CambioEstatusTDCSerializer(serializers.Serializer):
             raise CustomValidationError(detail=u'El numero de tarjeta o cuenta es requerido',
                                         code='400')
         return data
+
+
+class ReposicionTarjetasSerializer(serializers.Serializer):
+    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    TIPO_USO = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
+    EMISION = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
+    TARJETA_ASIGNADA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    MOTIVO_REPO = serializers.CharField(max_length=30, required=False, default="", allow_blank=True)
+    OFICINA_ENTREGA = serializers.CharField(max_length=8, required=False, default="", allow_blank=True)
+    NOMBRE_TARJETA = serializers.CharField(max_length=30, required=False, default="", allow_blank=True)
+    REFERENCIA = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('TARJETA', 'TIPO_USO', 'EMISION', 'TARJETA_ASIGNADA', 'MOTIVO_REPO', 'OFICINA_ENTREGA',
+                  'NOMBRE_TARJETA', 'REFERENCIA', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+
+    def validate(self, data):
+        data = super(ReposicionTarjetasSerializer, self).validate(data)
+        card = data.get('TARJETA', "").strip()
+        card_assigned = data.get('TARJETA_ASIGNADA', "").strip()
+
+        data['TARJETA'] = card
+        data['TARJETA_ASIGNADA'] = card_assigned
+        if len(card) == 0 or len(card_assigned) == 0:
+            raise CustomValidationError(detail=u'El numero de tarjeta o tarjeta asignada es requerido',
+                                        code='400')
+        return data
