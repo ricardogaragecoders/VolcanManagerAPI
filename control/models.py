@@ -32,3 +32,10 @@ class TransactionErrorCollection(MonitorCollection):
     def __init__(self):
         super(TransactionErrorCollection, self).__init__()
         self.get_collection('transactions_error')
+
+
+class DeliveryErrorCollection(MonitorCollection):
+
+    def __init__(self):
+        super(DeliveryErrorCollection, self).__init__()
+        self.get_collection('delivery_transactions_error')

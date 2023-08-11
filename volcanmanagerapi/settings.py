@@ -354,3 +354,4 @@ CORS_ALLOW_HEADERS = list(default_headers)
 CORS_ALLOW_METHODS = list(default_methods)
 CORS_EXPOSE_HEADERS = list(default_headers) + ['content-disposition', ]
 
+BROKER_URL = env.str('RABBITMQ_URL')

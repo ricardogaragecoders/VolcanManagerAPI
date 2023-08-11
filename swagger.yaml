@@ -496,7 +496,6 @@ paths:
           description: 'Reposicion Tarjetas'
       tags:
         - VolcanManager::Acciones
-        - VolcanManager::CambioPIN
   /volcan/api/Webhooks/:
     get:
       operationId: api_webhooks_read

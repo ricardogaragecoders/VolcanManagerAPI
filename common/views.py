@@ -2,9 +2,7 @@ from collections import OrderedDict
 from typing import Union
 
 from django.core import exceptions
-from django.http import HttpResponse
 from django.utils import timezone
-from django.utils.translation import gettext_lazy as _
 from rest_framework import viewsets
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.pagination import LimitOffsetPagination
@@ -12,14 +10,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from common.export_excel import WriteToExcel
-from common.export_pdf import WriteToPdf
 from common.middleware import get_request
 from common.models import Status
 from common.serializers import StatusSerializer
-from common.utils import make_day_start, make_day_end, \
-    get_response_data_errors, get_date_from_querystring, is_valid_uuid, handler_exception_general, handler_exception_404
-from users.permissions import IsVerified, IsChangePassword, IsAdministrator
+from common.utils import get_response_data_errors, handler_exception_general, handler_exception_404
+from users.permissions import IsVerified, IsChangePassword
 
 
 class LimitOffsetSetPagination(LimitOffsetPagination):
