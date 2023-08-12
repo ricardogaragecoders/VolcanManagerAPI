@@ -1,6 +1,22 @@
 from rest_framework import serializers
-
+from decimal import Decimal, InvalidOperation, DecimalException
 from common.exceptions import CustomValidationError
+
+
+def get_decimal_from_request_data(data, field):
+    try:
+        s_field = data.get(field, '')
+        if isinstance(s_field, str):
+            if len(s_field) > 0:
+                s_field = Decimal(s_field)
+            else:
+                s_field = Decimal('0')
+        else:
+            s_field = Decimal(s_field)
+        return s_field
+    except (InvalidOperation, DecimalException) as e:
+        raise CustomValidationError(detail=f"{field}: error en conversion de valor a decimal",
+                                    code='422')
 
 
 class ConsultaCuentaSerializer(serializers.Serializer):
@@ -104,8 +120,8 @@ class CambioPINSerializer(serializers.Serializer):
 class ExtrafinanciamientoSerializer(serializers.Serializer):
     TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
     MONEDA = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
-    IMPORTE = serializers.FloatField(min_value=0.0, required=False, default=0.0)
-    TASA = serializers.FloatField(min_value=0.0, required=False, default=0.0)
+    IMPORTE = serializers.CharField(max_length=19, required=False, default="", allow_blank=True, allow_null=True)
+    TASA = serializers.CharField(max_length=5, required=False, default="", allow_blank=True, allow_null=True)
     PLAZO = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
     REFERENCIA = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
     TIPO = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
@@ -121,10 +137,8 @@ class ExtrafinanciamientoSerializer(serializers.Serializer):
     def validate(self, data):
         data = super(ExtrafinanciamientoSerializer, self).validate(data)
         card = data.get('TARJETA', "").strip()
-        amount = float(data.get('IMPORTE', 0.0))
-        amounts = ("%.2f" % amount).split('.')
-        tax = float(data.get('TASA', 0.0))
-        taxes = ("%.2f" % tax).split('.')
+        amounts = ("%.2f" % get_decimal_from_request_data(data, 'IMPORTE')).split('.')
+        taxes = ("%.2f" % get_decimal_from_request_data(data, 'TASA')).split('.')
 
         data['TARJETA'] = card
         if len(card) == 0:
@@ -141,9 +155,9 @@ class ExtrafinanciamientoSerializer(serializers.Serializer):
 class CambioLimitesSerializer(serializers.Serializer):
     CUENTA = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
     TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
-    LIMITE_CR = serializers.FloatField(min_value=0.0, required=False, default=0.0)
-    LIMITE_CON = serializers.FloatField(min_value=0.0, required=False, default=0.0)
-    LIMITE_EXTRA = serializers.FloatField(min_value=0.0, required=False, default=0.0)
+    LIMITE_CR = serializers.CharField(max_length=19, required=False, default="", allow_blank=True, allow_null=True)
+    LIMITE_CON = serializers.CharField(max_length=19, required=False, default="", allow_blank=True, allow_null=True)
+    LIMITE_EXTRA = serializers.CharField(max_length=19, required=False, default="", allow_blank=True, allow_null=True)
     MONEDA = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
     REFERENCIA = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
     EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
@@ -158,9 +172,9 @@ class CambioLimitesSerializer(serializers.Serializer):
         data = super(CambioLimitesSerializer, self).validate(data)
         account = data.get('CUENTA', "").strip()
         card = data.get('TARJETA', "").strip()
-        limits_cr = ("%.2f" % float(data.get('LIMITE_CR', 0.0))).split('.')
-        limits_con = ("%.2f" % float(data.get('LIMITE_CON', 0.0))).split('.')
-        limits_extra = ("%.2f" % float(data.get('LIMITE_EXTRA', 0.0))).split('.')
+        limits_cr = ("%.2f" % get_decimal_from_request_data(data, 'LIMITE_CR')).split('.')
+        limits_con = ("%.2f" % get_decimal_from_request_data(data, 'LIMITE_CON')).split('.')
+        limits_extra = ("%.2f" % get_decimal_from_request_data(data, 'LIMITE_EXTRA')).split('.')
 
         data['TARJETA'] = card
         data['CUENTA'] = account
