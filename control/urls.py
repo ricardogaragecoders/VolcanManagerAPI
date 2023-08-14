@@ -20,9 +20,9 @@ urlpatterns = [
     path('Webhooks/<str:webhook_id>/',
          WebHookApiView.as_view({'get': 'retrieve', 'patch': 'update', 'delete': 'destroy'})),
 
-    path('Transacciones/',
+    path('Notificaciones/',
          TransactionCollectionApiView.as_view({'get': 'list', 'post': 'create'})),
-    path('Transacciones/<str:transaction_id>/',
+    path('Notificaciones/<str:notification_id>/',
          TransactionCollectionApiView.as_view({'get': 'retrieve', 'patch': 'update', 'delete': 'destroy'})),
 
 ]

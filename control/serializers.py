@@ -318,7 +318,7 @@ class TransactionSerializer(serializers.Serializer):
         password = data.pop('password', settings.VOLCAN_PASSWORD_TRANSACTION)
 
         if user != settings.VOLCAN_USER_TRANSACTION or password != settings.VOLCAN_PASSWORD_TRANSACTION:
-            raise CustomValidationError(detail=f'Prueba de usuario y password incorrectos.',
-                                        code='422')
+            raise CustomValidationError(detail=f'Usuario y/o password incorrectos.',
+                                        code='401')
 
         return data

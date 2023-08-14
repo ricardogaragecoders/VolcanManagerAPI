@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from common.utils import get_date_from_querystring, make_day_start, make_day_end, get_response_data_errors
 from common.views import CustomViewSet, CustomViewSetWithPagination
 from control.models import Webhook, TransactionCollection, TransactionErrorCollection
+from control.permissions import HasPermissionByMethod, HasUserAndPasswordInData
 from control.serializers import WebhookSerializer, WebhookListSerializer, TransactionSerializer
 from users.permissions import IsVerified, IsOperator, IsAdministrator
 
@@ -117,7 +118,7 @@ class WebHookApiView(CustomViewSet):
         active = self.request.query_params.get('active', 'all')
         profile = self.request.user.profile
         if profile.isAdminProgram():
-            account_issuer = self.request.query_params.get('ai', '')
+            account_issuer = self.request.query_params.get('emisor', '')
         elif profile.isOperator(equal=True):
             account_issuer = profile.user.first_name
         else:
@@ -212,9 +213,13 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
     """
     serializer_class = None
     model_class = TransactionCollection
-    field_pk = 'transaction_id'
-    permission_classes = (IsAuthenticated, IsVerified, IsAdministrator)
+    field_pk = 'notification_id'
+    permission_classes = (HasPermissionByMethod,)
     http_method_names = ['get', 'post', 'options', 'head']
+    method_permissions = {
+        'POST': [HasUserAndPasswordInData,],
+        'GET': [IsAuthenticated, IsVerified, IsOperator]
+    }
     _limit = 20
     _offset = 0
     _page = 0
@@ -224,7 +229,7 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
     def get_results(self):
         profile = self.request.user.profile
         if profile.isAdminProgram():
-            account_issuer = self.request.query_params.get('ai', '')
+            account_issuer = self.request.query_params.get('emisor', '')
         elif profile.isOperator(equal=True):
             account_issuer = profile.user.first_name
         else:
@@ -289,8 +294,10 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
                 data['fecha_entregado'] = None
                 data['codigo_error'] = ''
                 data['mensaje_error'] = ''
-                db.insert_one(data=data)
-                self.make_response_success(data={'RSP_CODIGO': '00', 'RSP_DESCRIPTION': 'Aprobado'})
+                result = db.insert_one(data=data)
+                from control.tasks import send_transaction_emisor
+                send_transaction_emisor.delay(transaction_id=str(result.inserted_id))
+                self.make_response_success(data={'RSP_CODIGO': '00', 'RSP_DESCRIPCION': 'Aprobado'})
             else:
                 self.resp = get_response_data_errors(self.serializer.errors)
                 db = TransactionErrorCollection()
@@ -372,7 +379,6 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
             from control.models import TransactionCollection
             db = TransactionCollection()
             pk = kwargs.pop(self.field_pk)
-            query = None
             if len(pk) > 10:
                 from bson.objectid import ObjectId
                 query = db.find({'_id': ObjectId(pk)})

@@ -514,12 +514,12 @@ paths:
           required: false
           schema:
             type: integer
-        - name: isIn
-          description: Is internal. Programs
+        - name: emisor
+          description: Emisor
           in: query
+          required: false
           schema:
-            type: boolean
-            enum: [ true, false ]
+            type: string
         - name: q
           description: Find by program name
           in: query
@@ -605,11 +605,11 @@ paths:
         description: ID Webhook
         schema:
           type: string
-  /volcan/api/Transacciones/:
+  /volcan/api/Notificaciones/:
     get:
-      operationId: api_transactions_read
-      description: Return all transactions.
-      summary: Return all transactions
+      operationId: api_notifications_read
+      description: Return all notifications.
+      summary: Return all notifications
       parameters:
         - name: limit
           in: query
@@ -623,6 +623,12 @@ paths:
           required: false
           schema:
             type: integer
+        - name: emisor
+          description: Emisor
+          in: query
+          required: false
+          schema:
+            type: string
         - name: q
           description: Find by program name
           in: query
@@ -646,28 +652,28 @@ paths:
             default: false
       responses:
         '200':
-          description: 'Return all transactions'
+          description: 'Return all notifications'
       tags:
-        - VolcanManager::Transacciones
+        - VolcanManager::Notificaciones
     post:
-      operationId: api_control_transaction
-      description: Create a transactions.
+      operationId: api_control_notifications
+      description: Create a notification.
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Transaction"
+              $ref: "#/components/schemas/Notification"
         required: true
-      summary: Create a transaction
+      summary: Create a notification
       responses:
         '200':
-          description: 'Create a transaction'
+          description: 'Create a notification'
       tags:
-        - VolcanManager::Transacciones
+        - VolcanManager::Notificaciones
     parameters: []
-  /volcan/api/Transacciones/{transaction_id}/:
+  /volcan/api/Notificaciones/{notification_id}/:
     get:
-      operationId: api_transaction_read
+      operationId: api_notification_read
       description: Return a transaction.
       summary: Return a transaction.
       parameters: []
@@ -675,7 +681,7 @@ paths:
         '200':
           description: 'Returns a transaction.'
       tags:
-        - VolcanManager::Transacciones
+        - VolcanManager::Notificaciones
 #    patch:
 #      operationId: api_webhook_update
 #      description: Update a webhook.
@@ -1358,7 +1364,7 @@ components:
       required:
         - emisor
         - url_webhook
-    Transaction:
+    Notification:
       type: object
       properties:
         monto:
