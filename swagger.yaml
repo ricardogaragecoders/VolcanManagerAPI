@@ -674,44 +674,42 @@ paths:
   /volcan/api/Notificaciones/{notification_id}/:
     get:
       operationId: api_notification_read
-      description: Return a transaction.
-      summary: Return a transaction.
+      description: Return a notification.
+      summary: Return a notification.
       parameters: []
       responses:
         '200':
-          description: 'Returns a transaction.'
+          description: 'Returns a notification.'
       tags:
         - VolcanManager::Notificaciones
-#    patch:
-#      operationId: api_webhook_update
-#      description: Update a webhook.
-#      requestBody:
-#        content:
-#          application/json:
-#            schema:
-#              $ref: "#/components/schemas/Webhook"
-#        required: true
-#      summary: Update a loyalty program.
-#      responses:
-#        '200':
-#          description: 'Update a loyalty program.'
-#      tags:
-#        - VolcanManager::Transacciones
-#    delete:
-#      operationId: api_webhook_delete
-#      description: Delete a webhook.
-#      summary: Delete a webhook.
-#      parameters: []
-#      responses:
-#        '200':
-#          description: 'Delete a webhook.'
-#      tags:
-#        - VolcanManager::Transacciones
     parameters:
-      - name: transaction_id
+      - name: notification_id
         in: path
         required: true
-        description: ID Transaction
+        description: ID Notificacion
+        schema:
+          type: string
+  /volcan/api/Notificaciones/{notification_id}/reenviar/:
+    patch:
+      operationId: api_notification_resend
+      description: Resend notification.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Notification"
+        required: true
+      summary: Resend a notification.
+      responses:
+        '200':
+          description: 'Resend a notification.'
+      tags:
+        - VolcanManager::Notificaciones
+    parameters:
+      - name: notification_id
+        in: path
+        required: true
+        description: ID Notificacion
         schema:
           type: string
 components:

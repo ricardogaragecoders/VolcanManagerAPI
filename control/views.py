@@ -215,10 +215,11 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
     model_class = TransactionCollection
     field_pk = 'notification_id'
     permission_classes = (HasPermissionByMethod,)
-    http_method_names = ['get', 'post', 'options', 'head']
+    http_method_names = ['get', 'post', 'patch', 'options', 'head']
     method_permissions = {
         'POST': [HasUserAndPasswordInData,],
-        'GET': [IsAuthenticated, IsVerified, IsOperator]
+        'GET': [IsAuthenticated, IsVerified, IsOperator],
+        'PATCH': [IsAuthenticated, IsVerified, IsOperator]
     }
     _limit = 20
     _offset = 0
@@ -379,11 +380,24 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
             from control.models import TransactionCollection
             db = TransactionCollection()
             pk = kwargs.pop(self.field_pk)
+            profile = self.request.user.profile
+            filters = dict()
+
+            if profile.isAdminProgram():
+                account_issuer = self.request.query_params.get('emisor', '')
+            elif profile.isOperator(equal=True):
+                account_issuer = profile.user.first_name
+            else:
+                account_issuer = 'sin_emision'
+
+            if len(account_issuer) > 0:
+                filters['emisor'] = account_issuer.upper()
+
             if len(pk) > 10:
                 from bson.objectid import ObjectId
-                query = db.find({'_id': ObjectId(pk)})
-            else:
-                query = db.find({'_id': int(pk)})
+                filters['_id'] = ObjectId(pk)
+
+            query = db.find(filters)
 
             if query:
                 # import pytz
@@ -392,6 +406,8 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
                 for item in query:
                     # updated_at = local_tz.localize(item['updated_at'], is_dst=None)
                     results.append({
+                        'RSP_CODIGO': '00',
+                        'RSP_DESCRIPCION': 'Aprobado',
                         'rsp_id': '{}'.format(item['_id']),
                         'rsp_monto': item['monto'],
                         'rsp_moneda': item['moneda'],
@@ -411,6 +427,44 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
                         'rsp_codigo_error': item['codigo_error'],
                         'rsp_mensaje_error': item['mensaje_error'],
                     })
+                response_data = results[0] if len(results) > 0 else []
+                self.make_response_success(data=response_data)
+            else:
+                self.make_response_not_found()
+        except Exception as e:
+            from common.utils import handler_exception_general
+            self.resp = handler_exception_general(__name__, e)
+        finally:
+            return self.get_response()
+
+    def update(self, request, *args, **kwargs):
+        try:
+            from control.models import TransactionCollection
+            db = TransactionCollection()
+            pk = kwargs.pop(self.field_pk)
+            profile = self.request.user.profile
+            filters = dict()
+
+            if profile.isAdminProgram():
+                account_issuer = self.request.query_params.get('emisor', '')
+            elif profile.isOperator(equal=True):
+                account_issuer = profile.user.first_name
+            else:
+                account_issuer = 'sin_emision'
+
+            if len(account_issuer) > 0:
+                filters['emisor'] = account_issuer.upper()
+
+            if len(pk) > 10:
+                from bson.objectid import ObjectId
+                filters['_id'] = ObjectId(pk)
+            query = db.find(filters)
+            if query:
+                from control.tasks import send_transaction_emisor
+                results = []
+                for item in query:
+                    send_transaction_emisor.delay(transaction_id=str(item['_id']))
+                    results.append(str(item['_id']))
                 response_data = results[0] if len(results) > 0 else []
                 self.make_response_success(data=response_data)
             else:
