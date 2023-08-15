@@ -10,7 +10,7 @@ def get_decimal_from_request_data(data, field):
             if len(s_field) > 0:
                 s_field = Decimal(s_field)
             else:
-                s_field = Decimal('0')
+                s_field = ""
         else:
             s_field = Decimal(s_field)
         return s_field
@@ -137,18 +137,24 @@ class ExtrafinanciamientoSerializer(serializers.Serializer):
     def validate(self, data):
         data = super(ExtrafinanciamientoSerializer, self).validate(data)
         card = data.get('TARJETA', "").strip()
-        amounts = ("%.2f" % get_decimal_from_request_data(data, 'IMPORTE')).split('.')
-        taxes = ("%.2f" % get_decimal_from_request_data(data, 'TASA')).split('.')
+        amount = get_decimal_from_request_data(data, 'IMPORTE')
+        tax = get_decimal_from_request_data(data, 'TASA')
+        if isinstance(amount, Decimal):
+            amounts = ("%.2f" % amount ).split('.')
+            data['IMPORTE'] = amounts[0].zfill(17) + amounts[1].zfill(2)
+
+        if isinstance(tax, Decimal):
+            taxes = ("%.2f" % tax).split('.')
+            data['TASA'] = taxes[0].zfill(2) + taxes[1].zfill(2)
 
         data['TARJETA'] = card
+
         if len(card) == 0:
             raise CustomValidationError(detail=u'El numero de tarjeta es requerido',
                                         code='400')
         # if not importe.isnumeric():
         #     raise CustomValidationError(detail=u'El importe no es numerico',
         #                                 code='400')
-        data['TASA'] = taxes[0].zfill(2) + taxes[1].zfill(2)
-        data['IMPORTE'] = amounts[0].zfill(17) + amounts[1].zfill(2)
         return data
 
 
@@ -172,18 +178,28 @@ class CambioLimitesSerializer(serializers.Serializer):
         data = super(CambioLimitesSerializer, self).validate(data)
         account = data.get('CUENTA', "").strip()
         card = data.get('TARJETA', "").strip()
-        limits_cr = ("%.2f" % get_decimal_from_request_data(data, 'LIMITE_CR')).split('.')
-        limits_con = ("%.2f" % get_decimal_from_request_data(data, 'LIMITE_CON')).split('.')
-        limits_extra = ("%.2f" % get_decimal_from_request_data(data, 'LIMITE_EXTRA')).split('.')
+        limite_cr = get_decimal_from_request_data(data, 'LIMITE_CR')
+        limite_con = get_decimal_from_request_data(data, 'LIMITE_CON')
+        limite_extra = get_decimal_from_request_data(data, 'LIMITE_EXTRA')
+
+        if isinstance(limite_cr, Decimal):
+            limits_cr = ("%.2f" % get_decimal_from_request_data(data, 'LIMITE_CR')).split('.')
+            data['LIMITE_CR'] = limits_cr[0].zfill(17) + limits_cr[1].zfill(2)
+
+        if isinstance(limite_con, Decimal):
+            limits_con = ("%.2f" % get_decimal_from_request_data(data, 'LIMITE_CON')).split('.')
+            data['LIMITE_CON'] = limits_con[0].zfill(17) + limits_con[1].zfill(2)
+
+        if isinstance(limite_extra, Decimal):
+            limits_extra = ("%.2f" % get_decimal_from_request_data(data, 'LIMITE_EXTRA')).split('.')
+            data['LIMITE_EXTRA'] = limits_extra[0].zfill(17) + limits_extra[1].zfill(2)
 
         data['TARJETA'] = card
         data['CUENTA'] = account
+
         if len(card) == 0 and len(account) == 0:
             raise CustomValidationError(detail=u'El numero de tarjeta o cuenta es requerido',
                                         code='400')
-        data['LIMITE_CR'] = limits_cr[0].zfill(17) + limits_cr[1].zfill(2)
-        data['LIMITE_CON'] = limits_con[0].zfill(17) + limits_con[1].zfill(2)
-        data['LIMITE_EXTRA'] = limits_extra[0].zfill(17) + limits_extra[1].zfill(2)
         return data
 
 
@@ -233,11 +249,11 @@ class ReposicionTarjetasSerializer(serializers.Serializer):
     def validate(self, data):
         data = super(ReposicionTarjetasSerializer, self).validate(data)
         card = data.get('TARJETA', "").strip()
-        card_assigned = data.get('TARJETA_ASIGNADA', "").strip()
+        # card_assigned = data.get('TARJETA_ASIGNADA', "").strip()
 
         data['TARJETA'] = card
-        data['TARJETA_ASIGNADA'] = card_assigned
-        if len(card) == 0 or len(card_assigned) == 0:
-            raise CustomValidationError(detail=u'El numero de tarjeta o tarjeta asignada es requerido',
+        # data['TARJETA_ASIGNADA'] = card_assigned
+        if len(card) == 0:
+            raise CustomValidationError(detail=u'El numero de tarjeta es requerido',
                                         code='400')
         return data
