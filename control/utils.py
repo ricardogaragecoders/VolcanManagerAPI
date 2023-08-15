@@ -10,14 +10,17 @@ from control.serializers import ConsultaCuentaSerializer, ConsultaTarjetaSeriali
 
 def get_float_from_numeric_str(value: str) -> str:
     from decimal import Decimal
-    length = len(value)
-    assert length >= 4, "El valor no tiene el minimo de largo"
-    value_s = "%s.%s" % (value[0:length-2], value[length-2:length])
-    value_f = Decimal(value_s)
-    if value_f > Decimal('0'):
-        return '%04.2f' % value_f
-    else:
-        return '%05.2f' % value_f
+    try:
+        length = len(value)
+        assert length >= 4, "El valor no tiene el minimo de largo"
+        value_s = "%s.%s" % (value[0:length-2], value[length-2:length])
+        value_f = Decimal(value_s)
+        if value_f > Decimal('0'):
+            return '%04.2f' % value_f
+        else:
+            return '%05.2f' % value_f
+    except TypeError:
+        return ""
 
 
 def get_volcan_api_headers():
