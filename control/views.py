@@ -1,3 +1,5 @@
+import time
+
 import pymongo
 from django.db.models import Q
 from django.utils import timezone
@@ -217,7 +219,7 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
     permission_classes = (HasPermissionByMethod,)
     http_method_names = ['get', 'post', 'patch', 'options', 'head']
     method_permissions = {
-        'POST': [HasUserAndPasswordInData,],
+        'POST': [HasUserAndPasswordInData, ],
         'GET': [IsAuthenticated, IsVerified, IsOperator],
         'PATCH': [IsAuthenticated, IsVerified, IsOperator]
     }
@@ -227,7 +229,8 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
     _order_by = 'action'
     _total = 0
 
-    def get_results(self):
+    def get_queryset_filters(self, *args, **kwargs):
+        filters = dict()
         profile = self.request.user.profile
         if profile.isAdminProgram():
             account_issuer = self.request.query_params.get('emisor', '')
@@ -236,18 +239,6 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
         else:
             account_issuer = 'sin_emision'
 
-        self._limit = int(self.request.query_params.get('limit', 20))
-        self._offset = int(self.request.query_params.get('offset', 0))
-        self._page = int(self._offset / self._limit) if self._offset > 0 else 0
-        self._order_by = self.request.query_params.get('orderBy', 'action')
-        order_by_desc = self.request.query_params.get('orderByDesc', 'false')
-        q = self.request.query_params.get('q', None)
-        # export = self.request.query_params.get('export', None)
-
-        filters = dict()
-        sort = self._order_by
-        direction = pymongo.ASCENDING if order_by_desc == 'false' else pymongo.DESCENDING
-
         s_from_date = self.request.query_params.get('from_date', None)
         s_to_date = self.request.query_params.get('to_date', None)
         from_date = get_date_from_querystring(self.request, 'from_date', timezone.localtime(timezone.now()))
@@ -255,21 +246,28 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
         from_date = make_day_start(from_date)
         to_date = make_day_end(to_date)
         if s_from_date and s_to_date:
-            filters['updated_at'] = {
-                "$gte": from_date,
-                "$lt": to_date
-            }
+            filters['updated_at'] = {"$gte": from_date, "$lt": to_date}
         elif s_from_date:
-            filters['updated_at'] = {
-                "$gte": from_date
-            }
+            filters['updated_at'] = {"$gte": from_date}
         elif s_to_date:
-            filters['updated_at'] = {
-                "$lt": to_date
-            }
+            filters['updated_at'] = {"$lt": to_date}
 
         if len(account_issuer) > 0:
             filters['emisor'] = account_issuer.upper()
+
+        return filters
+
+    def get_queryset(self, *args, **kwargs):
+        filters = self.get_queryset_filters(*args, **kwargs)
+        self._limit = int(self.request.query_params.get('limit', 20))
+        self._offset = int(self.request.query_params.get('offset', 0))
+        self._page = int(self._offset / self._limit) if self._offset > 0 else 0
+        self._order_by = self.request.query_params.get('orderBy', 'action')
+        order_by_desc = self.request.query_params.get('orderByDesc', 'false')
+        q = self.request.query_params.get('q', None)
+        # export = self.request.query_params.get('export', None)
+        sort = self._order_by
+        direction = pymongo.ASCENDING if order_by_desc == 'false' else pymongo.DESCENDING
 
         if q:
             filters['$or'] = [
@@ -335,7 +333,7 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
         try:
             from bson.json_util import dumps
             # import pytz
-            query = self.get_results()
+            query = self.get_queryset(*args, **kwargs)
             results = []
             # local_tz = pytz.timezone('America/Mexico_City')
             for item in query:
@@ -379,26 +377,13 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
         try:
             from control.models import TransactionCollection
             db = TransactionCollection()
+            filters = self.get_queryset_filters(*args, **kwargs)
             pk = kwargs.pop(self.field_pk)
-            profile = self.request.user.profile
-            filters = dict()
-
-            if profile.isAdminProgram():
-                account_issuer = self.request.query_params.get('emisor', '')
-            elif profile.isOperator(equal=True):
-                account_issuer = profile.user.first_name
-            else:
-                account_issuer = 'sin_emision'
-
-            if len(account_issuer) > 0:
-                filters['emisor'] = account_issuer.upper()
-
             if len(pk) > 10:
                 from bson.objectid import ObjectId
                 filters['_id'] = ObjectId(pk)
 
             query = db.find(filters)
-
             if query:
                 # import pytz
                 results = []
@@ -441,29 +426,43 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
         try:
             from control.models import TransactionCollection
             db = TransactionCollection()
+            filters = self.get_queryset_filters(*args, **kwargs)
             pk = kwargs.pop(self.field_pk)
-            profile = self.request.user.profile
-            filters = dict()
-
-            if profile.isAdminProgram():
-                account_issuer = self.request.query_params.get('emisor', '')
-            elif profile.isOperator(equal=True):
-                account_issuer = profile.user.first_name
-            else:
-                account_issuer = 'sin_emision'
-
-            if len(account_issuer) > 0:
-                filters['emisor'] = account_issuer.upper()
-
             if len(pk) > 10:
                 from bson.objectid import ObjectId
                 filters['_id'] = ObjectId(pk)
+
             query = db.find(filters)
             if query:
                 from control.tasks import send_transaction_emisor
                 results = []
                 for item in query:
                     send_transaction_emisor.delay(transaction_id=str(item['_id']))
+                    results.append(str(item['_id']))
+                response_data = results[0] if len(results) > 0 else []
+                self.make_response_success(data=response_data)
+            else:
+                self.make_response_not_found()
+        except Exception as e:
+            from common.utils import handler_exception_general
+            self.resp = handler_exception_general(__name__, e)
+        finally:
+            return self.get_response()
+
+    def resend(self, request, *args, **kwargs):
+        try:
+            from control.models import TransactionCollection
+            db = TransactionCollection()
+            filters = self.get_queryset_filters(*args, **kwargs)
+            filters['entregado'] = False
+
+            query = db.find(filters)
+            if query:
+                from control.tasks import send_transaction_emisor
+                results = []
+                for item in query:
+                    send_transaction_emisor.delay(transaction_id=str(item['_id']))
+                    time.sleep(3)
                     results.append(str(item['_id']))
                 response_data = results[0] if len(results) > 0 else []
                 self.make_response_success(data=response_data)

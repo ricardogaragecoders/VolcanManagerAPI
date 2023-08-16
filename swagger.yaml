@@ -712,6 +712,23 @@ paths:
         description: ID Notificacion
         schema:
           type: string
+  /volcan/api/Notificaciones/reenviar/emisor/:
+    patch:
+      operationId: api_notification_resend_by_emmisor
+      description: Resend notification by emisor.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Notification"
+        required: true
+      summary: Resend a notification by emisor.
+      responses:
+        '200':
+          description: 'Resend a notification by emisor.'
+      tags:
+        - VolcanManager::Notificaciones
+    parameters: []
 components:
   schemas:
     LoginToken:

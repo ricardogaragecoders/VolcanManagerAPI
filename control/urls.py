@@ -28,4 +28,7 @@ urlpatterns = [
     path('Notificaciones/<str:notification_id>/reenviar/',
          TransactionCollectionApiView.as_view({'patch': 'update'})),
 
+    path('Notificaciones/reenviar/emisor/',
+         TransactionCollectionApiView.as_view({'patch': 'resend'})),
+
 ]
