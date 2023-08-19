@@ -60,11 +60,11 @@ class CustomViewSet(viewsets.GenericViewSet):
 
         if not success and len(code) == 0:
             if status == 404:
-                code = 'not_found'
+                code = '404'
             elif status == 422:
-                code = 'unprocessable_entity'
+                code = '422'
             else:
-                code = 'bad_request'
+                code = '400'
 
         if isinstance(data, dict) and len(data) > 0:
             if 'RSP_CODIGO' in data:
@@ -99,6 +99,7 @@ class CustomViewSet(viewsets.GenericViewSet):
 
         if code == 'no_permissions':
             status = 403
+            code = '403'
         if len(data) > 0:
             if isinstance(data, dict):
                 for k, v in data.items():
@@ -114,6 +115,8 @@ class CustomViewSet(viewsets.GenericViewSet):
         response_data_2 = {}
         for k, v in response_data.items():
             response_data_2[k.lower()] = v
+        if status == 422 or status == 400 or status == 403:
+            status = 200
         return Response(response_data_2, status=status)
 
     def get_queryset_filters(self, *args, **kwargs):

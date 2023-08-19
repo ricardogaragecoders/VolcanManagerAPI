@@ -62,6 +62,8 @@ def custom_exception_handler(exception, context):
                     if isinstance(k, str) and isinstance(v, list):
                         v = '%s' % (v[0] if not 'message' in v[0] else v[0]['message'])
                     if isinstance(k, str) and isinstance(v, str):
+                        if 'data' not in response_data:
+                            response_data = {'data': {}}
                         response_data['data'][k] = v
 
             if len(data) > 1:
@@ -86,9 +88,9 @@ def custom_exception_handler(exception, context):
             import logging
             logger = logging.getLogger(__name__)
             logger.exception({'RSP_CODIGO': code, 'RSP_DESCRIPCION': str(message)})
-
+            response_data['RSP_CODIGO'] = str(exception.status_code)
             return Response({k.lower(): v for k, v, in response_data.items()},
-                            status=exception.status_code, headers=headers)
+                            status=200, headers=headers)
         else:
             return Response({k.lower(): v for k, v, in response_data.items()},
                             status=status.HTTP_401_UNAUTHORIZED, headers=headers)

@@ -9,26 +9,71 @@ info:
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
   title: VOLCAN MANAGER API
-  version: "1.0"
+  version: "2.0"
 security:
   - bearerAuth: []
 paths:
   /volcan/api/auth/token/:
     post:
       operationId: api_login_token
-      description: Login token
+      description: Auth login
       requestBody:
         content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/LoginToken"
           application/json:
             schema:
               $ref: "#/components/schemas/LoginToken"
         required: true
-      summary: Login
+      summary: Auth login
       responses:
-        '401':
-          description: 'Acceso no autorizado'
+        '400':
+          description: 'Auth login unsuccess'
+          examples:
+            application/json:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "no_active_account",
+                "rsp_descripcion": "Usuario no activo o no encontrado"
+              }
+        '422':
+          description: 'Invalid data request'
+          examples:
+            application/json:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "unprocessable_entity",
+                "rsp_descripcion": "Password: this field may not be blank.",
+                "password": "Password: this field may not be blank. "
+              }
         '200':
-          description: 'Return login token'
+          description: 'Auth login success'
+          examples:
+            application/json:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Auth login success",
+                "refresh": "eyJ...kvk",
+                "access": "eyJ...8sg",
+                "role": 10,
+                "profile": {
+                  "id": 1,
+                  "username": "richpolis",
+                  "first_name": "",
+                  "last_name": "",
+                  "second_last_name": "",
+                  "email": "",
+                  "phone": null,
+                  "role": 10,
+                  "verification_email": true,
+                  "verification_phone": false,
+                  "change_password": false,
+                  "created_at": "2023-07-26T17:19:20.693099Z",
+                  "updated_at": "2023-07-26T17:22:11.590198Z"
+                }
+              }
       tags:
         - VolcanManager::Auth
     parameters: []
@@ -38,14 +83,24 @@ paths:
       description: Verify token
       requestBody:
         content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/VerifyToken"
           application/json:
             schema:
               $ref: "#/components/schemas/VerifyToken"
         required: true
       summary: Verify token
       responses:
-        '201':
+        '200':
           description: 'Verify token'
+          examples:
+            application/json:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "ok"
+              }
       tags:
         - VolcanManager::Auth
     parameters: []
@@ -55,301 +110,75 @@ paths:
       description: Refresh token
       requestBody:
         content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/RefreshToken"
           application/json:
             schema:
               $ref: "#/components/schemas/RefreshToken"
         required: true
       summary: Refresh token
       responses:
-        '201':
+        '200':
           description: 'Refresh token'
+          examples:
+            application/json:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "ok",
+                "access": "eyJ...GV4"
+              }
       tags:
         - VolcanManager::Auth
     parameters: []
-#  /volcan/api/users/logout/:
-#    post:
-#      operationId: api_logout_token
-#      description: Logout
-#      summary: Logout
-#      parameters: []
-#      responses:
-#        '200':
-#          description: 'Logout'
-#      tags:
-#        - VolcanManager::Auth
-#    parameters: []
-#  /volcan/api/users/empty/:
-#    post:
-#      operationId: api_users_empty
-#      description: Users empty
-#      requestBody:
-#        content:
-#          application/json:
-#            schema:
-#              $ref: "#/components/schemas/EmptyUser"
-#        required: true
-#      summary: Logout, only superadmin
-#      responses:
-#        '200':
-#          description: 'Logout user with username'
-#      tags:
-#        - VolcanManager::Superadmin
-#    parameters: []
-#  /volcan/api/users/reset/password/:
-#    post:
-#      operationId: api_users_reset_password
-#      description: Users reset password
-#      requestBody:
-#        content:
-#          application/json:
-#            schema:
-#              $ref: "#/components/schemas/ResetPassword"
-#        required: true
-#      summary: Reset password, only superadmin
-#      responses:
-#        '200':
-#          description: 'User reset password'
-#      tags:
-#        - VolcanManager::Superadmin
-#    parameters: []
-#  /volcan/api/users/profile/:
-#    get:
-#      operationId: cacao_profile_read
-#      description: Return profile user.
-#      summary: Return profile user
-#      parameters: []
-#      responses:
-#        '200':
-#          description: 'Return my profile'
-#      tags:
-#        - VolcanManager::Users
-#    parameters: []
-#  /volcan/api/users/register/admin/:
-#    post:
-#      operationId: api_users_register_admin
-#      description: Register users admin
-#      requestBody:
-#        content:
-#          application/json:
-#            schema:
-#              $ref: "#/components/schemas/RegisterAdmin"
-#        required: true
-#      summary: Register users admin, only superadmin
-#      responses:
-#        '201':
-#          description: 'Create a new admin'
-#      tags:
-#        - VolcanManager::Superadmin
-#    parameters: []
-#  /volcan/api/users/verification/code/:
-#    post:
-#      operationId: api_verification_code
-#      description: Verification code
-#      requestBody:
-#        content:
-#          application/json:
-#            schema:
-#              $ref: "#/components/schemas/VerificationCode"
-#        required: true
-#      summary: Verification code
-#      responses:
-#        '200':
-#          description: 'Verify your code'
-#      tags:
-#        - VolcanManager::Users
-#    parameters: []
-#  /volcan/api/users/resend/code/:
-#    post:
-#      operationId: api_resend_code
-#      description: Resend code
-#      requestBody:
-#        content:
-#          application/json:
-#            schema:
-#              $ref: "#/components/schemas/ResendCode"
-#        required: true
-#      summary: Resend code
-#      responses:
-#        '200':
-#          description: 'Resend verification code'
-#      tags:
-#        - VolcanManager::Users
-#    parameters: []
-#  /volcan/api/users/recover/password/:
-#    post:
-#      operationId: api_recover_password
-#      description: Recover password
-#      requestBody:
-#        content:
-#          application/json:
-#            schema:
-#              $ref: "#/components/schemas/RecoverPassword"
-#        required: true
-#      summary: Recover password
-#      responses:
-#        '200':
-#          description: 'Recover password'
-#      tags:
-#        - VolcanManager::Users
-#    parameters: []
-#  /volcan/api/users/change/password/:
-#    post:
-#      operationId: api_change_password
-#      description: Change Password
-#      requestBody:
-#        content:
-#          application/json:
-#            schema:
-#              $ref: "#/components/schemas/ChangePassword"
-#        required: true
-#      summary: Change password
-#      responses:
-#        '200':
-#          description: 'Change Password'
-#      tags:
-#        - VolcanManager::Users
-#    parameters: []
-#  /volcan/api/statements/companies/:
-#    get:
-#      operationId: volcan_magma_companies_get
-#      description: Return all companies.
-#      summary: Return all companies.
-#      parameters:
-#        - name: limit
-#          in: query
-#          description: Number of results to return per page.
-#          required: false
-#          schema:
-#            type: integer
-#        - name: offset
-#          in: query
-#          description: The initial index from which to return the results.
-#          required: false
-#          schema:
-#            type: integer
-#        - name: active
-#          in: query
-#          description: Active or inactive
-#          required: false
-#          schema:
-#            type: string
-#            enum: [all, true, false]
-#        - name: cId
-#          in: query
-#          description: ID Company
-#          required: false
-#          schema:
-#            type: string
-#        - name: q
-#          description: Search by Keyword
-#          in: query
-#          required: false
-#          schema:
-#            type: string
-#        - name: orderBy
-#          description: Order By field
-#          in: query
-#          required: false
-#          schema:
-#            type: string
-#            enum: ['name', 'created_at']
-#        - name: orderByDesc
-#          description: Order desc
-#          in: query
-#          schema:
-#            type: boolean
-#            enum: [true, false]
-#            default: false
-#        - name: export
-#          description: Type of export data
-#          in: query
-#          required: false
-#          schema:
-#            type: string
-#            enum: [ excel, pdf ]
-#      responses:
-#        '200':
-#          description: 'Return all companies'
-#      tags:
-#        - VolcanManager::Companies
-#    post:
-#      operationId: api_control_company_create
-#      description: Create a new company.
-#      requestBody:
-#        content:
-#          application/json:
-#            schema:
-#              $ref: "#/components/schemas/Company"
-#        required: true
-#      summary: Create a new company.
-#      responses:
-#        '201':
-#          description: 'Create a new company'
-#      tags:
-#        - VolcanManager::Companies
-#    parameters: []
-#  /volcan/api/statements/companies/{company_id}/:
-#    get:
-#      operationId: api_control_company_read
-#      description: Returns a company.
-#      summary: Returns a company.
-#      parameters:
-#        - name: simple
-#          description: Simple data company
-#          in: query
-#          schema:
-#            type: boolean
-#            enum: [true, false]
-#      responses:
-#        '200':
-#          description: 'Returns a company.'
-#      tags:
-#        - VolcanManager::Companies
-#    patch:
-#      operationId: api_control_company_update
-#      description: Update a company.
-#      requestBody:
-#        content:
-#          application/json:
-#            schema:
-#              $ref: "#/components/schemas/Company"
-#        required: true
-#      summary: Update a company.
-#      responses:
-#        '200':
-#          description: 'Update a company.'
-#      tags:
-#        - VolcanManager::Companies
-#    delete:
-#      operationId: api_control_company_delete
-#      description: Delete a company.
-#      summary: Delete a company.
-#      parameters: []
-#      responses:
-#        '200':
-#          description: 'Delete a company.'
-#      tags:
-#        - VolcanManager::Companies
-#    parameters:
-#      - name: company_id
-#        in: path
-#        required: true
-#        schema:
-#          type: string
   /volcan/api/CreacionEnte/:
     post:
       operationId: api_control_creacion_ente
       description: Creacion Ente.
       requestBody:
         content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/CreacionEnte"
           application/json:
             schema:
               $ref: "#/components/schemas/CreacionEnte"
         required: true
       summary: Creacion Ente.
       responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
         '200':
           description: 'Creacion Ente'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_enteid": "0000000"
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Cliente ya existe",
+                "rsp_enteid": "0000000"
+              }
       tags:
         - VolcanManager::Acciones
   /volcan/api/CreacionCtaTar/:
@@ -358,14 +187,48 @@ paths:
       description: Creacion Cta Tar.
       requestBody:
         content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/CreacionCtaTar"
           application/json:
             schema:
               $ref: "#/components/schemas/CreacionCtaTar"
         required: true
       summary: Creacion Cta Tar.
       responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
         '200':
           description: 'Creacion Cta Tar'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_cuenta": "5...8",
+                "rsp_tarjeta": "E...I"
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error en Alta Cuenta",
+                "rsp_cuenta": ""
+              }
       tags:
         - VolcanManager::Acciones
   /volcan/api/Cuentas/:
@@ -374,14 +237,108 @@ paths:
       description: Consulta cuenta.
       requestBody:
         content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ConsultaCuenta"
           application/json:
             schema:
               $ref: "#/components/schemas/ConsultaCuenta"
         required: true
       summary: Consulta cuenta.
       responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
         '200':
           description: 'Consulta cuenta'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_cif": "...",
+                "rsp_id_owner": "1...1",
+                "rsp_nombre": "TEST Test Volcan",
+                "rsp_tipo_identificacion": "",
+                "rsp_doc_identificacion": "",
+                "rsp_cuentas": [
+                  {
+                    "rsp_cuenta": "5...8",
+                    "rsp_plan": "MBK",
+                    "rsp_tipo_cta": "P",
+                    "rsp_status": "AC",
+                    "rsp_ciclo": "01",
+                    "rsp_moneda": "840",
+                    "rsp_limite_cred": "2000.00",
+                    "rsp_deb_tran": "00.00",
+                    "rsp_cre_tran": "00.00",
+                    "rsp_saldo": "00.00",
+                    "rsp_disp_efe": "1000.00",
+                    "rsp_disp_com": "2000.00",
+                    "rsp_disp_ext": "00.00",
+                    "rsp_imp_venc": "00.00",
+                    "rsp_cuo_ven": "00",
+                    "rsp_pgo_min": "00.00",
+                    "rsp_fec_ven": "0",
+                    "rsp_pgo_contado": "00.00",
+                    "rsp_fec_contado": "0",
+                    "rsp_tasa_interes": "0.16",
+                    "rsp_tasa_mora": "0.24",
+                    "rsp_sld_ptos": "00.00",
+                    "rsp_tar_titular": "5...7",
+                    "rsp_sts_tar": "S",
+                    "rsp_iban": "",
+                    "rsp_poliza": ""
+                  },
+                  {
+                    "rsp_cuenta": "5...8",
+                    "rsp_plan": "MBK",
+                    "rsp_tipo_cta": "P",
+                    "rsp_status": "AC",
+                    "rsp_ciclo": "11",
+                    "rsp_moneda": "840",
+                    "rsp_limite_cred": "5000.00",
+                    "rsp_deb_tran": "00.00",
+                    "rsp_cre_tran": "00.00",
+                    "rsp_saldo": "0.16",
+                    "rsp_disp_efe": "2499.41",
+                    "rsp_disp_com": "4998.81",
+                    "rsp_disp_ext": "5000.00",
+                    "rsp_imp_venc": "00.00",
+                    "rsp_cuo_ven": "00",
+                    "rsp_pgo_min": "00.00",
+                    "rsp_fec_ven": "0",
+                    "rsp_pgo_contado": "00.00",
+                    "rsp_fec_contado": "0",
+                    "rsp_tasa_interes": "0.16",
+                    "rsp_tasa_mora": "0.24",
+                    "rsp_sld_ptos": "00.00",
+                    "rsp_tar_titular": "1...F",
+                    "rsp_sts_tar": "A",
+                    "rsp_iban": "",
+                    "rsp_poliza": ""
+                  }
+                ]
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error en consulta de cuentas"
+              }
       tags:
         - VolcanManager::Acciones
   /volcan/api/Extrafinanciamientos/:
@@ -390,14 +347,54 @@ paths:
       description: Extrafinanciamientos.
       requestBody:
         content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/Extrafinanciamiento"
           application/json:
             schema:
               $ref: "#/components/schemas/Extrafinanciamiento"
         required: true
       summary: Extrafinanciamientos.
       responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
         '200':
           description: 'Extrafinanciamientos'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_cuenta": "5...8",
+                "rsp_importe": "1.00",
+                "rsp_tasa": "16.00",
+                "rsp_plazo": "24",
+                "rsp_cuota": "5.90",
+                "rsp_moneda": "840",
+                "rsp_referencia": "EXTRA VOLCAN",
+                "rsp_autoriz": "00124",
+                "rsp_noextra": "0000000028"
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error en extrafinanciamientos"
+              }
       tags:
         - VolcanManager::Acciones
   /volcan/api/Intrafinanciamientos/:
@@ -406,14 +403,54 @@ paths:
       description: Intrafinanciamientos.
       requestBody:
         content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/Intrafinanciamiento"
           application/json:
             schema:
               $ref: "#/components/schemas/Intrafinanciamiento"
         required: true
       summary: Intrafinanciamientos.
       responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
         '200':
           description: 'Intrafinanciamientos'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_cuenta": "5...8",
+                "rsp_importe": "1.00",
+                "rsp_tasa": "16.00",
+                "rsp_plazo": "24",
+                "rsp_cuota": "5.90",
+                "rsp_moneda": "840",
+                "rsp_referencia": "EXTRA VOLCAN",
+                "rsp_autoriz": "00124",
+                "rsp_noextra": "0000000028"
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error en intrafinanciamientos"
+              }
       tags:
         - VolcanManager::Acciones
   /volcan/api/ConsultaTarjetas/:
@@ -422,14 +459,66 @@ paths:
       description: Consulta tarjetas.
       requestBody:
         content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ConsultaTarjetas"
           application/json:
             schema:
               $ref: "#/components/schemas/ConsultaTarjetas"
         required: true
       summary: ConsultaTarjetas.
       responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
         '200':
           description: 'ConsultaTarjetas'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_cif": "",
+                "rsp_id_owner": "...",
+                "rsp_nombre": "TEST Test Volcan",
+                "rsp_tipo_identificacion": "..",
+                "rsp_doc_identificacion": "...",
+                "rsp_tarjetas": [
+                  {
+                    "rsp_tarjeta": "E...1",
+                    "rsp_nombre": "Test Volcan 1",
+                    "rsp_tipo_tarjeta": "P",
+                    "rsp_uso": "V",
+                    "rsp_estado": "AC",
+                    "rsp_descripcion": "Activa",
+                    "rsp_vencimiento": "0728",
+                    "rsp_moneda_loc": "840",
+                    "rsp_limite_loc": "0000000000000884000",
+                    "rsp_moneda_int": "",
+                    "rsp_limite_int": ""
+                  }
+                ],
+                "rsp_owner_p": ""
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error en consulta tarjetas"
+              }
       tags:
         - VolcanManager::Acciones
   /volcan/api/CambioPIN/:
@@ -438,14 +527,46 @@ paths:
       description: Cambio de PIN.
       requestBody:
         content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/CambioPIN"
           application/json:
             schema:
               $ref: "#/components/schemas/CambioPIN"
         required: true
       summary: Cambio de PIN.
       responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
         '200':
           description: 'Cambio de PIN.'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_enteid": "0000000"
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error en cambio de nip"
+              }
       tags:
         - VolcanManager::Acciones
   /volcan/api/CambioLimites/:
@@ -454,14 +575,52 @@ paths:
       description: Cambio Limites.
       requestBody:
         content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/CambioLimites"
           application/json:
             schema:
               $ref: "#/components/schemas/CambioLimites"
         required: true
       summary: Cambio limites.
       responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
         '200':
           description: 'Cambio limites.'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_cuenta": "5...8",
+                "rsp_limite_cr": "1100.00",
+                "rsp_limite_extra": "",
+                "rsp_tarjeta": "E...1",
+                "rsp_limite_con": "",
+                "rsp_referencia": "EXTRA VOLCAN",
+                "rsp_autoriz": "00124"
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error en cambio de limites"
+              }
       tags:
         - VolcanManager::Acciones
   /volcan/api/CambioEstatusTDC/:
@@ -470,14 +629,51 @@ paths:
       description: Cambio Estatus TDC
       requestBody:
         content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/CambioEstatusTDC"
           application/json:
             schema:
               $ref: "#/components/schemas/CambioEstatusTDC"
         required: true
       summary: Cambio estatus TDC
       responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
         '200':
           description: 'Cambio estatus TDC.'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_tarjeta": "1...6",
+                "rsp_cuenta": "...",
+                "rsp_estatus": "00",
+                "rsp_descripcion_sts": "Descripcion",
+                "rsp_referencia": "EXTRA VOLCAN",
+                "rsp_autoriz": "00124"
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error en cambio de estatus TDC"
+              }
       tags:
         - VolcanManager::Acciones
   /volcan/api/ReposicionTarjetas/:
@@ -486,14 +682,54 @@ paths:
       description: Reposicion Tarjetas
       requestBody:
         content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ReposicionTarjetas"
           application/json:
             schema:
               $ref: "#/components/schemas/ReposicionTarjetas"
         required: true
       summary: Reposicion Tarjetas
       responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
         '200':
           description: 'Reposicion Tarjetas'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_cuenta": "",
+                "rsp_tarjeta_nva": "1...6",
+                "rsp_estado_nva": "",
+                "rsp_descrip_nva": "00",
+                "rsp_tarjeta_rep": "...",
+                "rsp_estado_rep": "",
+                "rsp_descrip_rep": "00",
+                "rsp_referencia": "EXTRA VOLCAN",
+                "rsp_autoriz": "00124"
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error en reposicion de tarjetas"
+              }
       tags:
         - VolcanManager::Acciones
 components:
@@ -528,608 +764,605 @@ components:
           description: Verify access token
       required:
       - token
-#    RegisterAdmin:
-#      type: object
-#      properties:
-#        first_name:
-#          type: string
-#          description: First Name
-#          maxLength: 45
-#        last_name:
-#          type: string
-#          description: Last name
-#          maxLength: 45
-#        second_last_name:
-#          type: string
-#          description: Second last name
-#          maxLength: 45
-#        email:
-#          type: string
-#          description: Email
-#          maxLength: 100
-#        phone:
-#          type: string
-#          description: Phone
-#          maxLength: 10
-#        password:
-#          type: string
-#          description: Password
-#          maxLength: 45
-#        role:
-#          type: integer
-#          format: int64
-#          description: Role
-#          enum: [1,2,3,4]
-#          default: 3
-#      required:
-#        - first_name
-#        - last_name
-#        - email
-#        - password
-#    VerificationCode:
-#      type: object
-#      properties:
-#        token:
-#          type: string
-#          description: Token with code and email
-#        email:
-#          type: string
-#          format: email
-#          description: Email
-#          maxLength: 100
-#        code:
-#          type: string
-#          description: Code
-#          maxLength: 6
-#    ResendCode:
-#      type: object
-#      properties:
-#        email:
-#          type: string
-#          description: Email for resend verification code
-#          maxLength: 100
-#        code:
-#          type: string
-#          description: Type code to send
-#          enum: [verification_2factor, verification_email, recover_password_email]
-#          default: verification_2factor
-#      required:
-#        - email
-#    RecoverPassword:
-#      type: object
-#      properties:
-#        email:
-#          type: string
-#          description: Email
-#          maxLength: 100
-#      required:
-#        - email
-#    ChangePassword:
-#      type: object
-#      properties:
-#        token:
-#          type: string
-#          description: Token verification
-#        password:
-#          type: string
-#          description: Password
-#          maxLength: 45
-#      required:
-#        - token
-#        - password
-#    EmptyUser:
-#      type: object
-#      properties:
-#        username:
-#          type: string
-#          description: Username
-#          maxLength: 45
-#    ResetPassword:
-#      type: object
-#      properties:
-#        username:
-#          type: string
-#          description: Username
-#          maxLength: 45
-#        password:
-#          type: string
-#          description: Password
-#          maxLength: 45
-#    image_file:
-#      type: object
-#      properties:
-#        file:
-#          type: string
-#          description: Data base64
-#      required:
-#        - file
-#    Company:
-#      type: object
-#      properties:
-#        name:
-#          type: string
-#          description: Company name
-#          maxLength: 40
-#        primary_color:
-#          type: string
-#          description: Company primary color
-#          maxLength: 20
-#        secondary_color:
-#          type: string
-#          description: Company secondary color
-#          maxLength: 20
-#        advise_color:
-#          type: string
-#          description: Company advise color
-#        font_family:
-#          type: string
-#          description: Company font family
-#          enum: [Montserrat, Lato, Roboto, 'Open Sans', Poppins]
-#          default: Montserrat
-#        image:
-#          $ref: '#/components/schemas/image_file'
-#        active:
-#          type: boolean
-#          description: Active company
-#      required:
-#        - name
     CreacionEnte:
       type: object
       properties:
         cif:
           type: string
-          enum: [""]
+          description: 'CIF'
+          maxLength: 15
         personeria:
           type: string
-          enum: [""]
+          description: 'Personería. F=Fisica/J=Juridica'
+          enum: ['F', 'J']
+          maxLength: 1
         tipo_identificacion:
           type: string
-          enum: [""]
+          description: 'Tipo de identificación. Ver valores validos del catalogo de EveryCard'
+          maxLength: 2
         documento_identificacion:
           type: string
-          enum: [""]
+          description: "Mandatorio. Documento de ID"
+          maxLength: 20
         primer_nombre:
           type: string
-          enum: [""]
+          description: 'Primero nombre. Valida que tenga al menos 3 caracteres'
+          minLength: 3
+          maxLength: 15
         segundo_nombre:
           type: string
-          enum: [""]
+          description: 'Segundo nombre. Valida que tenga al menos 3 caracteres'
+          minLength: 3
+          maxLength: 15
         primer_apellido:
           type: string
-          enum: [""]
+          description: 'Primer apellido. Valida que tenga al menos 3 caracteres'
+          minLength: 3
+          maxLength: 15
         segundo_apellido:
           type: string
-          enum: [""]
+          description: 'Segundo apellido. Valida que tenga al menos 3 caracteres'
+          minLength: 3
+          maxLength: 15
         apellido_casada:
           type: string
-          enum: [""]
+          description: 'Opcional. Apellido de casada. Valida que tenga al menos 3 caracteres'
+          minLength: 3
+          maxLength: 15
         fecha_nacimiento:
           type: string
-          enum: [""]
+          format: date
+          pattern: '^\d{4}\d{2}\d{2}$'
+          description: 'Fecha de nacimiento. Formato: YYYYMMDD'
+          maxLength: 8
         sexo:
           type: string
-          enum: [""]
+          description: 'Sexo. F=Femenino/M=Masculino'
+          enum: ['F', 'M']
+          maxLength: 1
         estado_civil:
           type: string
-          enum: [""]
+          description: 'Estado civil. Valores validos Catalogo de EveryCard'
+          maxLength: 2
         profesion:
           type: string
-          enum: [""]
+          description: 'Código de profesión. Valores validos Catalogo de EveryCard'
+          maxLength: 2
         seguro_social:
           type: string
-          enum: [""]
+          description: 'Opcional. Seguro social'
+          maxLength: 25
         pais_nacimiento:
           type: string
-          enum: [""]
+          description: 'Pais de nacimiento. Catalogo de ISO de 2 posiciones de paises'
+          maxLength: 3
         pais_residencia:
           type: string
-          enum: [""]
+          description: 'Pais de residencia. Catalogo de ISO de 2 posiciones de paises'
+          maxLength: 3
         nacionalidad:
           type: string
-          enum: [""]
+          description: 'Nacionalidad. Catalogo de ISO de 2 posiciones de paises'
+          maxLength: 3
         codigo_provincia:
           type: string
-          enum: [""]
+          description: 'Codigo provincia. Enviar valores validos de catalogo de EveryCard'
+          maxLength: 3
         codigo_canton:
           type: string
-          enum: [""]
+          description: 'Codigo canton. Enviar valores validos de catalogo de EveryCard'
+          maxLength: 5
         codigo_distrito:
           type: string
-          enum: [""]
+          description: 'Opcional. Codigo distrito. Enviar valores validos de catalogo  en EveryCard'
         direccion_1:
           type: string
-          enum: [""]
+          description: 'Mandatorio. Dirección 1. Obligatorio para tarjeta titular'
+          maxLength: 50
         direccion_2:
           type: string
-          enum: [""]
+          description: 'Opcional. Dirección 2'
+          maxLength: 50
         codigo_postal:
           type: string
-          enum: [""]
+          description: 'Opcional. Codigo postal'
+          maxLength: 10
         telefono_casa:
           type: string
-          enum: [""]
+          description: 'Condicional. Telefono de casa. Valida que el cliente reporte al menos 1 telefono'
         celular:
           type: string
-          enum: [""]
+          description: 'Condicional. Celular. Valida que el cliente reporte al menos 1 telefono'
         telefono_oficina:
           type: string
-          enum: [""]
+          description: 'Condicional. Telefono de oficina. Valida que el cliente reporte al menos 1 telefono'
         email_personal:
           type: string
-          enum: [""]
+          description: 'Mandatorio. Email personal. Obligatorio para titular'
+          maxLength: 100
         email_oficina:
           type: string
-          enum: [""]
+          description: 'Opcional. Email de oficina'
+          maxLength: 100
         lugar_trabajo:
           type: string
-          enum: [""]
+          description: 'Opcional. Lugar de trabajo'
+          maxLength: 40
         direccion_1_trabajo:
           type: string
-          enum: [""]
+          description: 'Opcional. Dirección 1 trabajo'
+          maxLength: 50
         direccion_2_trabajo:
           type: string
-          enum: [""]
+          description: 'Opcional. Dirección 2 trabajo'
+          maxLength: 50
         puesto:
           type: string
-          enum: [""]
+          description: 'Opcional. Posición de trabajo'
+          maxLength: 50
         ingreso_mensual:
           type: string
-          enum: [""]
+          description: 'Opcional. Ingreso mensual. Formato 2 decimales. Ejemplo: 1100.00'
+          maxLength: 12
         fecha_ingreso_trabajo:
           type: string
-          enum: [""]
+          format: date
+          pattern: '^\d{4}\d{2}\d{2}$'
+          description: 'Opcional. Fecha de ingreso al trabajo. Formato YYYYMMDD'
+          maxLength: 8
         oficina_ext:
           type: string
-          enum: [""]
+          description: 'Extension'
+          maxLength: 12
         nombre_conyugue:
           type: string
-          enum: [""]
+          description: 'Opcional. Nombre de conyugue'
+          maxLength: 20
         apellido_conyugue:
           type: string
-          enum: [""]
+          description: 'Opcional. Apellido de conyugue'
+          maxLength: 20
         cedula_conyugue:
           type: string
-          enum: [""]
+          description: 'Opcional. Cedula conyugue'
+          maxLength: 20
         nombre_padre:
           type: string
-          enum: [""]
+          description: 'Opcional. Nombre del padre'
+          maxLength: 20
         apellido_padre:
           type: string
-          enum: [""]
+          description: 'Opcional. Apellido del padre'
+          maxLength: 20
         nombre_madre:
           type: string
-          enum: [""]
+          description: 'Opcional. Nombre de la madre'
+          maxLength: 20
         apellido_madre:
           type: string
-          enum: [""]
+          description: 'Opcional. Apellido de la madre'
+          maxLength: 20
         tipo_gestion:
           type: string
-          enum: [""]
+          description: 'Tipo de gestion. Indica si es ingreso o modificación del cliente'
+          maxLength: 1
         emisor:
           type: string
-          enum: [""]
+          description: 'Emisor'
+          maxLength: 50
       required:
-      - tipo_identificacion
+        - documento_identificacion
+        - direccion_1
+        - email_personal
+        - emisor
     CreacionCtaTar:
       type: object
       properties:
         id_ente_owner:
           type: string
-          enum: [""]
+          description: 'Opcional. Identificador unico del ente dueño de la tarjeta'
+          maxLength: 20
         nombre_tarjeta:
           type: string
-          enum: [""]
+          description: 'Mandatorio. Nombre de la tarjeta a emitir dueño'
+          maxLength: 30
         tipo_tarjeta:
           type: string
-          enum: [""]
+          description: 'Mandatorio. P=Principal/A=Adicional'
+          enum: ['P', 'A']
+          maxLength: 1
         id_ente_additional:
           type: string
-          enum: [""]
+          description: 'Opcional. Identificador unico del ente de cliente titular en caso de una adicional'
+          maxLength: 20
         tarjeta_virtual:
           type: string
-          enum: [""]
+          description: 'Mandatorio. S=Si/N=Emite Física'
+          enum: ['S', 'N']
+          maxLength: 1
         producto_bin:
           type: string
-          enum: [""]
+          description: 'Mandatorio. BIN de la tarjeta a otorgar'
+          maxLength: 9
         limite_cred_titular:
           type: string
-          enum: [""]
+          description: 'Opcional. Importe con 2 decimales. Requerido para tarjeta titular'
+          maxlength: 20
         limite_consumo_adicional:
           type: string
-          enum: [""]
+          description: 'Opcional. Importe con 2 decimales. Requerido para tarjeta adicional, no puede ser mayor al limite del credito del titular'
+          maxlength: 20
         ciclo_corte_titular:
           type: string
-          enum: [""]
+          description: 'Opcional. Día del mes para el corte para emitir EDC, es requerido para tarjeta titular'
+          maxLength: 2
         plan_titular:
           type: string
-          enum: [""]
+          description: 'Opcional. Plan contiene las condiciones contratadas de la línea de crédito, es requerido para tarjetas titulares'
+          maxLength: 10
         codigo_lealtad_titular:
           type: string
-          enum: [""]
+          description: 'Opcional. Código de catalogo del programa de lealtad asignado a la tajeta principal, requerido para tarjeta principal'
+          maxLength: 3
         envio_edc_titular:
           type: string
-          enum: [""]
+          description: 'Mandatorio. Envío de estado de cuenta F=Físico/E=por email/A=ambos'
+          enum: ['F', 'E', 'A']
+          maxLength: 1
         email_edc_titular:
           type: string
-          enum: [""]
+          description: 'Opcional. Dirección de correo electrónico para enviar el Estado de Cuenta'
+          maxLength: 100
         direccion_1_edc_titular:
           type: string
-          enum: [""]
+          description: 'Opcional. Dirección parte 1 para el envío del estado de cuenta físico'
+          maxLength: 50
         direccion_2_edc_titular:
           type: string
-          enum: [""]
+          description: 'Opcional. Dirección parte 2 para el envío del estado de cuenta físico'
+          maxLength: 50
         ciudad_edc_titular:
           type: string
-          enum: [""]
+          description: 'Opcioonal. Ciudad para el envío físico del estado de cuenta'
+          maxLength: 20
         provincia_edc_titular:
           type: string
-          enum: [""]
+          description: 'Opcional. Provincia/Estado/cacerio/aldea para el envío del estado cuenta'
+          maxLength: 40
         codigo_postal_edc_titular:
           type: string
-          enum: [""]
+          description: 'Opcional. Apartado postal/Código postal/ZIPCOD para el envío de estado de cuenta'
+          maxLength: 20
         pais_edc_titular:
           type: string
-          enum: [""]
+          description: 'Opcional. País para el envío del estado de cuenta relacioando a la dirección'
+          maxLength: 3
         iban_internacional:
           type: string
-          enum: [""]
+          description: 'Opcional. Número de cuenta bancaria internacional para transferencias'
+          maxLength: 40
         iban_local:
           type: string
-          enum: [""]
+          description: 'Opcional. Número de cuenta interbancaria nacional'
+          maxLength: 40
         vendedores_tc:
           type: string
-          enum: [""]
+          description: 'Opcional. Código comercial de la colocación de la tarjeta'
+          maxLength: 10
         indicador_poliza:
           type: string
-          enum: [""]
+          description: 'Opcional. Cliente contrato poliza de seguros varios'
+          maxLength: 1
         emisor:
           type: string
-          enum: [""]
+          description: 'Mandatorio. Código de Identificación del emisor esto lo Asigna Volcán'
+          maxLength: 3
       required:
-      - id_ente_owner
+        - nombre_tarjeta
+        - tipo_tarjeta
+        - tarjeta_virtual
+        - producto_bin
+        - envio_edc_titular
+        - emisor
     ConsultaCuenta:
       type: object
       properties:
         cuenta:
           type: string
-          enum: [""]
+          description: 'Condicional. Consulta única por cuenta'
+          maxLength: 15
         cif:
           type: string
-          enum: [""]
+          description: 'Condicional. Consulta por CIF devuelve todas las cuentas relacionadas'
+          maxLength: 15
         id_owner:
           type: string
-          enum: [""]
+          description: 'Condicional. Consulta por Identificador único del sistema, devuelve todas las cuentas relacionadas, este código el sistema lo responde cuando se hace el alta del Ente o cliente.'
+          maxLength: 15
         tipo_identificacion:
           type: string
-          enum: [""]
+          description: 'Condicional. Consulta de cuentas por documento de identificación del cliente, se debe de enviar el código de catalogo del tipo de identificación'
+          maxLength: 2
         doc_identificacion:
           type: string
-          enum: [""]
+          description: 'Condicional. Consulta de cuentas por documento de identificación del TH, devuelve todas las cuentas relacionadas, para esta consulta es necesario enviar el tipo de identificación  el Doc.'
+          maxLength: 20
         moneda:
           type: string
-          enum: [""]
+          description: 'Mandatorio. Código de la moneda en ISO, para la consulta de saldo local o internacional'
+          maxLength: 3
+          default: 840
         emisor:
           type: string
-          enum: [""]
+          description: 'Mandatorio. Código de Identificación del emisor esto lo Asigna Volcán'
+          maxLength: 3
       required:
-      - cuenta
-      - cif
-      - id_owner
-      - tipo_identificacion
-      - doc_identificacion
+        - moneda
+        - emisor
     Extrafinanciamiento:
       type: object
       properties:
         tarjeta:
           type: string
-          enum: [ "" ]
+          description: 'Mandatorio. Número de cuenta relacionada al cliente'
+          maxLength: 16
         moneda:
           type: string
-          enum: [ "" ]
+          description: 'Mandatorio. Código de la moneda en ISO, para la consulta de saldo local o internacional'
+          maxLength: 3
+          default: '840'
         importe:
           type: string
-          enum: [ "" ]
+          description: 'Mandatorio. Importe. Formato 2 decimales.'
+          example: '1.00'
+          maxLength: 20
         tasa:
           type: string
-          enum: [ "" ]
+          description: 'Mandatorio. Tasa de interes. Formato 2 decimales'
+          example: '24.00'
+          maxLength: 5
         plazo:
           type: string
-          enum: [ "" ]
+          description: 'Mandatorio. Numero de pagos. Desde 01 al 60'
+          example: '01'
+          maxLength: 3
         referencia:
           type: string
-          enum: [ "" ]
+          description: 'Mandatorio. Referencia o folio de transaccion.'
+          maxLength: 12
         tipo:
           type: string
-          enum: [ "" ]
+          description: 'Mandatorio. Tipo C=Compra/A=Adelanto de efectivo'
+          enum: ['C', 'A']
+          maxLength: 1
         comercio:
           type: string
-          enum: [""]
+          description: 'Mandatorio. Nombre del comercio de la transaccion'
+          maxLength: 40
         emisor:
           type: string
-          enum: [""]
+          description: 'Mandatorio. Código de Identificación del emisor esto lo Asigna Volcán'
+          maxLength: 3
       required:
         - tarjeta
+        - emisor
     Intrafinanciamiento:
       type: object
       properties:
         tarjeta:
           type: string
-          enum: [ "" ]
+          description: 'Mandatorio. Número de cuenta relacionada al cliente'
+          maxLength: 16
         moneda:
           type: string
-          enum: [ "" ]
+          description: 'Mandatorio. Código de la moneda en ISO, para la consulta de saldo local o internacional'
+          maxLength: 3
+          default: '840'
         importe:
           type: string
-          enum: [ "" ]
+          description: 'Mandatorio. Importe. Formato 2 decimales.'
+          example: '1.00'
+          maxLength: 20
         tasa:
           type: string
-          enum: [ "" ]
+          description: 'Mandatorio. Tasa de interes. Formato 2 decimales'
+          example: '24.00'
+          maxLength: 5
         plazo:
           type: string
-          enum: [ "" ]
+          description: 'Mandatorio. Numero de pagos. Desde 01 al 60'
+          example: '01'
+          maxLength: 3
         referencia:
           type: string
-          enum: [ "" ]
+          description: 'Mandatorio. Referencia o folio de transaccion.'
+          maxLength: 12
         tipo:
           type: string
-          enum: [ "" ]
+          description: 'Mandatorio. Tipo C=Compra/A=Adelanto de efectivo'
+          enum: [ 'C', 'A' ]
+          maxLength: 1
         comercio:
           type: string
-          enum: [""]
+          description: 'Mandatorio. Nombre del comercio de la transaccion'
+          maxLength: 40
         emisor:
           type: string
-          enum: [""]
+          description: 'Mandatorio. Código de Identificación del emisor esto lo Asigna Volcán'
+          maxLength: 3
       required:
         - tarjeta
+        - emisor
     ConsultaTarjetas:
       type: object
       properties:
         tarjeta:
           type: string
-          enum: [ "" ]
+          description: 'Condicional. Consulta por número de Tarjeta Cifrada con la llame de Emisor'
+          maxLength: 16
         cif:
           type: string
-          enum: [ "" ]
+          description: 'Condicional. Consulta por CIF devuelve todas las tarjetas relacionaldas'
+          maxLength: 15
         id_owner:
           type: string
-          enum: [ "" ]
+          description: 'Condicional. Consulta por Identificador único del sistema, devuelve todas las tarjetas relacionadas al cliente'
+          maxLength: 15
         tipo_identificacion:
           type: string
-          enum: [ "" ]
+          description: 'Condicional. Consulta de cuentas por documento de identificación del cliente, se debe de enviar el código de catalogo del tipo de identificación'
+          maxLength: 2
         doc_identificacion:
           type: string
-          enum: [ "" ]
+          description: 'Condicional. Consulta de cuentas por documento de identificación del TH, devuelve todas las tarjetas relacionadas, 
+                        para esta consulta es necesario enviar el tipo de identificación  el Doc.'
+          maxLength: 20
         emisor:
           type: string
-          enum: [ "" ]
+          description: 'Mandatorio. Código de Identificación del emisor esto lo Asigna Volcán'
+          maxLength: 3
       required:
-        - tarjeta
+        - emisor
     CambioPIN:
       type: object
       properties:
         tarjeta:
           type: string
-          enum: [ "" ]
+          description: 'Mandatorio. Número de tarjeta del Cliente, puede ser principal o adicional cifrador TDES'
+          maxLength: 16
         pin:
           type: string
-          enum: [ "" ]
+          description: 'Mandatorio. PIN de la tarjeta cifrado TDES'
+          maxLength: 16
         emisor:
           type: string
-          enum: [ "" ]
+          description: 'Mandatorio. Código de Identificación del emisor esto lo Asigna Volcán'
+          maxLength: 3
       required:
         - tarjeta
         - pin
+        - emisor
     CambioLimites:
       type: object
       properties:
         cuenta:
           type: string
+          description: 'Mandatorio. Tarjeta de Crédito debe de enviarse cifrada con la llave del emisor RKEY/WSV'
           maxLength: 15
-          enum: [""]
         tarjeta:
           type: string
+          description: 'Condiconal. Solo aplica para tarjetas adicionales, no es necesario el campo de cuenta'
           maxLength: 16
-          enum: [""]
         limite_cr:
           type: string
-          maxLength: 19
-          enum: [""]
+          description: 'Condicional. Nuevo importe de límte de crédito por cuenta formato valido por ejemplo USD1,100 = 1100.00. Formato 2 decimales'
+          example: '1100.00'
+          maxLength: 20
         limite_con:
           type: string
-          maxLength: 19
-          enum: [""]
+          description: 'Condicional. Nuevo límit de consumo para tarjetas adicionales, formato valido por ejemplo USD1,100 = 1100.00. Formato 2 decimales'
+          maxLength: 20
         limite_extra:
           type: string
-          maxLength: 19
-          enum: [""]
+          description: 'Condicional. Nuevo límite de extrafinanciamiento por cuenta, formato valido por ejemplo USD1,100 = 1100.00. Formato 2 decimales'
+          maxLength: 20
         moneda:
           type: string
+          description: 'Mandatorio. Código de moneda en formato de ISO relacionada a cambio de límte tanto para la adicional como por cuenta'
           maxLength: 3
-          enum: [""]
         referencia:
           type: string
+          description: 'Mandatorio. Referencia unica por cada transacción'
           maxLength: 12
-          enum: [""]
         emisor:
           type: string
+          description: 'Mandatorio. Código de Identificación del emisor esto lo Asigna Volcán'
           maxLength: 3
-          enum: [""]
       required:
-        - tarjeta
         - cuenta
+        - moneda
+        - referencia
         - emisor
     CambioEstatusTDC:
       type: object
       properties:
         tarjeta:
           type: string
+          description: 'Opcional. Tarjeta de Crédito debe de enviarse cifrada con la llave del emisor RKEY/WSV, no se requiere si es por cuenta'
           maxLength: 16
-          enum: [""]
         cuenta:
           type: string
+          description: 'Opcional. Número de cuenta para cambiar el estado, no se requiere el númer de TDC'
           maxLength: 15
-          enum: [ "" ]
         estatus:
           type: string
+          description: 'Mandatorio. Código de estatus valido, basado en catalogo de EveryCard'
           maxLength: 2
-          enum: [""]
         motivo:
           type: string
+          description: 'Mandatorio. Descripción de la razón del cambio del estatus de la tarjeta'
           maxLength: 40
-          enum: [ "" ]
         referencia:
           type: string
+          description: 'Mandatorio. Referencia de auditoria única por transacción'
           maxLength: 12
-          enum: [""]
         emisor:
           type: string
+          description: 'Mandatorio. Código de Identificación del emisor esto lo Asigna Volcán'
           maxLength: 3
-          enum: [""]
       required:
-        - tarjeta
-        - cuenta
+        - estatus
+        - motivo
+        - referencia
         - emisor
     ReposicionTarjetas:
       type: object
       properties:
         tarjeta:
           type: string
+          description: 'Mandatorio. Tarjeta a remplazar cifrada, campo debe de viajar en HITARJ relaciona el dueño de la tarjeta'
           maxLength: 16
-          enum: [""]
         tipo_uso:
           type: string
+          description: 'Mandatorio. Tipo de uso F=Fisica/V=Virtual (deberá de heredar el uso de la tarjeta origen)'
+          enum: ['F', 'V']
           maxLength: 1
-          enum: [ "" ]
         emision:
           type: string
+          description: 'Mandatorio. P=Pre-expedidas/T=Pos-Expedidas o personalizadas'
+          enum: ['P', 'T']
           maxLength: 1
-          enum: [""]
         tarjeta_asignada:
           type: string
+          description: 'Opcional. Número de tarjeta pre-Expedida que se le asignara al cliente, cifrada, en el caso que la sucursal tenga tarjetas físicas'
           maxLength: 16
-          enum: [""]
         motivo_repo:
           type: string
+          description: 'Mandatorio. Código de motivo de reposición basado en catalogo de EveryCard'
           maxLength: 30
-          enum: [ "" ]
         oficina_entrega:
           type: string
+          description: 'Opcional. Código de oficina de entrega de la tarjeta basado en el catologo de oficinas de EveryCard'
           maxLength: 8
-          enum: [""]
         nombre_tarjeta:
           type: string
+          description: 'Mandatorio. Nuevo nombre de la tarjeta a embozar.'
           maxLength: 30
         referencia:
           type: string
+          description: 'Mandatorio. Folio único por cada transacción'
           maxLength: 12
-          enum: [""]
         emisor:
           type: string
+          description: 'Mandatorio. Código de Identificación del emisor esto lo Asigna Volcán'
           maxLength: 3
-          enum: [""]
       required:
         - tarjeta
-        - tarjeta_asignada
+        - tipo_uso
+        - emision
+        - motivo_repo
+        - nombre_tarjeta
+        - referencia
         - emisor
   securitySchemes:
     bearerAuth:            # arbitrary name for the security scheme

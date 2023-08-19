@@ -5,7 +5,7 @@ from django.conf import settings
 from common.utils import get_response_data_errors
 from control.serializers import ConsultaCuentaSerializer, ConsultaTarjetaSerializer, \
     CambioPINSerializer, ExtrafinanciamientoSerializer, CambioLimitesSerializer, CambioEstatusTDCSerializer, \
-    ReposicionTarjetasSerializer
+    ReposicionTarjetasSerializer, CreacionEnteSerializer
 
 
 def get_float_from_numeric_str(value: str) -> str:
@@ -84,37 +84,41 @@ def process_volcan_api_request(data, url, request, times=0):
 def creation_ente(request, **kwargs):
     times = kwargs.get('times', 0)
     if 'request_data' not in kwargs:
-        request_data = request.data
+        request_data = request.data.copy()
     else:
-        request_data = kwargs['request_data']
+        request_data = kwargs['request_data'].copy()
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_URL
     api_url = f'{url_server}/web/services/Alta_Ente_1'
-    resp = process_volcan_api_request(data=data, url=api_url, request=request, times=times)
-    if 'RSP_ERROR' in resp[1]:
-        if resp[1]['RSP_ERROR'].upper() == 'OK':
-            resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
-        elif resp[1]['RSP_ERROR'] == '':
-            return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
-        elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':
-            return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Transaccion erronea'}, resp[2]
-        else:
-            resp_copy = resp[1].copy()
-            for k in resp[1].keys():
-                if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION', 'RSP_ENTEID']:
-                    del resp_copy[k]
-            return resp[0], resp_copy, resp[2]
+    serializer = CreacionEnteSerializer(data=data)
+    if serializer.is_valid():
+        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        if 'RSP_ERROR' in resp[1]:
+            if resp[1]['RSP_ERROR'].upper() == 'OK':
+                resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
+            elif resp[1]['RSP_ERROR'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
+            elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Transaccion erronea'}, resp[2]
+            else:
+                resp_copy = resp[1].copy()
+                for k in resp[1].keys():
+                    if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION', 'RSP_ENTEID']:
+                        del resp_copy[k]
+                return resp[0], resp_copy, resp[2]
+    else:
+        resp = get_response_data_errors(serializer.errors)
     return resp
 
 
 def creation_cta_tar(request, **kwargs):
     times = kwargs.get('times', 0)
     if 'request_data' not in kwargs:
-        request_data = request.data
+        request_data = request.data.copy()
     else:
-        request_data = kwargs['request_data']
+        request_data = kwargs['request_data'].copy()
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
@@ -140,9 +144,9 @@ def creation_cta_tar(request, **kwargs):
 def consulta_cuenta(request, **kwargs):
     times = kwargs.get('times', 0)
     if 'request_data' not in kwargs:
-        request_data = request.data
+        request_data = request.data.copy()
     else:
-        request_data = kwargs['request_data']
+        request_data = kwargs['request_data'].copy()
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
@@ -184,9 +188,9 @@ def consulta_cuenta(request, **kwargs):
 def extrafinanciamientos(request, **kwargs):
     times = kwargs.get('times', 0)
     if 'request_data' not in kwargs:
-        request_data = request.data
+        request_data = request.data.copy()
     else:
-        request_data = kwargs['request_data']
+        request_data = kwargs['request_data'].copy()
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
@@ -222,9 +226,9 @@ def extrafinanciamientos(request, **kwargs):
 def intrafinanciamientos(request, **kwargs):
     times = kwargs.get('times', 0)
     if 'request_data' not in kwargs:
-        request_data = request.data
+        request_data = request.data.copy()
     else:
-        request_data = kwargs['request_data']
+        request_data = kwargs['request_data'].copy()
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
@@ -260,9 +264,9 @@ def intrafinanciamientos(request, **kwargs):
 def consulta_tarjetas(request, **kwargs):
     times = kwargs.get('times', 0)
     if 'request_data' not in kwargs:
-        request_data = request.data
+        request_data = request.data.copy()
     else:
-        request_data = kwargs['request_data']
+        request_data = kwargs['request_data'].copy()
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
@@ -298,9 +302,9 @@ def consulta_tarjetas(request, **kwargs):
 def cambio_pin(request, **kwargs):
     times = kwargs.get('times', 0)
     if 'request_data' not in kwargs:
-        request_data = request.data
+        request_data = request.data.copy()
     else:
-        request_data = kwargs['request_data']
+        request_data = kwargs['request_data'].copy()
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
@@ -330,9 +334,9 @@ def cambio_pin(request, **kwargs):
 def cambio_limites(request, **kwargs):
     times = kwargs.get('times', 0)
     if 'request_data' not in kwargs:
-        request_data = request.data
+        request_data = request.data.copy()
     else:
-        request_data = kwargs['request_data']
+        request_data = kwargs['request_data'].copy()
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
@@ -368,9 +372,9 @@ def cambio_limites(request, **kwargs):
 def cambio_estatus_tdc(request, **kwargs):
     times = kwargs.get('times', 0)
     if 'request_data' not in kwargs:
-        request_data = request.data
+        request_data = request.data.copy()
     else:
-        request_data = kwargs['request_data']
+        request_data = kwargs['request_data'].copy()
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
@@ -400,9 +404,9 @@ def cambio_estatus_tdc(request, **kwargs):
 def reposicion_tarjetas(request, **kwargs):
     times = kwargs.get('times', 0)
     if 'request_data' not in kwargs:
-        request_data = request.data
+        request_data = request.data.copy()
     else:
-        request_data = kwargs['request_data']
+        request_data = kwargs['request_data'].copy()
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
