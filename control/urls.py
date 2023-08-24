@@ -13,5 +13,6 @@ urlpatterns = [
     path('CambioLimites/', ControlApiView.as_view({'post': 'cambio_limites'})),
     path('CambioEstatusTDC/', ControlApiView.as_view({'post': 'cambio_estatus_tdc'})),
     path('ReposicionTarjetas/', ControlApiView.as_view({'post': 'reposicion_tarjetas'})),
+    path('GestionTransacciones/', ControlApiView.as_view({'post': 'gestion_transacciones'})),
 
 ]

@@ -732,6 +732,62 @@ paths:
               }
       tags:
         - VolcanManager::Acciones
+  /volcan/api/GestionTransacciones/:
+    post:
+      operationId: api_control_gestion_transacciones
+      description: Gestion de Transacciones
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/GestionTransacciones"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GestionTransacciones"
+        required: true
+      summary: Gestion de transacciones
+      responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
+        '200':
+          description: 'Gestion transacciones'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_cuenta": "1...6",
+                "rsp_importe": "1.00",
+                "rsp_moneda": "",
+                "rsp_operacion": "",
+                "rsp_referencia": "EXTRA VOLCAN",
+                "rsp_autoriz": "00124",
+                "rsp_doc_oper": "",
+                "rsp_disponible": "",
+                "rsp_disp_puntos": ""
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error gestion transacciones"
+              }
+      tags:
+        - VolcanManager::Acciones
 components:
   schemas:
     LoginToken:
@@ -778,7 +834,7 @@ components:
           maxLength: 1
         tipo_identificacion:
           type: string
-          description: 'Tipo de identificación. Ver valores validos del catalogo de EveryCard'
+          description: 'Tipo de identificación. Ver valores válidos del catálogo del sistema de crédito Volcán'
           maxLength: 2
         documento_identificacion:
           type: string
@@ -813,7 +869,7 @@ components:
           type: string
           format: date
           pattern: '^\d{4}\d{2}\d{2}$'
-          description: 'Fecha de nacimiento. Formato: YYYYMMDD'
+          description: 'Fecha de nacimiento. Formato: AAAAMMDD'
           maxLength: 8
         sexo:
           type: string
@@ -822,11 +878,11 @@ components:
           maxLength: 1
         estado_civil:
           type: string
-          description: 'Estado civil. Valores validos Catalogo de EveryCard'
+          description: 'Estado civil. Valores válidos catálogo del sistema de crédito Volcán'
           maxLength: 2
         profesion:
           type: string
-          description: 'Código de profesión. Valores validos Catalogo de EveryCard'
+          description: 'Código de profesión. Valores válidos catálogo del sistema de crédito Volcán'
           maxLength: 2
         seguro_social:
           type: string
@@ -834,27 +890,27 @@ components:
           maxLength: 25
         pais_nacimiento:
           type: string
-          description: 'Pais de nacimiento. Catalogo de ISO de 2 posiciones de paises'
+          description: 'Pais de nacimiento. Catálogo de ISO de 2 posiciones de paises'
           maxLength: 3
         pais_residencia:
           type: string
-          description: 'Pais de residencia. Catalogo de ISO de 2 posiciones de paises'
+          description: 'Pais de residencia. Catálogo de ISO de 2 posiciones de paises'
           maxLength: 3
         nacionalidad:
           type: string
-          description: 'Nacionalidad. Catalogo de ISO de 2 posiciones de paises'
+          description: 'Nacionalidad. Catálogo de ISO de 2 posiciones de paises'
           maxLength: 3
         codigo_provincia:
           type: string
-          description: 'Codigo provincia. Enviar valores validos de catalogo de EveryCard'
+          description: 'Código provincia. Enviar valores válidos de catálogo del sistema de crédito Volcán'
           maxLength: 3
         codigo_canton:
           type: string
-          description: 'Codigo canton. Enviar valores validos de catalogo de EveryCard'
+          description: 'Código canton. Enviar valores válidos de catálogo del sistema de crédito Volcán'
           maxLength: 5
         codigo_distrito:
           type: string
-          description: 'Opcional. Codigo distrito. Enviar valores validos de catalogo  en EveryCard'
+          description: 'Opcional. Código distrito. Enviar valores válidos de catálogo del sistema de crédito Volcán'
         direccion_1:
           type: string
           description: 'Mandatorio. Dirección 1. Obligatorio para tarjeta titular'
@@ -865,17 +921,17 @@ components:
           maxLength: 50
         codigo_postal:
           type: string
-          description: 'Opcional. Codigo postal'
+          description: 'Opcional. Código postal'
           maxLength: 10
         telefono_casa:
           type: string
-          description: 'Condicional. Telefono de casa. Valida que el cliente reporte al menos 1 telefono'
+          description: 'Condicional. Teléfono de casa. Valida que el cliente reporte al menos 1 telefono'
         celular:
           type: string
           description: 'Condicional. Celular. Valida que el cliente reporte al menos 1 telefono'
         telefono_oficina:
           type: string
-          description: 'Condicional. Telefono de oficina. Valida que el cliente reporte al menos 1 telefono'
+          description: 'Condicional. Teléfono de oficina. Valida que el cliente reporte al menos 1 telefono'
         email_personal:
           type: string
           description: 'Mandatorio. Email personal. Obligatorio para titular'
@@ -908,11 +964,11 @@ components:
           type: string
           format: date
           pattern: '^\d{4}\d{2}\d{2}$'
-          description: 'Opcional. Fecha de ingreso al trabajo. Formato YYYYMMDD'
+          description: 'Opcional. Fecha de ingreso al trabajo. Formato AAAAMMDD'
           maxLength: 8
         oficina_ext:
           type: string
-          description: 'Extension'
+          description: 'Extensión de teléfono de la oficina'
           maxLength: 12
         nombre_conyugue:
           type: string
@@ -948,7 +1004,7 @@ components:
           maxLength: 1
         emisor:
           type: string
-          description: 'Emisor'
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
           maxLength: 50
       required:
         - documento_identificacion
@@ -990,7 +1046,7 @@ components:
           maxlength: 20
         limite_consumo_adicional:
           type: string
-          description: 'Opcional. Importe con 2 decimales. Requerido para tarjeta adicional, no puede ser mayor al limite del credito del titular'
+          description: 'Opcional. Importe con 2 decimales. Requerido para tarjeta adicional, no puede ser mayor al límite del crédito del titular'
           maxlength: 20
         ciclo_corte_titular:
           type: string
@@ -1002,7 +1058,7 @@ components:
           maxLength: 10
         codigo_lealtad_titular:
           type: string
-          description: 'Opcional. Código de catalogo del programa de lealtad asignado a la tajeta principal, requerido para tarjeta principal'
+          description: 'Opcional. Código de catálogo del programa de lealtad asignado a la tajeta principal, requerido para tarjeta principal'
           maxLength: 3
         envio_edc_titular:
           type: string
@@ -1055,7 +1111,7 @@ components:
           maxLength: 1
         emisor:
           type: string
-          description: 'Mandatorio. Código de Identificación del emisor esto lo Asigna Volcán'
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
           maxLength: 3
       required:
         - nombre_tarjeta
@@ -1081,7 +1137,7 @@ components:
           maxLength: 15
         tipo_identificacion:
           type: string
-          description: 'Condicional. Consulta de cuentas por documento de identificación del cliente, se debe de enviar el código de catalogo del tipo de identificación'
+          description: 'Condicional. Consulta de cuentas por documento de identificación del cliente, se debe de enviar el código de catálogo del tipo de identificación'
           maxLength: 2
         doc_identificacion:
           type: string
@@ -1094,7 +1150,7 @@ components:
           default: 840
         emisor:
           type: string
-          description: 'Mandatorio. Código de Identificación del emisor esto lo Asigna Volcán'
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
           maxLength: 3
       required:
         - moneda
@@ -1118,12 +1174,12 @@ components:
           maxLength: 20
         tasa:
           type: string
-          description: 'Mandatorio. Tasa de interes. Formato 2 decimales'
+          description: 'Mandatorio. Tasa de interés. Formato 2 decimales'
           example: '24.00'
           maxLength: 5
         plazo:
           type: string
-          description: 'Mandatorio. Numero de pagos. Desde 01 al 60'
+          description: 'Mandatorio. Número de pagos. Desde 01 al 60'
           example: '01'
           maxLength: 3
         referencia:
@@ -1141,7 +1197,7 @@ components:
           maxLength: 40
         emisor:
           type: string
-          description: 'Mandatorio. Código de Identificación del emisor esto lo Asigna Volcán'
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
           maxLength: 3
       required:
         - tarjeta
@@ -1165,12 +1221,12 @@ components:
           maxLength: 20
         tasa:
           type: string
-          description: 'Mandatorio. Tasa de interes. Formato 2 decimales'
+          description: 'Mandatorio. Tasa de interés. Formato 2 decimales'
           example: '24.00'
           maxLength: 5
         plazo:
           type: string
-          description: 'Mandatorio. Numero de pagos. Desde 01 al 60'
+          description: 'Mandatorio. Número de pagos. Desde 01 al 60'
           example: '01'
           maxLength: 3
         referencia:
@@ -1188,7 +1244,7 @@ components:
           maxLength: 40
         emisor:
           type: string
-          description: 'Mandatorio. Código de Identificación del emisor esto lo Asigna Volcán'
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
           maxLength: 3
       required:
         - tarjeta
@@ -1210,16 +1266,16 @@ components:
           maxLength: 15
         tipo_identificacion:
           type: string
-          description: 'Condicional. Consulta de cuentas por documento de identificación del cliente, se debe de enviar el código de catalogo del tipo de identificación'
+          description: 'Condicional. Consulta de cuentas por documento de identificación del cliente, se debe de enviar el código de catálogo del tipo de identificación'
           maxLength: 2
         doc_identificacion:
           type: string
           description: 'Condicional. Consulta de cuentas por documento de identificación del TH, devuelve todas las tarjetas relacionadas, 
-                        para esta consulta es necesario enviar el tipo de identificación  el Doc.'
+                        para esta consulta es necesario enviar el tipo de identificación'
           maxLength: 20
         emisor:
           type: string
-          description: 'Mandatorio. Código de Identificación del emisor esto lo Asigna Volcán'
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
           maxLength: 3
       required:
         - emisor
@@ -1236,7 +1292,7 @@ components:
           maxLength: 16
         emisor:
           type: string
-          description: 'Mandatorio. Código de Identificación del emisor esto lo Asigna Volcán'
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
           maxLength: 3
       required:
         - tarjeta
@@ -1255,12 +1311,12 @@ components:
           maxLength: 16
         limite_cr:
           type: string
-          description: 'Condicional. Nuevo importe de límte de crédito por cuenta formato valido por ejemplo USD1,100 = 1100.00. Formato 2 decimales'
+          description: 'Condicional. Nuevo importe de límite de crédito por cuenta formato valido por ejemplo USD1,100 = 1100.00. Formato 2 decimales'
           example: '1100.00'
           maxLength: 20
         limite_con:
           type: string
-          description: 'Condicional. Nuevo límit de consumo para tarjetas adicionales, formato valido por ejemplo USD1,100 = 1100.00. Formato 2 decimales'
+          description: 'Condicional. Nuevo límite de consumo para tarjetas adicionales, formato valido por ejemplo USD1,100 = 1100.00. Formato 2 decimales'
           maxLength: 20
         limite_extra:
           type: string
@@ -1268,15 +1324,15 @@ components:
           maxLength: 20
         moneda:
           type: string
-          description: 'Mandatorio. Código de moneda en formato de ISO relacionada a cambio de límte tanto para la adicional como por cuenta'
+          description: 'Mandatorio. Código de moneda en formato de ISO relacionada a cambio de límite tanto para la adicional como por cuenta'
           maxLength: 3
         referencia:
           type: string
-          description: 'Mandatorio. Referencia unica por cada transacción'
+          description: 'Mandatorio. Referencia única por cada transacción'
           maxLength: 12
         emisor:
           type: string
-          description: 'Mandatorio. Código de Identificación del emisor esto lo Asigna Volcán'
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
           maxLength: 3
       required:
         - cuenta
@@ -1296,7 +1352,7 @@ components:
           maxLength: 15
         estatus:
           type: string
-          description: 'Mandatorio. Código de estatus valido, basado en catalogo de EveryCard'
+          description: 'Mandatorio. Código de estatus valido, basado en catálogo del sistema de crédito Volcán'
           maxLength: 2
         motivo:
           type: string
@@ -1308,7 +1364,7 @@ components:
           maxLength: 12
         emisor:
           type: string
-          description: 'Mandatorio. Código de Identificación del emisor esto lo Asigna Volcán'
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
           maxLength: 3
       required:
         - estatus
@@ -1338,11 +1394,11 @@ components:
           maxLength: 16
         motivo_repo:
           type: string
-          description: 'Mandatorio. Código de motivo de reposición basado en catalogo de EveryCard'
+          description: 'Mandatorio. Código de motivo de reposición basado en catálogo del sistema de crédito Volcán'
           maxLength: 30
         oficina_entrega:
           type: string
-          description: 'Opcional. Código de oficina de entrega de la tarjeta basado en el catologo de oficinas de EveryCard'
+          description: 'Opcional. Código de oficina de entrega de la tarjeta basado en el catálogo de oficinas del sistema de crédito Volcán'
           maxLength: 8
         nombre_tarjeta:
           type: string
@@ -1354,7 +1410,7 @@ components:
           maxLength: 12
         emisor:
           type: string
-          description: 'Mandatorio. Código de Identificación del emisor esto lo Asigna Volcán'
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
           maxLength: 3
       required:
         - tarjeta
@@ -1363,6 +1419,91 @@ components:
         - motivo_repo
         - nombre_tarjeta
         - referencia
+        - emisor
+    GestionTransacciones:
+      type: object
+      properties:
+        tarjeta:
+          type: string
+          description: 'Mandatorio. Tarjeta de Crédito debe de enviarse cifrada con la llave del emisor RKEY/WSV'
+          maxLength: 16
+        transaccion:
+          type: string
+          description: 'Mandatorio. Enviar lo siguiente: COM = Compras normales/ADE=Adelanto de Efectivo/PAG=Pagos a la TDC'
+          enum: ['COM', 'ADE', 'PAG']
+          maxLength: 3
+        importe:
+          type: string
+          description: 'Mandatorio. Importe de la transacción el formato valido es por ejemplo USD$1,100.00, se deberá enviar = 1100.00. Formato 2 decimales'
+          example: '1.00'
+          maxLength: 20
+        moneda:
+          type: string
+          description: 'Mandatorio. Moneda del importe de la transacción, en el estandar de ISO'
+          maxLength: 3
+        fecha_trx:
+          type: string
+          format: date
+          pattern: '^\d{4}\d{2}\d{2}$'
+          description: 'Mandatorio. Fecha de la transacción para el registro de la aplicación de movimientos. Formato AAAAMMDD'
+          maxLength: 8
+        hora_trx:
+          type: string
+          format: time
+          pattern: '^\d{2}\d{2}\d{2}$'
+          description: 'Mandatorio. Hora de la transacción formato HHMMSS'
+          maxLength: 6
+        cvv:
+          type: string
+          description: 'Mandatorio. Código de valiación para compras '
+          maxLength: 3
+        cheque:
+          type: string
+          description: 'Condicional. Campo obligatorio cuando por el código de movimiento.'
+          maxLength: 20
+        plaza:
+          type: string
+          description: 'Condicional. Campo obligatorio cuando esta presente el número de cheque'
+          maxLength: 2
+        no_financiamiento:
+          type: string
+          description: 'Mandatorio. Identificación del Intra/Extrafinanciamiento registrado en el estado de cuenta de la TDC.'
+          maxLength: 10
+        referencia:
+          type: string
+          description: 'Mandatorio. Folio único por cada transacción se debera de enviar por cada operación'
+          maxLength: 12
+        doc_oper:
+          type: string
+          description: 'Opcional. Numero de documento a reversar registrado en los movimientos de la TDC, si ingresan la autorización es obligatorio'
+          maxLength: 10
+        autorizacion:
+          type: string
+          description: 'Opcional. Número de Autorización dato obligatorio para anular o reversar operaciones'
+          maxLength: 6
+        comercio:
+          type: string
+          description: 'Condicional. Formato 1-25 Nombre del comercio/26-37 Ciudad de la transacción/38-40 Código de Pais de la trx en ISO'
+          maxLength: 40
+        sucursal:
+          type: string
+          description: 'Mandatorio. Oficina, Sucursal/Terminal origen de la transacción'
+          maxLength: 8
+        emisor:
+          type: string
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+          maxLength: 3
+      required:
+        - tarjeta
+        - transaccion
+        - importe
+        - moneda
+        - fecha_trx
+        - hora_trx
+        - cvv
+        - no_financiamiento
+        - referencia
+        - sucursal
         - emisor
   securitySchemes:
     bearerAuth:            # arbitrary name for the security scheme

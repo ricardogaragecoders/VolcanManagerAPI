@@ -317,3 +317,50 @@ class ReposicionTarjetasSerializer(serializers.Serializer):
             raise CustomValidationError(detail=u'El numero de tarjeta es requerido',
                                         code='400')
         return data
+
+
+class GestionTransaccionesSerializer(serializers.Serializer):
+    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    TRANSACCION = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    IMPORTE = serializers.CharField(max_length=19, required=False, default="", allow_blank=True, allow_null=True)
+    MONEDA = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    FECHA_TRX = serializers.CharField(max_length=8, required=False, default="", allow_blank=True)
+    HORA_TRX = serializers.CharField(max_length=6, required=False, default="", allow_blank=True)
+    CVV = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    CHEQUE = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    PLAZA = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
+    NO_FINANCIAMIENTO = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    REFERENCIA = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
+    DOC_OPER = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    AUTORIZACION = serializers.CharField(max_length=6, required=False, default="", allow_blank=True)
+    COMERCIO = serializers.CharField(max_length=40, required=False, default="", allow_blank=True)
+    SUCURSAL = serializers.CharField(max_length=8, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('TARJETA', 'TRANSACCION', 'IMPORTE', 'MONEDA', 'FECHA_TRX', 'HORA_TRX', 'CVV',
+                  'CHEQUE', 'PLAZA', 'NO_FINANCIAMIENTO', 'REFERENCIA', 'DOC_OPER', 'AUTORIZACION',
+                  'COMERCIO', 'SUCURSAL', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+
+    def validate(self, data):
+        data = super(GestionTransaccionesSerializer, self).validate(data)
+        card = data.get('TARJETA', "").strip()
+
+        amount = get_decimal_from_request_data(data, 'IMPORTE')
+
+        if isinstance(amount, Decimal):
+            amounts = ("%.2f" % amount ).split('.')
+            data['IMPORTE'] = amounts[0].zfill(17) + amounts[1].zfill(2)
+
+        if len(card) == 0:
+            raise CustomValidationError(detail=u'El numero de tarjeta es requerido',
+                                        code='400')
+        # if not importe.isnumeric():
+        #     raise CustomValidationError(detail=u'El importe no es numerico',
+        #                                 code='400')
+
+        data['TARJETA'] = card
+
+        return data
