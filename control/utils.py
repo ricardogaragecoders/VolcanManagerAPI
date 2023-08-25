@@ -19,6 +19,8 @@ def get_float_from_numeric_str(value: str) -> str:
             return '%04.2f' % value_f
         else:
             return '%05.2f' % value_f
+    except AssertionError:
+        return value
     except TypeError:
         return ""
 
