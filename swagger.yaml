@@ -1471,7 +1471,7 @@ components:
           maxLength: 2
         no_financiamiento:
           type: string
-          description: 'Mandatorio. Identificación del Intra/Extrafinanciamiento registrado en el estado de cuenta de la TDC.'
+          description: 'Identificación del Intra/Extrafinanciamiento registrado en el estado de cuenta de la TDC.'
           maxLength: 10
         referencia:
           type: string
@@ -1512,7 +1512,6 @@ components:
         - moneda
         - fecha_trx
         - hora_trx
-        - no_financiamiento
         - referencia
         - comercio
         - ciudad
