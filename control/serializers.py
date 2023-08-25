@@ -335,7 +335,7 @@ class GestionTransaccionesSerializer(serializers.Serializer):
     DOC_OPER = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
     AUTORIZACION = serializers.CharField(max_length=6, required=False, default="", allow_blank=True)
     COMERCIO = serializers.CharField(max_length=24, required=False, default="", allow_blank=True)
-    CUIDAD = serializers.CharField(max_length=13, required=False, default="", allow_blank=True)
+    CIUDAD = serializers.CharField(max_length=13, required=False, default="", allow_blank=True)
     PAIS = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
     SUCURSAL = serializers.CharField(max_length=8, required=False, default="", allow_blank=True)
     EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
