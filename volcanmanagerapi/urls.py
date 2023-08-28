@@ -30,6 +30,8 @@ urlpatterns = [
 
     path('volcan/api/', include('control.urls')),
 
+    path('', include('thalesapi.urls')),
+
 ]
 
 
