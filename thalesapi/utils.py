@@ -216,13 +216,27 @@ def get_card_credentials_credit(request, *args, **kwargs):
     if response_status == 200:
         if 'RSP_ERROR' in response_data and response_data['RSP_ERROR'].upper() == 'OK':
             # falta el proceso de encriptacion para Thales
-            data = {
+            from jwcrypto import jwk, jwe
+            from jwcrypto.common import json_encode, json_decode
+            payload = {
                 "pan": response_data['pan'] if 'pan' in response_data else '',
                 "exp": response_data['exp'] if 'exp' in response_data else '',
                 "name": response_data['name'] if 'name' in response_data else '',
                 "cvv": response_data['cvv'] if 'cvv' in response_data else ''
             }
-            response_data = {'encryptedData': data}
+            payload = json.dumps(payload)
+            public_key = None
+            with open(settings.PUB_KEY_ISSUER_SERVER_TO_D1_SERVER_PEM, "rb") as pemfile:
+                public_key = jwk.JWK.from_pem(pemfile.read())
+            if public_key:
+                protected_header_back = {
+                    "alg": "ECDH-ES",
+                    "enc": "A256GCM",
+                    "kid": "G0D43.TEST.CMS_ENC.ECC.01"
+                }
+                jwetoken = jwe.JWE(payload.encode('utf-8'), recipient=public_key, protected=protected_header_back)
+                enc = jwetoken.serialize(compact=True)
+                response_data = {'encryptedData': enc}
         else:
             response_status = 400
             response_data = {'error': response_data['RSP_DESCRIPCION']}
