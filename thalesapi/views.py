@@ -38,7 +38,7 @@ class ThalesApiView(CustomViewSet):
             request_data = request.data.copy()
         else:
             request_data = kwargs['request_data'].copy()
-        if 'cardBin' in request_data and is_card_bin_valid(request_data['card_bin']):
+        if 'cardBin' in request_data and is_card_bin_valid(request_data['cardBin']):
             # aqui revisamos si es credito o prepago
             card_bin = request_data['cardBin']
             card_type = CardType.CT_PREPAID if card_bin == '53876436' else CardType.CT_CREDIT
@@ -55,11 +55,11 @@ class ThalesApiView(CustomViewSet):
                                                                      request_data=request_data,
                                                                      *args, **kwargs)
             if response_status == 200:
-                CardDetail.objects.create(consumer_id=response_data['consumerId'],
-                                          card_id=response_data['cardId'],
-                                          issuer_id=issuer_id,
-                                          card_bin=card_bin,
-                                          card_type=card_type)
+                CardDetail.objects.get_or_create(consumer_id=response_data['consumerId'],
+                                                 card_id=response_data['cardId'],
+                                                 issuer_id=issuer_id,
+                                                 card_bin=card_bin,
+                                                 card_type=card_type)
         else:
             response_data, response_status = {'error': 'Datos incompletos'}, 400
         return Response(data=response_data, status=response_status)

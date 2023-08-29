@@ -122,7 +122,7 @@ def post_verify_card_credit(request, *args, **kwargs):
                                                                     url=api_url, request=request)
         # aqui falta hacer el proceso para cambiar la respuesta como la necesita Thales
         if response_status == 200:
-            if int(response_data['RSP_CODIGO']) == 0:
+            if 'RSP_ERROR' in response_data and response_data['RSP_ERROR'].upper() == 'OK':
                 data = {
                     "cardId": response_data['cardId'] if 'cardId' in response_data else '',
                     "consumerId": response_data['consumerId'] if 'consumerId' in response_data else '',
@@ -169,7 +169,7 @@ def get_consumer_information_credit(request, *args, **kwargs):
     data = {'cardId': card_detail.card_id, 'consumerId': card_detail.consumer_id}
     response_data, response_status = process_volcan_api_request(data=data, url=api_url, request=request)
     if response_status == 200:
-        if int(response_data['RSP_CODIGO']) == 0:
+        if 'RSP_ERROR' in response_data and response_data['RSP_ERROR'].upper() == 'OK':
             data = {
                 "language": "en-US",
                 "firstName": response_data['firstName'] if 'firstName' in response_data else '',
@@ -214,7 +214,7 @@ def get_card_credentials_credit(request, *args, **kwargs):
     data = {'cardId': card_detail.card_id, 'consumerId': card_detail.consumer_id}
     response_data, response_status = process_volcan_api_request(data=data, url=api_url, request=request)
     if response_status == 200:
-        if int(response_data['RSP_CODIGO']) == 0:
+        if 'RSP_ERROR' in response_data and response_data['RSP_ERROR'].upper() == 'OK':
             # falta el proceso de encriptacion para Thales
             data = {
                 "pan": response_data['pan'] if 'pan' in response_data else '',
