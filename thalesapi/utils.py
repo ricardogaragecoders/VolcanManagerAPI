@@ -115,7 +115,7 @@ def post_verify_card_credit(request, *args, **kwargs):
     else:
         request_data = kwargs['request_data'].copy()
     url_server = settings.SERVER_VOLCAN_URL
-    api_url = f'{url_server}/web/services/Thales_Verify_Card'
+    api_url = f'{url_server}/web/services/VerifyCard_1'
     serializer = VerifyCardCreditSerializer(data=request_data)
     if serializer.is_valid():
         response_data, response_status = process_volcan_api_request(data=serializer.validated_data,
@@ -124,19 +124,19 @@ def post_verify_card_credit(request, *args, **kwargs):
         if response_status == 200:
             if 'RSP_ERROR' in response_data and response_data['RSP_ERROR'].upper() == 'OK':
                 data = {
-                    "cardId": response_data['cardId'] if 'cardId' in response_data else '',
-                    "consumerId": response_data['consumerId'] if 'consumerId' in response_data else '',
-                    "accountId": response_data['accountId'] if 'accountId' in response_data else '',
+                    "cardId": response_data['RSP_TARJETAID'] if 'RSP_TARJETAID' in response_data else '',
+                    "consumerId": response_data['RSP_CLIENTEID'] if 'RSP_CLIENTEID' in response_data else '',
+                    "accountId": response_data['RSP_CUENTAID'] if 'RSP_CUENTAID' in response_data else '',
                     "verificationResults": {
                         "securityCode": {
-                            "valid": ('valid_cvv' in response_data and response_data['valid_cvv'] == 'OK'),
+                            "valid": ('RSP_VALID_CVV' in response_data and response_data['RSP_VALID_CVV'] == '1'),
                             "verificationAttemptsExceeded": (
-                                    'num_attemps' in response_data and response_data['num_attemps'] != 'OK')
+                                    'RSP_NUM_ATTEMPS' in response_data and response_data['RSP_NUM_ATTEMPS'] != '1')
                         },
                         "card": {
-                            "lostOrStolen": ('lost_stolen' in response_data and response_data['lost_stolen'] != 'OK'),
-                            "expired": ('expired' in response_data and response_data['expired'] != 'OK'),
-                            "invalid": ('invalid' in response_data and response_data['invalid'] != 'OK'),
+                            "lostOrStolen": ('RSP_LOST_STOLEN' in response_data and response_data['RSP_LOST_STOLEN'] != '1'),
+                            "expired": ('RSP_EXPIRADA' in response_data and response_data['RSP_EXPIRADA'] != '1'),
+                            "invalid": ('RSP_TAR_VALID' in response_data and response_data['RSP_TAR_VALID'] != '1'),
                             "fraudSuspect": False
                         }
                     }
@@ -215,9 +215,7 @@ def get_card_credentials_credit(request, *args, **kwargs):
     response_data, response_status = process_volcan_api_request(data=data, url=api_url, request=request)
     if response_status == 200:
         if 'RSP_ERROR' in response_data and response_data['RSP_ERROR'].upper() == 'OK':
-            # falta el proceso de encriptacion para Thales
             from jwcrypto import jwk, jwe
-            from jwcrypto.common import json_encode, json_decode
             payload = {
                 "pan": response_data['pan'] if 'pan' in response_data else '',
                 "exp": response_data['exp'] if 'exp' in response_data else '',
