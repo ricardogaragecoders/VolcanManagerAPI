@@ -46,3 +46,27 @@ class VerifyCardCreditSerializer(serializers.Serializer):
             logger.exception(e)
 
         return data
+
+
+class GetConsumerInfoSerializer(serializers.Serializer):
+    cardId = serializers.CharField(max_length=48, required=False, default="", allow_blank=True, allow_null=True)
+    consumerId = serializers.CharField(max_length=64, required=False, default="", allow_blank=False, allow_null=False)
+
+    class Meta:
+        fields = ('cardId', 'consumerId')
+
+    def validate(self, data):
+        data = super(GetConsumerInfoSerializer, self).validate(data)
+        card_id = data.pop('cardId', None)
+        consumer_id = data.pop('consumerId', None)
+
+        data['TARJETAID'] = card_id
+        if len(card_id) == 0:
+            raise CustomValidationError(detail=u'TARJETAID es requerido', code='400')
+
+        data['FOLIO'] = code_generator(characters=12, option='num')
+        data['USUARIO_ATZ'] = settings.VOLCAN_USUARIO_ATZ
+        data['ACCESO_ATZ'] = settings.VOLCAN_ACCESO_ATZ
+        data['EMISOR'] = 'CMF'
+
+        return data

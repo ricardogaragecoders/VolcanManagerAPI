@@ -4,7 +4,7 @@ from django.conf import settings
 
 from common.utils import get_response_data_errors
 from control.utils import get_volcan_api_headers
-from thalesapi.serializers import VerifyCardCreditSerializer
+from thalesapi.serializers import VerifyCardCreditSerializer, GetConsumerInfoSerializer
 
 
 def get_str_from_date_az7(s_date):
@@ -165,37 +165,42 @@ def post_verify_card_prepaid(request, *args, **kwargs):
 def get_consumer_information_credit(request, *args, **kwargs):
     card_detail = kwargs.get('card_detail')
     url_server = settings.SERVER_VOLCAN_URL
-    api_url = f'{url_server}/web/services/Thales_Get_Consumer_Info'
+    api_url = f'{url_server}/web/services/Volcan_GetConsumer_1'
     data = {'cardId': card_detail.card_id, 'consumerId': card_detail.consumer_id}
-    response_data, response_status = process_volcan_api_request(data=data, url=api_url, request=request)
-    if response_status == 200:
-        if 'RSP_ERROR' in response_data and response_data['RSP_ERROR'].upper() == 'OK':
-            data = {
-                "language": "en-US",
-                "firstName": response_data['firstName'] if 'firstName' in response_data else '',
-                "middleName": response_data['middleName'] if 'middleName' in response_data else '',
-                "lastName": response_data['lastName'] if 'lastName' in response_data else '',
-                "dateOfBirth": get_str_from_date_az7(
-                    response_data['dateOfBirth']) if 'dateOfBirth' in response_data else '',
-                "title": "Mr.",
-                "email": response_data['email'] if 'email' in response_data else '',
-                "mobilePhoneNumber": {
-                    "countryCode": "+507",
-                    "phoneNumber": response_data['mobilePhoneNumber'] if 'mobilePhoneNumber' in response_data else ''
-                },
-                "residencyAddress": {
-                    "line1": response_data['line_1'] if 'line_1' in response_data else '',
-                    "line2": response_data['line_2'] if 'line_2' in response_data else '',
-                    "city": response_data['city'] if 'city' in response_data else '',
-                    "state": response_data['state'] if 'state' in response_data else '',
-                    "zipCode": response_data['zipCode'] if 'zipCode' in response_data else '',
-                    "countryCode": "PA"
+    serializer = GetConsumerInfoSerializer(data=data)
+    if serializer.is_valid():
+        response_data, response_status = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request)
+        if response_status == 200:
+            if 'RSP_ERROR' in response_data and response_data['RSP_ERROR'].upper() == 'OK':
+                data = {
+                    "language": "en-US",
+                    "firstName": response_data['RSP_NOMBRE1'] if 'RSP_NOMBRE1' in response_data else '',
+                    "middleName": response_data['RSP_NOMBRE2'] if 'RSP_NOMBRE2' in response_data else '',
+                    "lastName": response_data['RSP_APELLIDO1'] if 'RSP_APELLIDO1' in response_data else '',
+                    "dateOfBirth": get_str_from_date_az7(
+                        response_data['RSP_FECHA_NAC']) if 'RSP_FECHA_NAC' in response_data else '',
+                    "title": "Mr.",
+                    "email": response_data['RSP_MAIL'] if 'RSP_MAIL' in response_data else '',
+                    "mobilePhoneNumber": {
+                        "countryCode": "+507",
+                        "phoneNumber": response_data['RSP_TELEFONO'] if 'RSP_TELEFONO' in response_data else ''
+                    },
+                    "residencyAddress": {
+                        "line1": response_data['RSP_DIRECCION1'] if 'RSP_DIRECCION1' in response_data else '',
+                        "line2": response_data['RSP_DIRECCION2'] if 'RSP_DIRECCION2' in response_data else '',
+                        "city": response_data['RSP_CIUDAD'] if 'RSP_CIUDAD' in response_data else '',
+                        "state": response_data['RSP_ESTADO'] if 'RSP_ESTADO' in response_data else '',
+                        "zipCode": response_data['RSP_CPOSTAL'] if 'RSP_CPOSTAL' in response_data else '',
+                        "countryCode": "PA"
+                    }
                 }
-            }
-            response_data = data
-        else:
-            response_status = 400
-            response_data = {'error': response_data['RSP_DESCRIPCION']}
+                response_data = data
+            else:
+                response_status = 400
+                response_data = {'error': response_data['RSP_DESCRIPCION']}
+    else:
+        response_message, response_data, response_status = get_response_data_errors(serializer.errors)
+        response_data, response_status = {'error': response_message}, 400
     return response_data, response_status
 
 
