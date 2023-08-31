@@ -260,7 +260,7 @@ def get_card_credentials_credit_testing(request, *args, **kwargs):
     }
     payload = json.dumps(payload)
     public_key = None
-    with open('/home/richpolis/Proyectos/python/volcanmanagerapi/keys/sandbox/VOLCAPA1-jwt-pub-key.pem', "rb") as pemfile:
+    with open(settings.PUB_KEY_D1_SERVER_TO_ISSUER_SERVER_PEM, "rb") as pemfile:
         public_key = jwk.JWK.from_pem(pemfile.read())
     if public_key:
         protected_header_back = {
