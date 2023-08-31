@@ -1,8 +1,7 @@
-from rest_framework import serializers
-from decimal import Decimal, InvalidOperation, DecimalException
-from common.exceptions import CustomValidationError
 from django.conf import settings
+from rest_framework import serializers
 
+from common.exceptions import CustomValidationError
 from common.utils import code_generator
 
 
@@ -24,10 +23,9 @@ class VerifyCardCreditSerializer(serializers.Serializer):
         data['FOLIO'] = code_generator(characters=12, option='num')
         data['USUARIO_ATZ'] = settings.VOLCAN_USUARIO_ATZ
         data['ACCESO_ATZ'] = settings.VOLCAN_ACCESO_ATZ
-        data['EMISOR'] = 'CMF'
+        data['EMISOR'] = settings.THALESAPI_EMISOR_DEFAULT
 
         from jwcrypto import jwk, jwe
-        from jwcrypto.common import json_encode, json_decode
         import json
         try:
             with open(settings.PRIV_KEY_D1_SERVER_TO_ISSUER_SERVER_PEM, "rb") as pemfile:
@@ -67,7 +65,7 @@ class GetConsumerInfoSerializer(serializers.Serializer):
         data['FOLIO'] = code_generator(characters=12, option='num')
         data['USUARIO_ATZ'] = settings.VOLCAN_USUARIO_ATZ
         data['ACCESO_ATZ'] = settings.VOLCAN_ACCESO_ATZ
-        data['EMISOR'] = 'CMF'
+        data['EMISOR'] = settings.THALESAPI_EMISOR_DEFAULT
 
         return data
 
@@ -91,7 +89,7 @@ class GetDataCredentialsSerializer(serializers.Serializer):
         data['FOLIO'] = code_generator(characters=12, option='num')
         data['USUARIO_ATZ'] = settings.VOLCAN_USUARIO_ATZ
         data['ACCESO_ATZ'] = settings.VOLCAN_ACCESO_ATZ
-        data['EMISOR'] = 'CMF'
-        data['AUTORIZACION'] = ''
+        data['EMISOR'] = settings.THALESAPI_EMISOR_DEFAULT
+        data['AUTORIZACION'] = settings.THALESAPI_AUTORIZACION_DEFAULT
 
         return data

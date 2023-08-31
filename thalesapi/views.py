@@ -1,10 +1,10 @@
 from rest_framework.exceptions import ParseError
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+
 from common.views import CustomViewSet
 from thalesapi.models import CardType, CardDetail
 from thalesapi.utils import is_card_bin_valid
-from users.permissions import IsVerified, IsOperator
 
 
 # Create your views here.
