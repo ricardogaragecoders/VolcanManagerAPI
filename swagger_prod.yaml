@@ -799,141 +799,141 @@ paths:
       tags:
         - VolcanManager::Acciones
     parameters: []
-  /cms/api/v1/issuers/{issuer_id}/cards/credentials:
-    post:
-      operationId: api_thalesapi_verify_card
-      description: Thales API Endpoint VerifyCard
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: "#/components/schemas/VerifyCard"
-          application/json:
-            schema:
-              $ref: "#/components/schemas/VerifyCard"
-        required: true
-      summary: Thales API Endpoint VerifyCard
-      parameters:
-        - in: header
-          name: Authorization
-          schema:
-            type: string
-            maxLength: 250
-          required: false
-        - in: header
-          name: x-correlation-id
-          schema:
-            type: string
-            pattern: '[a-zA-Z0-9_\-\. ]{1,64}'
-          required: true
-      responses:
-        '200':
-          description: 'Thales response'
-        '400':
-          description: 'Thales response'
-        '404':
-          description: 'Thales response'
-        '500':
-          description: 'Thales response'
-      tags:
-        - VolcanManager::ThalesAPI
-    parameters:
-      - name: issuer_id
-        in: path
-        required: true
-        description: Issuer ID
-        schema:
-          type: string
-  /banking/d1/v1/issuers/{issuer_id}/consumers/{consumer_id}:
-    get:
-      operationId: api_thalesapi_get_consumer_info
-      description: Thales API Endpoint GetConsumerInfo
-      summary: Thales API Endpoint GetConsumerInfo
-      parameters:
-        - name: cardId
-          in: query
-          description: Card ID.
-          required: true
-          schema:
-            type: string
-        - in: header
-          name: Authorization
-          schema:
-            type: string
-            maxLength: 250
-          required: false
-        - in: header
-          name: x-correlation-id
-          schema:
-            type: string
-            pattern: '[a-zA-Z0-9_\-\. ]{1,64}'
-          required: true
-      responses:
-        '200':
-          description: 'Thales response'
-        '400':
-          description: 'Thales response'
-        '404':
-          description: 'Thales response'
-        '500':
-          description: 'Thales response'
-      tags:
-        - VolcanManager::ThalesAPI
-    parameters:
-      - name: issuer_id
-        in: path
-        required: true
-        description: Issuer ID
-        schema:
-          type: string
-      - name: consumer_id
-        in: path
-        required: true
-        description: Consumer ID
-        schema:
-          type: string
-  /cms/api/v1/issuers/{issuer_id}/cards/{card_id}/credentials:
-    get:
-      operationId: api_thalesapi_get_card_credentials
-      description: Thales API Endpoint GetCardCredentials
-      summary: Thales API Endpoint GetCardCredentials
-      parameters:
-        - in: header
-          name: Authorization
-          schema:
-            type: string
-            maxLength: 250
-          required: false
-        - in: header
-          name: x-correlation-id
-          schema:
-            type: string
-            pattern: '[a-zA-Z0-9_\-\. ]{1,64}'
-          required: true
-      responses:
-        '200':
-          description: 'Thales response'
-        '400':
-          description: 'Thales response'
-        '404':
-          description: 'Thales response'
-        '500':
-          description: 'Thales response'
-      tags:
-        - VolcanManager::ThalesAPI
-    parameters:
-      - name: issuer_id
-        in: path
-        required: true
-        description: Issuer ID
-        schema:
-          type: string
-      - name: card_id
-        in: path
-        required: true
-        description: Card ID
-        schema:
-          type: string
+#  /cms/api/v1/issuers/{issuer_id}/cards/credentials:
+#    post:
+#      operationId: api_thalesapi_verify_card
+#      description: Thales API Endpoint VerifyCard
+#      requestBody:
+#        content:
+#          application/x-www-form-urlencoded:
+#            schema:
+#              $ref: "#/components/schemas/VerifyCard"
+#          application/json:
+#            schema:
+#              $ref: "#/components/schemas/VerifyCard"
+#        required: true
+#      summary: Thales API Endpoint VerifyCard
+#      parameters:
+#        - in: header
+#          name: Authorization
+#          schema:
+#            type: string
+#            maxLength: 250
+#          required: false
+#        - in: header
+#          name: x-correlation-id
+#          schema:
+#            type: string
+#            pattern: '[a-zA-Z0-9_\-\. ]{1,64}'
+#          required: true
+#      responses:
+#        '200':
+#          description: 'Thales response'
+#        '400':
+#          description: 'Thales response'
+#        '404':
+#          description: 'Thales response'
+#        '500':
+#          description: 'Thales response'
+#      tags:
+#        - VolcanManager::ThalesAPI
+#    parameters:
+#      - name: issuer_id
+#        in: path
+#        required: true
+#        description: Issuer ID
+#        schema:
+#          type: string
+#  /banking/d1/v1/issuers/{issuer_id}/consumers/{consumer_id}:
+#    get:
+#      operationId: api_thalesapi_get_consumer_info
+#      description: Thales API Endpoint GetConsumerInfo
+#      summary: Thales API Endpoint GetConsumerInfo
+#      parameters:
+#        - name: cardId
+#          in: query
+#          description: Card ID.
+#          required: true
+#          schema:
+#            type: string
+#        - in: header
+#          name: Authorization
+#          schema:
+#            type: string
+#            maxLength: 250
+#          required: false
+#        - in: header
+#          name: x-correlation-id
+#          schema:
+#            type: string
+#            pattern: '[a-zA-Z0-9_\-\. ]{1,64}'
+#          required: true
+#      responses:
+#        '200':
+#          description: 'Thales response'
+#        '400':
+#          description: 'Thales response'
+#        '404':
+#          description: 'Thales response'
+#        '500':
+#          description: 'Thales response'
+#      tags:
+#        - VolcanManager::ThalesAPI
+#    parameters:
+#      - name: issuer_id
+#        in: path
+#        required: true
+#        description: Issuer ID
+#        schema:
+#          type: string
+#      - name: consumer_id
+#        in: path
+#        required: true
+#        description: Consumer ID
+#        schema:
+#          type: string
+#  /cms/api/v1/issuers/{issuer_id}/cards/{card_id}/credentials:
+#    get:
+#      operationId: api_thalesapi_get_card_credentials
+#      description: Thales API Endpoint GetCardCredentials
+#      summary: Thales API Endpoint GetCardCredentials
+#      parameters:
+#        - in: header
+#          name: Authorization
+#          schema:
+#            type: string
+#            maxLength: 250
+#          required: false
+#        - in: header
+#          name: x-correlation-id
+#          schema:
+#            type: string
+#            pattern: '[a-zA-Z0-9_\-\. ]{1,64}'
+#          required: true
+#      responses:
+#        '200':
+#          description: 'Thales response'
+#        '400':
+#          description: 'Thales response'
+#        '404':
+#          description: 'Thales response'
+#        '500':
+#          description: 'Thales response'
+#      tags:
+#        - VolcanManager::ThalesAPI
+#    parameters:
+#      - name: issuer_id
+#        in: path
+#        required: true
+#        description: Issuer ID
+#        schema:
+#          type: string
+#      - name: card_id
+#        in: path
+#        required: true
+#        description: Card ID
+#        schema:
+#          type: string
 components:
   schemas:
     LoginToken:
@@ -1664,26 +1664,26 @@ components:
         - pais
         - sucursal
         - emisor
-    VerifyCard:
-      type: object
-      properties:
-        encryptedData:
-          type: string
-          description: 'Mandatorio. Encryted data'
-          maxLength: 250
-        cardId:
-          type: string
-          description: 'Mandatorio. Card ID Thales'
-          pattern: '[A-Za-z0-9_-]{1,48}'
-          maxLength: 48
-        cardBin:
-          type: string
-          description: 'Mandatorio. Card BIN'
-          maxLength: 6
-      required:
-        - encryptedData
-        - cardId
-        - cardBin
+#    VerifyCard:
+#      type: object
+#      properties:
+#        encryptedData:
+#          type: string
+#          description: 'Mandatorio. Encryted data'
+#          maxLength: 250
+#        cardId:
+#          type: string
+#          description: 'Mandatorio. Card ID Thales'
+#          pattern: '[A-Za-z0-9_-]{1,48}'
+#          maxLength: 48
+#        cardBin:
+#          type: string
+#          description: 'Mandatorio. Card BIN'
+#          maxLength: 6
+#      required:
+#        - encryptedData
+#        - cardId
+#        - cardBin
   securitySchemes:
     bearerAuth:            # arbitrary name for the security scheme
       type: http

@@ -30,6 +30,8 @@ urlpatterns = [
 
     path('volcan/api/', include('control.urls')),
 
+    path('', include('thalesapi.urls')),
+
 ]
 
 
@@ -41,4 +43,8 @@ if settings.DEBUG:
         path('admin/', admin.site.urls),
         path('', include('swagger_ui.urls')),
         path('__debug__/', include(debug_toolbar.urls)),
+    ] + urlpatterns
+else:
+    urlpatterns = [
+        path('', include('swagger_ui.urls')),
     ] + urlpatterns
