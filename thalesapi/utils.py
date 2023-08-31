@@ -4,7 +4,7 @@ from django.conf import settings
 
 from common.utils import get_response_data_errors
 from control.utils import get_volcan_api_headers
-from thalesapi.serializers import VerifyCardCreditSerializer, GetConsumerInfoSerializer
+from thalesapi.serializers import VerifyCardCreditSerializer, GetConsumerInfoSerializer, GetDataCredentialsSerializer
 
 
 def get_str_from_date_az7(s_date):
@@ -215,34 +215,39 @@ def get_consumer_information_prepaid(request, *args, **kwargs):
 def get_card_credentials_credit(request, *args, **kwargs):
     card_detail = kwargs.get('card_detail')
     url_server = settings.SERVER_VOLCAN_URL
-    api_url = f'{url_server}/web/services/Thales_Get_Card_Credentials'
+    api_url = f'{url_server}/web/services/GetCardCredentials_1'
     data = {'cardId': card_detail.card_id, 'consumerId': card_detail.consumer_id}
-    response_data, response_status = process_volcan_api_request(data=data, url=api_url, request=request)
-    if response_status == 200:
-        if 'RSP_ERROR' in response_data and response_data['RSP_ERROR'].upper() == 'OK':
-            from jwcrypto import jwk, jwe
-            payload = {
-                "pan": response_data['pan'] if 'pan' in response_data else '',
-                "exp": response_data['exp'] if 'exp' in response_data else '',
-                "name": response_data['name'] if 'name' in response_data else '',
-                "cvv": response_data['cvv'] if 'cvv' in response_data else ''
-            }
-            payload = json.dumps(payload)
-            public_key = None
-            with open(settings.PUB_KEY_ISSUER_SERVER_TO_D1_SERVER_PEM, "rb") as pemfile:
-                public_key = jwk.JWK.from_pem(pemfile.read())
-            if public_key:
-                protected_header_back = {
-                    "alg": "ECDH-ES",
-                    "enc": "A256GCM",
-                    "kid": "G0D43.TEST.CMS_ENC.ECC.01"
+    serializer = GetDataCredentialsSerializer(data=data)
+    if serializer.is_valid():
+        response_data, response_status = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request)
+        if response_status == 200:
+            if 'RSP_ERROR' in response_data and response_data['RSP_ERROR'].upper() == 'OK':
+                from jwcrypto import jwk, jwe
+                payload = {
+                    "pan": response_data['RSP_TARJETA'] if 'RSP_TARJETA' in response_data else '',
+                    "exp": response_data['RSP_VENCIMIENTO'] if 'RSP_VENCIMIENTO' in response_data else '',
+                    "name": response_data['RSP_NOMBRE'] if 'RSP_NOMBRE' in response_data else '',
+                    "cvv": response_data['RSP_CVV'] if 'RSP_CVV' in response_data else ''
                 }
-                jwetoken = jwe.JWE(payload.encode('utf-8'), recipient=public_key, protected=protected_header_back)
-                enc = jwetoken.serialize(compact=True)
-                response_data = {'encryptedData': enc}
-        else:
-            response_status = 400
-            response_data = {'error': response_data['RSP_DESCRIPCION']}
+                payload = json.dumps(payload)
+                public_key = None
+                with open(settings.PUB_KEY_ISSUER_SERVER_TO_D1_SERVER_PEM, "rb") as pemfile:
+                    public_key = jwk.JWK.from_pem(pemfile.read())
+                if public_key:
+                    protected_header_back = {
+                        "alg": "ECDH-ES",
+                        "enc": "A256GCM",
+                        "kid": "G0D43.TEST.CMS_ENC.ECC.01"
+                    }
+                    jwetoken = jwe.JWE(payload.encode('utf-8'), recipient=public_key, protected=protected_header_back)
+                    enc = jwetoken.serialize(compact=True)
+                    response_data = {'encryptedData': enc}
+            else:
+                response_status = 400
+                response_data = {'error': response_data['RSP_DESCRIPCION']}
+    else:
+        response_message, response_data, response_status = get_response_data_errors(serializer.errors)
+        response_data, response_status = {'error': response_message}, 400
     return response_data, response_status
 
 
