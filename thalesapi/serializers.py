@@ -90,6 +90,6 @@ class GetDataCredentialsSerializer(serializers.Serializer):
         data['USUARIO_ATZ'] = settings.VOLCAN_USUARIO_ATZ
         data['ACCESO_ATZ'] = settings.VOLCAN_ACCESO_ATZ
         data['EMISOR'] = settings.THALESAPI_EMISOR_DEFAULT
-        data['AUTORIZACION'] = settings.THALESAPI_AUTORIZACION_DEFAULT
+        # data['AUTORIZACION'] = settings.THALESAPI_AUTORIZACION_DEFAULT
 
         return data

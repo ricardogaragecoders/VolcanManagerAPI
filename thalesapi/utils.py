@@ -129,7 +129,7 @@ def post_verify_card_credit(request, *args, **kwargs):
                         "securityCode": {
                             "valid": ('RSP_VALID_CVV' in response_data and response_data['RSP_VALID_CVV'] == '1'),
                             "verificationAttemptsExceeded": (
-                                    'RSP_NUM_ATTEMPS' in response_data and response_data['RSP_NUM_ATTEMPS'] != '1')
+                                    'RSP_NUM_ATTEMPS' in response_data and response_data['RSP_NUM_ATTEMPS'] != '0')
                         },
                         "card": {
                             "lostOrStolen": ('RSP_LOST_STOLEN' in response_data and response_data['RSP_LOST_STOLEN'] != '1'),
@@ -247,6 +247,30 @@ def get_card_credentials_credit(request, *args, **kwargs):
         response_message, response_data, response_status = get_response_data_errors(serializer.errors)
         response_data, response_status = {'error': response_message}, 400
     return response_data, response_status
+
+
+def get_card_credentials_credit_testing(request, *args, **kwargs):
+    response_data = request.data
+    from jwcrypto import jwk, jwe
+    payload = {
+        "pan": response_data['RSP_TARJETA'] if 'RSP_TARJETA' in response_data else '',
+        "exp": response_data['RSP_VENCIMIENTO'] if 'RSP_VENCIMIENTO' in response_data else '',
+        "name": response_data['RSP_NOMBRE'] if 'RSP_NOMBRE' in response_data else '',
+        "cvv": response_data['RSP_CVV'] if 'RSP_CVV' in response_data else ''
+    }
+    payload = json.dumps(payload)
+    public_key = None
+    with open('/home/richpolis/Proyectos/python/volcanmanagerapi/keys/sandbox/VOLCAPA1-jwt-pub-key.pem', "rb") as pemfile:
+        public_key = jwk.JWK.from_pem(pemfile.read())
+    if public_key:
+        protected_header_back = {
+            "alg": "ECDH-ES",
+            "enc": "A256GCM"
+        }
+        jwetoken = jwe.JWE(payload.encode('utf-8'), recipient=public_key, protected=protected_header_back)
+        enc = jwetoken.serialize(compact=True)
+        response_data = {'encryptedData': enc}
+    return response_data, 200
 
 
 def get_card_credentials_prepaid(request, *args, **kwargs):
