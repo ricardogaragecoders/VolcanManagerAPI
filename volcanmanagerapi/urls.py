@@ -44,3 +44,7 @@ if settings.DEBUG:
         path('', include('swagger_ui.urls')),
         path('__debug__/', include(debug_toolbar.urls)),
     ] + urlpatterns
+else:
+    urlpatterns = [
+        path('', include('swagger_ui.urls')),
+    ] + urlpatterns

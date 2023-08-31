@@ -264,6 +264,9 @@ if DEBUG:
         # Panel options
         'SQL_WARNING_THRESHOLD': 100,  # milliseconds
     }
+else:
+    SWAGGER_YAML_FILE = os.path.join(BASE_DIR, "swagger_prod.yaml")
+    INSTALLED_APPS = ['swagger_ui', ] + INSTALLED_APPS
 
 LOGGING = {
     'version': 1,

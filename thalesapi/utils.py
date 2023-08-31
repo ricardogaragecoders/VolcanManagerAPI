@@ -26,10 +26,9 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
     response_data = dict()
     response_status = 500
     headers = get_thales_api_headers(request)
-    if settings.DEBUG:
-        print(f"Request: {url}")
-        print(f"Headers: {request.headers}")
-        print(f"Data json: {data}")
+    print(f"Request: {url}")
+    print(f"Headers: {request.headers}")
+    print(f"Data json: {data}")
     try:
         if http_verb == 'POST':
             r = requests.post(url=url, data=data, headers=headers)
@@ -71,10 +70,9 @@ def process_volcan_api_request(data, url, request, times=0):
     response_status = 500
     headers = get_volcan_api_headers()
     data_json = json.dumps(data)
-    if settings.DEBUG:
-        print(f"Request: {url}")
-        print(f"Headers: {request.headers}")
-        print(f"Data json: {data_json}")
+    print(f"Request: {url}")
+    print(f"Headers: {request.headers}")
+    print(f"Data json: {data_json}")
     try:
         r = requests.post(url=url, data=data_json, headers=headers)
         response_status = r.status_code
