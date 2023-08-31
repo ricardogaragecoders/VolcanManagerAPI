@@ -934,6 +934,41 @@ paths:
         description: Card ID
         schema:
           type: string
+  /testing/cms/api/v1/issuers/{issuer_id}/cards/{card_id}/credentials:
+    post:
+      operationId: api_thalesapi_get_card_credentials_testing
+      description: Thales API Endpoint GetCardCredentials_testing
+      summary: Thales API Endpoint GetCardCredentials Testing
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardCredentialsTesting"
+        required: true
+      responses:
+        '200':
+          description: 'Thales response'
+        '400':
+          description: 'Thales response'
+        '404':
+          description: 'Thales response'
+        '500':
+          description: 'Thales response'
+      tags:
+        - VolcanManager::ThalesAPI
+    parameters:
+      - name: issuer_id
+        in: path
+        required: true
+        description: Issuer ID
+        schema:
+          type: string
+      - name: card_id
+        in: path
+        required: true
+        description: Card ID
+        schema:
+          type: string
 components:
   schemas:
     LoginToken:
@@ -1684,6 +1719,26 @@ components:
         - encryptedData
         - cardId
         - cardBin
+    CardCredentialsTesting:
+      type: object
+      properties:
+        RSP_TARJETA:
+          type: string
+          maxLength: 20
+        RSP_VENCIMIENTO:
+          type: string
+          maxLength: 4
+        RSP_NOMBRE:
+          type: string
+          maxLength: 30
+        RSP_CVV:
+          type: string
+          maxLength: 3
+      required:
+        - RSP_TARJETA
+        - RSP_VENCIMIENTO
+        - RSP_NOMBRE
+        - RSP_CVV
   securitySchemes:
     bearerAuth:            # arbitrary name for the security scheme
       type: http
