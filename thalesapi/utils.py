@@ -22,6 +22,30 @@ def get_thales_api_headers(request=None):
     return request.headers
 
 
+def get_card_triple_des_process(card_data, is_descript=False):
+    try:
+        from Crypto.Cipher import DES3
+
+        key = bytes.fromhex('E391048C40C18AF45EB557D9E010CB9D')
+        des3 = DES3.new(key, DES3.MODE_ECB)
+
+        if not is_descript:
+            card = bytes.fromhex(card_data)
+            enc_bytes = des3.encrypt(card)
+            enc_buf = ''.join(["%02X" % x for x in enc_bytes]).strip()
+            return str(enc_buf)
+        else:
+            card_az7 = bytes.fromhex(card_data)
+            enc_bytes = des3.decrypt(card_az7)
+            enc_buf = ''.join(["%02X" % x for x in enc_bytes]).strip()
+            return str(enc_buf)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.exception(e)
+        return None
+
+
 def process_prepaid_api_request(data, url, request, http_verb='POST'):
     response_data = dict()
     response_status = 500
@@ -132,7 +156,8 @@ def post_verify_card_credit(request, *args, **kwargs):
                                     'RSP_NUM_ATTEMPS' in response_data and response_data['RSP_NUM_ATTEMPS'] != '0')
                         },
                         "card": {
-                            "lostOrStolen": ('RSP_LOST_STOLEN' in response_data and response_data['RSP_LOST_STOLEN'] != '1'),
+                            "lostOrStolen": (
+                                    'RSP_LOST_STOLEN' in response_data and response_data['RSP_LOST_STOLEN'] != '1'),
                             "expired": ('RSP_EXPIRADA' in response_data and response_data['RSP_EXPIRADA'] != '1'),
                             "invalid": ('RSP_TAR_VALID' in response_data and response_data['RSP_TAR_VALID'] != '1'),
                             "fraudSuspect": False
@@ -167,7 +192,8 @@ def get_consumer_information_credit(request, *args, **kwargs):
     data = {'cardId': card_detail.card_id, 'consumerId': card_detail.consumer_id}
     serializer = GetConsumerInfoSerializer(data=data)
     if serializer.is_valid():
-        response_data, response_status = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request)
+        response_data, response_status = process_volcan_api_request(data=serializer.validated_data, url=api_url,
+                                                                    request=request)
         if response_status == 200:
             if 'RSP_ERROR' in response_data and response_data['RSP_ERROR'].upper() == 'OK':
                 data = {
@@ -217,7 +243,8 @@ def get_card_credentials_credit(request, *args, **kwargs):
     data = {'cardId': card_detail.card_id, 'consumerId': card_detail.consumer_id}
     serializer = GetDataCredentialsSerializer(data=data)
     if serializer.is_valid():
-        response_data, response_status = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request)
+        response_data, response_status = process_volcan_api_request(data=serializer.validated_data, url=api_url,
+                                                                    request=request)
         if response_status == 200:
             if 'RSP_ERROR' in response_data and response_data['RSP_ERROR'].upper() == 'OK':
                 from jwcrypto import jwk, jwe
@@ -227,19 +254,28 @@ def get_card_credentials_credit(request, *args, **kwargs):
                     "name": response_data['RSP_NOMBRE'] if 'RSP_NOMBRE' in response_data else '',
                     "cvv": response_data['RSP_CVV'] if 'RSP_CVV' in response_data else ''
                 }
-                payload = json.dumps(payload)
-                public_key = None
-                with open(settings.PUB_KEY_ISSUER_SERVER_TO_D1_SERVER_PEM, "rb") as pemfile:
-                    public_key = jwk.JWK.from_pem(pemfile.read())
-                if public_key:
-                    protected_header_back = {
-                        "alg": "ECDH-ES",
-                        "enc": "A256GCM",
-                        "kid": "G0D43.TEST.CMS_ENC.ECC.01"
-                    }
-                    jwetoken = jwe.JWE(payload.encode('utf-8'), recipient=public_key, protected=protected_header_back)
-                    enc = jwetoken.serialize(compact=True)
-                    response_data = {'encryptedData': enc}
+
+                card_real = get_card_triple_des_process(payload['pan'], is_descript=True)
+                if card_real:
+                    payload['pand'] = card_real
+                    payload = json.dumps(payload)
+                    print(payload)
+                    public_key = None
+                    with open(settings.PUB_KEY_ISSUER_SERVER_TO_D1_SERVER_PEM, "rb") as pemfile:
+                        public_key = jwk.JWK.from_pem(pemfile.read())
+                    if public_key:
+                        protected_header_back = {
+                            "alg": "ECDH-ES",
+                            "enc": "A256GCM",
+                            "kid": "G0D43.TEST.CMS_ENC.ECC.01"
+                        }
+                        jwetoken = jwe.JWE(payload.encode('utf-8'), recipient=public_key,
+                                           protected=protected_header_back)
+                        enc = jwetoken.serialize(compact=True)
+                        response_data = {'encryptedData': enc}
+                else:
+                    response_status = 400
+                    response_data = {'error': 'Error en proceso de desincriptacion triple des'}
             else:
                 response_status = 400
                 response_data = {'error': response_data['RSP_DESCRIPCION']}
@@ -258,19 +294,28 @@ def get_card_credentials_credit_testing(request, *args, **kwargs):
         "name": response_data['RSP_NOMBRE'] if 'RSP_NOMBRE' in response_data else '',
         "cvv": response_data['RSP_CVV'] if 'RSP_CVV' in response_data else ''
     }
-    payload = json.dumps(payload)
-    public_key = None
-    with open('/home/richpolis/Proyectos/python/volcanmanagerapi/keys/sandbox/VOLCAPA1-jwt-pub-key.pem', "rb") as pemfile:
-        public_key = jwk.JWK.from_pem(pemfile.read())
-    if public_key:
-        protected_header_back = {
-            "alg": "ECDH-ES",
-            "enc": "A256GCM"
-        }
-        jwetoken = jwe.JWE(payload.encode('utf-8'), recipient=public_key, protected=protected_header_back)
-        enc = jwetoken.serialize(compact=True)
-        response_data = {'encryptedData': enc}
-    return response_data, 200
+    card_real = get_card_triple_des_process(payload['pan'], is_descript=True)
+    if card_real:
+        payload['pan'] = card_real
+        payload = json.dumps(payload)
+        print(payload)
+        public_key = None
+        with open('/home/richpolis/Proyectos/python/volcanmanagerapi/keys/sandbox/VOLCAPA1-jwt-pub-key.pem',
+                  "rb") as pemfile:
+            public_key = jwk.JWK.from_pem(pemfile.read())
+        if public_key:
+            protected_header_back = {
+                "alg": "ECDH-ES",
+                "enc": "A256GCM"
+            }
+            jwetoken = jwe.JWE(payload.encode('utf-8'), recipient=public_key, protected=protected_header_back)
+            enc = jwetoken.serialize(compact=True)
+            response_data = {'encryptedData': enc}
+        return response_data, 200
+    else:
+        response_status = 400
+        response_data = {'error': 'Error en proceso de desincriptacion triple des'}
+        return response_data, response_status
 
 
 def get_card_credentials_prepaid(request, *args, **kwargs):
