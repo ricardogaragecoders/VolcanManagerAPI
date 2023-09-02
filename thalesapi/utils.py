@@ -26,7 +26,7 @@ def get_card_triple_des_process(card_data, is_descript=False):
     try:
         from Crypto.Cipher import DES3
 
-        key = bytes.fromhex('E391048C40C18AF45EB557D9E010CB9D')
+        key = bytes.fromhex(settings.AZ7_KEY_DEV)
         des3 = DES3.new(key, DES3.MODE_ECB)
 
         if not is_descript:
