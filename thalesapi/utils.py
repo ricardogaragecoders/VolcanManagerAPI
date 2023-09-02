@@ -136,7 +136,7 @@ def post_verify_card_credit(request, *args, **kwargs):
         request_data = request.data.copy()
     else:
         request_data = kwargs['request_data'].copy()
-    url_server = settings.SERVER_VOLCAN_URL
+    url_server = settings.SERVER_VOLCAN_AZ7_URL
     api_url = f'{url_server}/web/services/VerifyCard_1'
     serializer = VerifyCardCreditSerializer(data=request_data)
     if serializer.is_valid():
@@ -179,15 +179,15 @@ def post_verify_card_prepaid(request, *args, **kwargs):
         request_data = request.data.copy()
     else:
         request_data = kwargs['request_data'].copy()
-    url_server = settings.SERVER_VOLCAN_URL
-    api_url = f'{url_server}/web/services/Prepaid_Verify_Card'
+    url_server = settings.SERVER_VOLCAN_PAYCARD_URL
+    api_url = f'{url_server}{request.path}'
     response_data, response_status = process_prepaid_api_request(data=request_data, url=api_url, request=request)
     return response_data, response_status
 
 
 def get_consumer_information_credit(request, *args, **kwargs):
     card_detail = kwargs.get('card_detail')
-    url_server = settings.SERVER_VOLCAN_URL
+    url_server = settings.SERVER_VOLCAN_AZ7_URL
     api_url = f'{url_server}/web/services/Volcan_GetConsumer_1'
     data = {'cardId': card_detail.card_id, 'consumerId': card_detail.consumer_id}
     serializer = GetConsumerInfoSerializer(data=data)
@@ -229,8 +229,8 @@ def get_consumer_information_credit(request, *args, **kwargs):
 
 
 def get_consumer_information_prepaid(request, *args, **kwargs):
-    url_server = settings.SERVER_VOLCAN_URL
-    api_url = f'{url_server}/web/services/Prepaid_Get_Consumer_Info'
+    url_server = settings.SERVER_VOLCAN_PAYCARD_URL
+    api_url = f'{url_server}{request.get_full_path()}'
     response_data, response_status = process_prepaid_api_request(data=dict(), url=api_url,
                                                                  request=request, http_verb='GET')
     return response_data, response_status
@@ -238,7 +238,7 @@ def get_consumer_information_prepaid(request, *args, **kwargs):
 
 def get_card_credentials_credit(request, *args, **kwargs):
     card_detail = kwargs.get('card_detail')
-    url_server = settings.SERVER_VOLCAN_URL
+    url_server = settings.SERVER_VOLCAN_AZ7_URL
     api_url = f'{url_server}/web/services/GetCardCredentials_1'
     data = {'cardId': card_detail.card_id, 'consumerId': card_detail.consumer_id}
     serializer = GetDataCredentialsSerializer(data=data)
@@ -318,8 +318,8 @@ def get_card_credentials_credit_testing(request, *args, **kwargs):
 
 
 def get_card_credentials_prepaid(request, *args, **kwargs):
-    url_server = settings.SERVER_VOLCAN_URL
-    api_url = f'{url_server}/web/services/Prepaid_Get_Card_Credentials'
+    url_server = settings.SERVER_VOLCAN_PAYCARD_URL
+    api_url = f'{url_server}{request.path}'
     response_data, response_status = process_prepaid_api_request(data=dict(), url=api_url,
                                                                  request=request, http_verb='GET')
     return response_data, response_status
