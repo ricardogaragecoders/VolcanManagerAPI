@@ -58,6 +58,7 @@ class ThalesApiView(CustomViewSet):
                 CardDetail.objects.get_or_create(consumer_id=response_data['consumerId'],
                                                  card_id=response_data['cardId'],
                                                  issuer_id=issuer_id,
+                                                 account_id=response_data['accountId'],
                                                  card_bin=card_bin,
                                                  card_type=card_type)
         else:

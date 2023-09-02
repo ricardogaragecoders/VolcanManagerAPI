@@ -43,6 +43,13 @@ class VerifyCardCreditSerializer(serializers.Serializer):
             logger = logging.getLogger(__name__)
             logger.exception(e)
 
+        from thalesapi.utils import get_card_triple_des_process
+        card_az7 = get_card_triple_des_process(data['TARJETA'])
+        if not card_az7:
+            raise CustomValidationError(detail=u'Error en proceso de encriptado triple des', code='400')
+        else:
+            data['TARJETA'] = card_az7
+
         return data
 
 
