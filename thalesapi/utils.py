@@ -19,7 +19,16 @@ def is_card_bin_valid(card_bin):
 
 
 def get_thales_api_headers(request=None):
-    return request.headers
+    if request and request.headers:
+        x_correlation_id = request.headers['X-Correlation-Id'] if 'X-Correlation-Id' in request.headers else ''
+    else:
+        x_correlation_id = ''
+
+    return {
+        'X-Correlation-Id': x_correlation_id,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
 
 
 def get_card_triple_des_process(card_data, is_descript=False):
@@ -51,7 +60,7 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
     response_status = 500
     headers = get_thales_api_headers(request)
     print(f"Request: {url}")
-    print(f"Headers: {request.headers}")
+    print(f"Headers: {headers}")
     print(f"Data json: {data}")
     try:
         if http_verb == 'POST':
@@ -95,7 +104,7 @@ def process_volcan_api_request(data, url, request, times=0):
     headers = get_volcan_api_headers()
     data_json = json.dumps(data)
     print(f"Request: {url}")
-    print(f"Headers: {request.headers}")
+    print(f"Headers: {headers}")
     print(f"Data json: {data_json}")
     try:
         r = requests.post(url=url, data=data_json, headers=headers)
@@ -181,7 +190,8 @@ def post_verify_card_prepaid(request, *args, **kwargs):
         request_data = kwargs['request_data'].copy()
     url_server = settings.SERVER_VOLCAN_PAYCARD_URL
     api_url = f'{url_server}{request.path}'
-    response_data, response_status = process_prepaid_api_request(data=request_data, url=api_url, request=request)
+    data_json = json.dumps(request_data)
+    response_data, response_status = process_prepaid_api_request(data=data_json, url=api_url, request=request)
     return response_data, response_status
 
 
