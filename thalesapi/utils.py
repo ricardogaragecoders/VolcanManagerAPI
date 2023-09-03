@@ -267,7 +267,7 @@ def get_card_credentials_credit(request, *args, **kwargs):
 
                 card_real = get_card_triple_des_process(payload['pan'], is_descript=True)
                 if card_real:
-                    payload['pand'] = card_real
+                    payload['pan'] = card_real
                     payload = json.dumps(payload)
                     print(payload)
                     public_key = None
