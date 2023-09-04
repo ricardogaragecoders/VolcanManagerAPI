@@ -46,8 +46,8 @@ class CreacionEnteSerializer(serializers.Serializer):
     TELEFONO_CASA = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
     CELULAR = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
     TELEFONO_OFICINA = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
-    EMAIL_PERSONAL = serializers.CharField(max_length=100, required=False, default="", allow_blank=True)
-    EMAIL_OFICINA = serializers.CharField(max_length=100, required=False, default="", allow_blank=True)
+    EMAIL_PERSONAL = serializers.EmailField(max_length=100, required=False, default="", allow_blank=True)
+    EMAIL_OFICINA = serializers.EmailField(max_length=100, required=False, default="", allow_blank=True)
     LUGAR_TRABAJO = serializers.CharField(max_length=40, required=False, default="", allow_blank=True)
     DIRECCION_1_TRABAJO = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
     DIRECCION_2_TRABAJO = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
@@ -77,6 +77,19 @@ class CreacionEnteSerializer(serializers.Serializer):
                   'PUESTO', 'INGRESO_MENSUAL', 'FECHA_INGRESO_TRABAJO', 'OFICINA_EXT', 'NOMBRE_CONYUGUE',
                   'APELLIDO_CONYUGUE', 'CEDULA_CONYUGUE', 'NOMBRE_PADRE', 'APELLIDO_PADRE', 'NOMBRE_MADRE',
                   'APELLIDO_MADRE', 'TIPO_GESTION', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+
+    def validate(self, data):
+        data = super(CreacionEnteSerializer, self).validate(data)
+        email_personal = data.get('EMAIL_PERSONAL', "").strip()
+        email_oficina = data.get('EMAIL_OFICINA', "").strip()
+        emisor = data.get('EMISOR', '').strip()
+
+        if len(email_personal) == 0 and len(email_oficina) == 0:
+            raise CustomValidationError(detail=u'Email es requerido', code='400')
+
+        if len(emisor) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
+        return data
 
 
 class ConsultaCuentaSerializer(serializers.Serializer):
