@@ -214,8 +214,8 @@ def get_consumer_information_credit(request, *args, **kwargs):
         if response_status == 200:
             if 'RSP_ERROR' in response_data and response_data['RSP_ERROR'].upper() == 'OK':
                 city = get_value_by_default(response_data['RSP_CIUDAD'], default=u'Panamá') if 'RSP_CIUDAD' in response_data else u'Panamá'
-                state = get_value_by_default(response_data['RSP_ESTADO'], default='PAN') if 'RSP_ESTADO' in response_data else 'PAN'
-                zip_code = get_value_by_default(response_data['RSP_CPOSTAL'], default='0') if 'RSP_CPOSTAL' in response_data else '0'
+                state = get_value_by_default(response_data['RSP_ESTADO'], default=u'Panamá') if 'RSP_ESTADO' in response_data else u'Panamá'
+                zip_code = get_value_by_default(response_data['RSP_CPOSTAL'], default='7215') if 'RSP_CPOSTAL' in response_data else '7215'
                 data = {
                     "language": "en-US",
                     "firstName": response_data['RSP_NOMBRE1'] if 'RSP_NOMBRE1' in response_data else '',
