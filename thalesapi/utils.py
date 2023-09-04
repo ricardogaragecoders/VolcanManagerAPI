@@ -31,6 +31,13 @@ def get_thales_api_headers(request=None):
     }
 
 
+def get_value_by_default(value, default=''):
+    if len(value) > 0:
+        return value
+    else:
+        return default
+
+
 def get_card_triple_des_process(card_data, is_descript=False):
     try:
         from Crypto.Cipher import DES3
@@ -206,6 +213,9 @@ def get_consumer_information_credit(request, *args, **kwargs):
                                                                     request=request)
         if response_status == 200:
             if 'RSP_ERROR' in response_data and response_data['RSP_ERROR'].upper() == 'OK':
+                city = get_value_by_default(response_data['RSP_CIUDAD'], default=u'Panamá') if 'RSP_CIUDAD' in response_data else u'Panamá'
+                state = get_value_by_default(response_data['RSP_ESTADO'], default='PAN') if 'RSP_ESTADO' in response_data else 'PAN'
+                zip_code = get_value_by_default(response_data['RSP_CPOSTAL'], default='0') if 'RSP_CPOSTAL' in response_data else '0'
                 data = {
                     "language": "en-US",
                     "firstName": response_data['RSP_NOMBRE1'] if 'RSP_NOMBRE1' in response_data else '',
@@ -222,9 +232,9 @@ def get_consumer_information_credit(request, *args, **kwargs):
                     "residencyAddress": {
                         "line1": response_data['RSP_DIRECCION1'] if 'RSP_DIRECCION1' in response_data else '',
                         "line2": response_data['RSP_DIRECCION2'] if 'RSP_DIRECCION2' in response_data else '',
-                        "city": response_data['RSP_CIUDAD'] if 'RSP_CIUDAD' in response_data else '',
-                        "state": response_data['RSP_ESTADO'] if 'RSP_ESTADO' in response_data else '',
-                        "zipCode": response_data['RSP_CPOSTAL'] if 'RSP_CPOSTAL' in response_data else '',
+                        "city": city,
+                        "state": state,
+                        "zipCode": zip_code,
                         "countryCode": "PA"
                     }
                 }
