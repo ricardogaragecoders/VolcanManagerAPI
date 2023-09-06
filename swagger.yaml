@@ -551,6 +551,9 @@ paths:
       description: Create webhook by emisor.
       requestBody:
         content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/Webhook"
           application/json:
             schema:
               $ref: "#/components/schemas/Webhook"
@@ -578,6 +581,9 @@ paths:
       description: Update a webhook.
       requestBody:
         content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/Webhook"
           application/json:
             schema:
               $ref: "#/components/schemas/Webhook"
@@ -660,6 +666,9 @@ paths:
       description: Create a notification.
       requestBody:
         content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/Notification"
           application/json:
             schema:
               $ref: "#/components/schemas/Notification"
@@ -695,6 +704,9 @@ paths:
       description: Resend notification.
       requestBody:
         content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/Notification"
           application/json:
             schema:
               $ref: "#/components/schemas/Notification"
@@ -718,6 +730,9 @@ paths:
       description: Resend notification by emisor.
       requestBody:
         content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/Notification"
           application/json:
             schema:
               $ref: "#/components/schemas/Notification"
@@ -1369,10 +1384,16 @@ components:
       properties:
         emisor:
           type: string
-          enum: [ "" ]
+          description: Emisor
         url_webhook:
           type: string
-          enum: [ "" ]
+          description: URL webhook
+        auth_username:
+          type: string
+          description: Auth username
+        auth_password:
+          type: string
+          description: Auth password
         activo:
           type: boolean
           enum: [true, false]
@@ -1384,49 +1405,49 @@ components:
       properties:
         monto:
           type: string
-          enum: [ "" ]
+          description: Monto
         moneda:
           type: string
-          enum: [ "" ]
+          description: Moneda
         emisor:
           type: string
-          enum: [ "" ]
+          description: Emisor
         estatus:
           type: string
-          enum: [ "" ]
+          description: Estatus
         tipo_transaccion:
           type: string
-          enum: [ "" ]
+          description: Tipo de transaccion
         tarjeta:
           type: string
-          enum: [ "" ]
+          description: Tarjeta
         id_movimiento:
           type: string
-          enum: [ "" ]
+          description: ID Movimiento
         fecha_transaccion:
           type: string
-          enum: [ "" ]
+          description: Fecha de transaccion
         hora_transaccion:
           type: string
-          enum: [ "" ]
+          description: Hora de transaccion
         referencia:
           type: string
-          enum: [ "" ]
+          description: Referencia
         numero_autorizacion:
           type: string
-          enum: [ "" ]
+          description: Numero de autorizacion
         codigo_autorizacion:
           type: string
-          enum: [ "" ]
+          description: Codigo de autorizacion
         comercio:
           type: string
-          enum: [ "" ]
+          description: Comercio
         user:
           type: string
-          enum: [""]
+          description: User
         password:
           type: string
-          enum: [""]
+          description: Password¡
       required:
         - monto
         - moneda

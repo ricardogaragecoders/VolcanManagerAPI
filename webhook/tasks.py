@@ -9,8 +9,8 @@ from celery import shared_task
 from django.conf import settings
 from django.utils import timezone
 
-from control.models import TransactionCollection
-from control.models import Webhook
+from webhook.models import TransactionCollection
+from webhook.models import Webhook
 
 
 class BodyDigestSignature(object):
@@ -28,18 +28,19 @@ class BodyDigestSignature(object):
         return request
 
 
-def get_volcan_headers():
+def get_volcan_headers(webhook: Webhook):
     return {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': f'Basic {webhook.key_webhook}'
     }
 
 
 def send_transaction_url_webhook(data, webhook: Webhook):
-    headers = get_volcan_headers()
+    headers = get_volcan_headers(webhook)
     data_json = json.dumps(data)
-    if settings.DEBUG:
-        print(f"Request webhook: {webhook.url_webhook}")
-        print(f"Data json webhook: {data_json}")
+    print(f"Request webhook: {webhook.url_webhook}")
+    print(f"Request headers: {headers}")
+    print(f"Data json webhook: {data_json}")
     response_status = 0
     try:
         res = requests.post(

@@ -58,7 +58,8 @@ INSTALLED_APPS = [
     # modules
     'users',
     'common',
-    'control'
+    'control',
+    'webhook',
 ]
 
 MIDDLEWARE = [
