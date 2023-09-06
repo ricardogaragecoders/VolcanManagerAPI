@@ -6,7 +6,6 @@ import pymongo
 import requests
 from bson.objectid import ObjectId
 from celery import shared_task
-from django.conf import settings
 from django.utils import timezone
 
 from webhook.models import TransactionCollection
@@ -48,20 +47,27 @@ def send_transaction_url_webhook(data, webhook: Webhook):
             data=data_json, headers=headers, auth=BodyDigestSignature(webhook.key_webhook))
         # r = requests.post(url=webhook.url_webhook, data=data_json, headers=headers)
         response_status = res.status_code
+        response_data = {}
         print(res.text)
         print(res.headers)
+        if 'Content-Type' in res.headers:
+            if res.headers['Content-Type'] == 'application/json':
+                response_data = res.json()
+            else:
+                response_data = res.content
+        print(f"Response webhook: {response_data}")
         if response_status == 200:
-            response_data = res.json() if 'Content-Type' in res.headers and res.headers['Content-Type'] == 'application/json' else res.text
-            print(f"Response webhook: {response_data}")
             response_message = response_data
         elif response_status == 204:
             response_message = ''
         elif response_status == 404:
             response_message = 'Recurso no disponible'
+        elif 400 <= response_status < 500:
+            response_message = response_data
         else:
             print(f"Response: {str(response_status)}")
-            print(f"Data server: {str(res.text)}")
-            response_message = res.text
+            print(f"Data server: {str(res.content)}")
+            response_message = res.content
     except requests.exceptions.Timeout:
         response_status = 408
         response_message = 'Error de conexion con servidor VOLCAN (Timeout)'
@@ -71,6 +77,7 @@ def send_transaction_url_webhook(data, webhook: Webhook):
         response_message = 'Error de conexion con servidor VOLCAN (TooManyRedirects)'
         print(response_message)
     except requests.exceptions.RequestException as e:
+        response_status = 400
         response_message = '%s' % e
     except Exception as e:
         response_status = 500

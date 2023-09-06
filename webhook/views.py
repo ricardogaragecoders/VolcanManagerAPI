@@ -287,7 +287,7 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
 
     def retrieve(self, request, *args, **kwargs):
         try:
-            from control.models import TransactionCollection
+            from webhook.models import TransactionCollection
             db = TransactionCollection()
             filters = self.get_queryset_filters(*args, **kwargs)
             pk = kwargs.pop(self.field_pk)
@@ -336,7 +336,7 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
 
     def update(self, request, *args, **kwargs):
         try:
-            from control.models import TransactionCollection
+            from webhook.models import TransactionCollection
             db = TransactionCollection()
             filters = self.get_queryset_filters(*args, **kwargs)
             pk = kwargs.pop(self.field_pk)
@@ -349,7 +349,7 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
                 from webhook.tasks import send_transaction_emisor
                 results = []
                 for item in query:
-                    send_transaction_emisor.delay(transaction_id=str(item['_id']))
+                    send_transaction_emisor(transaction_id=str(item['_id']))
                     results.append(str(item['_id']))
                 response_data = results[0] if len(results) > 0 else []
                 self.make_response_success(data=response_data)
@@ -363,7 +363,7 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
 
     def resend(self, request, *args, **kwargs):
         try:
-            from control.models import TransactionCollection
+            from webhook.models import TransactionCollection
             db = TransactionCollection()
             filters = self.get_queryset_filters(*args, **kwargs)
             filters['entregado'] = False
@@ -373,7 +373,7 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
                 from webhook.tasks import send_transaction_emisor
                 results = []
                 for item in query:
-                    send_transaction_emisor.delay(transaction_id=str(item['_id']))
+                    send_transaction_emisor(transaction_id=str(item['_id']))
                     time.sleep(3)
                     results.append(str(item['_id']))
                 response_data = results[0] if len(results) > 0 else []
