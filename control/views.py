@@ -93,3 +93,7 @@ class ControlApiView(CustomViewSet):
         return self.control_action(request=request, control_function=reposicion_tarjetas,
                                    name_control_function="reposicion_tarjetas")
 
+    def gestion_transacciones(self, request, *args, **kwargs):
+        from control.utils import gestion_transacciones
+        return self.control_action(request=request, control_function=gestion_transacciones,
+                                   name_control_function="gestion_transacciones")

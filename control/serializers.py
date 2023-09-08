@@ -21,6 +21,79 @@ def get_decimal_from_request_data(data, field):
                                     code='422')
 
 
+class CreacionEnteSerializer(serializers.Serializer):
+    CIF = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    PERSONERIA = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
+    TIPO_IDENTIFICACION = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
+    DOCUMENTO_IDENTIFICACION = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    PRIMER_NOMBRE = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    SEGUNDO_NOMBRE = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    PRIMER_APELLIDO = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    SEGUNDO_APELLIDO = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    APELLIDO_CASADA = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    FECHA_NACIMIENTO = serializers.CharField(max_length=8, required=False, default="", allow_blank=True)
+    SEXO = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
+    ESTADO_CIVIL = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
+    PROFESION = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
+    SEGURO_SOCIAL = serializers.CharField(max_length=25, required=False, default="", allow_blank=True)
+    PAIS_NACIMIENTO = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    PAIS_RESIDENCIA = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    NACIONALIDAD = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    CODIGO_PROVINCIA = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    CODIGO_CANTON = serializers.CharField(max_length=5, required=False, default="", allow_blank=True)
+    CODIGO_DISTRITO = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
+    DIRECCION_1 = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    DIRECCION_2 = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    CODIGO_POSTAL = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    TELEFONO_CASA = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
+    CELULAR = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
+    TELEFONO_OFICINA = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
+    EMAIL_PERSONAL = serializers.EmailField(max_length=100, required=False, default="", allow_blank=True)
+    EMAIL_OFICINA = serializers.EmailField(max_length=100, required=False, default="", allow_blank=True)
+    LUGAR_TRABAJO = serializers.CharField(max_length=40, required=False, default="", allow_blank=True)
+    DIRECCION_1_TRABAJO = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    DIRECCION_2_TRABAJO = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    PUESTO = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    INGRESO_MENSUAL = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    FECHA_INGRESO_TRABAJO = serializers.CharField(max_length=8, required=False, default="", allow_blank=True)
+    OFICINA_EXT = serializers.CharField(max_length=5, required=False, default="", allow_blank=True)
+    NOMBRE_CONYUGUE = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    APELLIDO_CONYUGUE = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    CEDULA_CONYUGUE = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    NOMBRE_PADRE = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    APELLIDO_PADRE = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    NOMBRE_MADRE = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    APELLIDO_MADRE = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    TIPO_GESTION = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('CIF', 'PERSONERIA', 'TIPO_IDENTIFICACION', 'DOCUMENTO_IDENTIFICACION',
+                  'PRIMER_NOMBRE', 'SEGUNDO_NOMBRE', 'PRIMER_APELLIDO', 'SEGUNDO_APELLIDO', 'APELLIDO_CASADA',
+                  'FECHA_NACIMIENTO', 'SEXO', 'ESTADO_CIVIL', 'PROFESION', 'SEGURO_SOCIAL', 'PAIS_NACIMIENTO',
+                  'PAIS_RESIDENCIA', 'NACIONALIDAD', 'CODIGO_PROVINCIA', 'CODIGO_CANTON', 'CODIGO_DISTRITO',
+                  'DIRECCION_1', 'DIRECCION_2', 'CODIGO_POSTAL', 'TELEFONO_CASA', 'CELULAR', 'TELEFONO_OFICINA',
+                  'EMAIL_PERSONAL', 'EMAIL_OFICINA', 'LUGAR_TRABAJO', 'DIRECCION_1_TRABAJO', 'DIRECCION_2_TRABAJO',
+                  'PUESTO', 'INGRESO_MENSUAL', 'FECHA_INGRESO_TRABAJO', 'OFICINA_EXT', 'NOMBRE_CONYUGUE',
+                  'APELLIDO_CONYUGUE', 'CEDULA_CONYUGUE', 'NOMBRE_PADRE', 'APELLIDO_PADRE', 'NOMBRE_MADRE',
+                  'APELLIDO_MADRE', 'TIPO_GESTION', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+
+    def validate(self, data):
+        data = super(CreacionEnteSerializer, self).validate(data)
+        email_personal = data.get('EMAIL_PERSONAL', "").strip()
+        email_oficina = data.get('EMAIL_OFICINA', "").strip()
+        emisor = data.get('EMISOR', '').strip()
+
+        if len(email_personal) == 0 and len(email_oficina) == 0:
+            raise CustomValidationError(detail=u'Email es requerido', code='400')
+
+        if len(emisor) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
+        return data
+
+
 class ConsultaCuentaSerializer(serializers.Serializer):
     CUENTA = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
     CIF = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
@@ -258,4 +331,54 @@ class ReposicionTarjetasSerializer(serializers.Serializer):
         if len(card) == 0:
             raise CustomValidationError(detail=u'El numero de tarjeta es requerido',
                                         code='400')
+        return data
+
+
+class GestionTransaccionesSerializer(serializers.Serializer):
+    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    TRANSACCION = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    IMPORTE = serializers.CharField(max_length=19, required=False, default="", allow_blank=True, allow_null=True)
+    MONEDA = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    FECHA_TRX = serializers.CharField(max_length=8, required=False, default="", allow_blank=True)
+    HORA_TRX = serializers.CharField(max_length=6, required=False, default="", allow_blank=True)
+    CVV2 = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    FECVENTO = serializers.CharField(max_length=4, required=False, default="", allow_blank=True)
+    CHEQUE = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    PLAZA = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
+    NO_FINANCIAMIENTO = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    REFERENCIA = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
+    DOC_OPER = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    AUTORIZACION = serializers.CharField(max_length=6, required=False, default="", allow_blank=True)
+    COMERCIO = serializers.CharField(max_length=24, required=False, default="", allow_blank=True)
+    CIUDAD = serializers.CharField(max_length=13, required=False, default="", allow_blank=True)
+    PAIS = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    SUCURSAL = serializers.CharField(max_length=8, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('TARJETA', 'TRANSACCION', 'IMPORTE', 'MONEDA', 'FECHA_TRX', 'HORA_TRX', 'CVV2', 'FECVENTO',
+                  'CHEQUE', 'PLAZA', 'NO_FINANCIAMIENTO', 'REFERENCIA', 'DOC_OPER', 'AUTORIZACION',
+                  'COMERCIO', 'CIUDAD', 'PAIS', 'SUCURSAL', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+
+    def validate(self, data):
+        data = super(GestionTransaccionesSerializer, self).validate(data)
+        card = data.get('TARJETA', "").strip()
+
+        amount = get_decimal_from_request_data(data, 'IMPORTE')
+
+        if isinstance(amount, Decimal):
+            amounts = ("%.2f" % amount ).split('.')
+            data['IMPORTE'] = amounts[0].zfill(17) + amounts[1].zfill(2)
+
+        if len(card) == 0:
+            raise CustomValidationError(detail=u'El numero de tarjeta es requerido',
+                                        code='400')
+        # if not importe.isnumeric():
+        #     raise CustomValidationError(detail=u'El importe no es numerico',
+        #                                 code='400')
+
+        data['TARJETA'] = card
+
         return data

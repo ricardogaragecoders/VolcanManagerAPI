@@ -207,7 +207,7 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
                 data['mensaje_error'] = ''
                 result = db.insert_one(data=data)
                 from webhook.tasks import send_transaction_emisor
-                send_transaction_emisor(transaction_id=str(result.inserted_id))
+                send_transaction_emisor.delay(transaction_id=str(result.inserted_id))
                 self.make_response_success(data={'RSP_CODIGO': '00', 'RSP_DESCRIPCION': 'Aprobado'})
             else:
                 self.resp = get_response_data_errors(self.serializer.errors)
@@ -349,7 +349,7 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
                 from webhook.tasks import send_transaction_emisor
                 results = []
                 for item in query:
-                    send_transaction_emisor(transaction_id=str(item['_id']))
+                    send_transaction_emisor.delay(transaction_id=str(item['_id']))
                     results.append(str(item['_id']))
                 response_data = results[0] if len(results) > 0 else []
                 self.make_response_success(data=response_data)
@@ -373,7 +373,7 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
                 from webhook.tasks import send_transaction_emisor
                 results = []
                 for item in query:
-                    send_transaction_emisor(transaction_id=str(item['_id']))
+                    send_transaction_emisor.delay(transaction_id=str(item['_id']))
                     time.sleep(3)
                     results.append(str(item['_id']))
                 response_data = results[0] if len(results) > 0 else []

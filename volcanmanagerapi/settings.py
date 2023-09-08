@@ -26,7 +26,6 @@ env = environ.Env(
     DEBUG=(bool, False)
 )
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
@@ -59,6 +58,7 @@ INSTALLED_APPS = [
     'users',
     'common',
     'control',
+    'thalesapi',
     'webhook',
 ]
 
@@ -72,6 +72,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'common.middleware.RequestMiddleware',
 ]
+
+APPEND_SLASH = False
 
 ROOT_URLCONF = 'volcanmanagerapi.urls'
 
@@ -93,7 +95,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'volcanmanagerapi.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
@@ -114,7 +115,6 @@ AUTHENTICATION_BACKENDS = (
     'users.backends.EmailOrUsernameModelBackend',
 )
 
-
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 
@@ -133,7 +133,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
@@ -146,7 +145,6 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
@@ -274,6 +272,9 @@ if DEBUG:
         # Panel options
         'SQL_WARNING_THRESHOLD': 100,  # milliseconds
     }
+else:
+    SWAGGER_YAML_FILE = os.path.join(BASE_DIR, "swagger_prod.yaml")
+    INSTALLED_APPS = ['swagger_ui', ] + INSTALLED_APPS
 
 LOGGING = {
     'version': 1,
@@ -335,11 +336,23 @@ LOGGING = {
 # URLs
 URL_BACKEND = env.str('URL_BACKEND', 'http://localhost:8000')
 EMAIL_CONTACT = env.str('EMAIL_CONTACT', 'info@volcangroup.io')
-SERVER_VOLCAN_URL = env.str('SERVER_VOLCAN_URL', 'http://10.23.102.10:21005')
+SERVER_VOLCAN_AZ7_URL = env.str('SERVER_VOLCAN_AZ7_URL', 'http://10.23.102.10:21005')
+SERVER_VOLCAN_PAYCARD_URL = env.str('SERVER_VOLCAN_AZ7_URL', 'http://10.23.106.33/wsParabiliumVolcan')
+
+PUB_KEY_D1_SERVER_TO_ISSUER_SERVER_PEM = env.str('PUB_KEY_D1_SERVER_TO_ISSUER_SERVER_PEM', '')
+PRIV_KEY_D1_SERVER_TO_ISSUER_SERVER_PEM = env.str('PRIV_KEY_D1_SERVER_TO_ISSUER_SERVER_PEM', '')
+PUB_KEY_ISSUER_SERVER_TO_D1_SERVER_PEM = env.str('PUB_KEY_ISSUER_SERVER_TO_D1_SERVER_PEM', '')
+
 VOLCAN_USUARIO_ATZ = env.str('USUARIO_ATZ', 'KLEWIS')
 VOLCAN_ACCESO_ATZ = env.str('ACCESO_ATZ', 'KLEWIS')
-VOLCAN_USER_TRANSACTION = env.str('VOLCAN_USER_TRANSACTION')
-VOLCAN_PASSWORD_TRANSACTION = env.str('VOLCAN_PASSWORD_TRANSACTION')
+AZ7_SECRET_KEY = env.str('AZ7_KEY_SECRET', '')
+
+THALESAPI_ENCRYPTED_K01_KID = env.str('THALESAPI_ENCRYPTED_K01_KID', '')
+THALESAPI_EMISOR_DEFAULT = env.str('THALESAPI_EMISOR_DEFAULT', 'CMF')
+# THALESAPI_AUTORIZACION_DEFAULT = env.str('THALESAPI_AUTORIZACION_DEFAULT', '')
+
+VOLCAN_USER_TRANSACTION = env.str('VOLCAN_USER_TRANSACTION', '')
+VOLCAN_PASSWORD_TRANSACTION = env.str('VOLCAN_PASSWORD_TRANSACTION', '')
 
 # config
 ENABLE_SEND_EMAIL = env.bool('ENABLE_SEND_EMAIL', True)
@@ -348,8 +361,8 @@ PASSWORD_DEFAULT = env.str('PASSWORD_DEFAULT', '')
 VERIFICATION_ADMINISTRATOR_DEFAULT = env.bool('VERIFICATION_ADMINISTRATOR_DEFAULT', True)
 PATH_IMAGE_LOGO = env.str('PATH_IMAGE_LOGO')
 
-
 from corsheaders.defaults import default_headers, default_methods
+
 CORS_ALLOWED_ORIGINS = env('CORS_ALLOWED_ORIGINS').split(',')
 CORS_ALLOW_HEADERS = list(default_headers)
 CORS_ALLOW_METHODS = list(default_methods)

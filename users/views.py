@@ -45,6 +45,9 @@ class CustomTokenObtainPairView(CustomViewSet, TokenObtainPairView):
                         self.resp[1]['refresh'] = str(refresh)
                         self.resp[1]['access'] = str(refresh.access_token)
                 else:
+                    response_data['RSP_CODIGO'] = '0000000000'
+                    response_data['RSP_DESCRIPCION'] = 'Auth login success'
+                    response_data['RSP_ERROR'] = 'OK'
                     self.make_response_success(data=response_data)
             else:
                 self.resp = get_response_data_errors(self.serializer.errors)
