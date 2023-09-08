@@ -1,5 +1,7 @@
-from rest_framework import serializers
 from decimal import Decimal, InvalidOperation, DecimalException
+
+from rest_framework import serializers
+
 from common.exceptions import CustomValidationError
 
 
@@ -183,10 +185,10 @@ class CambioPINSerializer(serializers.Serializer):
 
         if len(tarjeta) == 0:
             raise CustomValidationError(detail=u'El numbero de tarjeta es requerido',
-                                        code='400')
+                                        code='422')
         if len(pin) == 0:
             raise CustomValidationError(detail=u'El nuevo PIN es requerido',
-                                        code='400')
+                                        code='422')
         return data
 
 
@@ -224,7 +226,7 @@ class ExtrafinanciamientoSerializer(serializers.Serializer):
 
         if len(card) == 0:
             raise CustomValidationError(detail=u'El numero de tarjeta es requerido',
-                                        code='400')
+                                        code='422')
         # if not importe.isnumeric():
         #     raise CustomValidationError(detail=u'El importe no es numerico',
         #                                 code='400')

@@ -37,3 +37,5 @@ class HasGroupAdminPermission(permissions.BasePermission):
                 break
 
         return resp or (request.user.is_authenticated and request.user.is_superuser)
+
+

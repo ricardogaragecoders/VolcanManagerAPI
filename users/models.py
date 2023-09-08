@@ -56,7 +56,7 @@ class Profile(ModelDiffMixin, BaseModelWithDeleted):
         else:
             return self.role >= self.CLIENT
 
-    def IsOperator(self, equal=False):
+    def isOperator(self, equal=False):
         if equal:
             return self.role == self.OPERATOR
         else:
