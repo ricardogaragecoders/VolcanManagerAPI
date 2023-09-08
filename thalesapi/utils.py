@@ -42,7 +42,7 @@ def get_card_triple_des_process(card_data, is_descript=False):
     try:
         from Crypto.Cipher import DES3
 
-        key = bytes.fromhex(settings.AZ7_KEY_DEV)
+        key = bytes.fromhex(settings.AZ7_SECRET_KEY)
         des3 = DES3.new(key, DES3.MODE_ECB)
 
         if not is_descript:
@@ -287,7 +287,7 @@ def get_card_credentials_credit(request, *args, **kwargs):
                         protected_header_back = {
                             "alg": "ECDH-ES",
                             "enc": "A256GCM",
-                            "kid": "G0D43.TEST.CMS_ENC.ECC.01"
+                            "kid": settings.THALESAPI_ENCRYPTED_K01_KID
                         }
                         jwetoken = jwe.JWE(payload.encode('utf-8'), recipient=public_key,
                                            protected=protected_header_back)
