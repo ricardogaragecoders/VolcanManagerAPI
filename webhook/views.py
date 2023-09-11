@@ -196,7 +196,6 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
 
     def create(self, request, *args, **kwargs):
         try:
-            print(request.data)
             self.serializer = TransactionSerializer(data=request.data)
             if self.serializer.is_valid():
                 db = TransactionCollection()

@@ -60,7 +60,7 @@ class CustomTokenObtainPairView(CustomViewSet, TokenObtainPairView):
 
 
 class CustomTokenRefreshView(TokenRefreshView):
-    def create(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         """
             With custom response
         """
@@ -76,7 +76,7 @@ class CustomTokenRefreshView(TokenRefreshView):
 
 
 class CustomTokenVerifyView(TokenVerifyView):
-    def create(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         """
             With custom response
         """

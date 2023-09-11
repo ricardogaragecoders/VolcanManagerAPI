@@ -116,6 +116,7 @@ class ConsultaCuentaSerializer(serializers.Serializer):
         id_owner = data.get('ID_OWNER', "").strip()
         tipo_identificacion = data.get('TIPO_IDENTIFICACION', "").strip()
         doc_identificacion = data.get('DOC_IDENTIFICACION', "").strip()
+        emisor = data.get('EMISOR', '').strip()
 
         data['CUENTA'] = cuenta
         data['CIF'] = cif
@@ -127,6 +128,8 @@ class ConsultaCuentaSerializer(serializers.Serializer):
                 doc_identificacion) == 0:
             raise CustomValidationError(detail=u'No fue proporcionado ningun filtro para hacer la busqueda',
                                         code='400')
+        if len(emisor) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
         return data
 
 
@@ -151,6 +154,7 @@ class ConsultaTarjetaSerializer(serializers.Serializer):
         id_owner = data.get('ID_OWNER', "").strip()
         tipo_identificacion = data.get('TIPO_IDENTIFICACION', "").strip()
         doc_identificacion = data.get('DOC_IDENTIFICACION', "").strip()
+        emisor = data.get('EMISOR', '').strip()
 
         data['TARJETA'] = tarjeta
         data['CIF'] = cif
@@ -162,6 +166,8 @@ class ConsultaTarjetaSerializer(serializers.Serializer):
                 doc_identificacion) == 0:
             raise CustomValidationError(detail=u'No fue proporcionado ningun filtro para hacer la busqueda',
                                         code='400')
+        if len(emisor) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
         return data
 
 
@@ -179,6 +185,7 @@ class CambioPINSerializer(serializers.Serializer):
         data = super(CambioPINSerializer, self).validate(data)
         tarjeta = data.get('TARJETA', "").strip()
         pin = data.get('PIN', "").strip()
+        emisor = data.get('EMISOR', '').strip()
 
         data['TARJETA'] = tarjeta
         data['PIN'] = pin
@@ -189,6 +196,8 @@ class CambioPINSerializer(serializers.Serializer):
         if len(pin) == 0:
             raise CustomValidationError(detail=u'El nuevo PIN es requerido',
                                         code='422')
+        if len(emisor) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
         return data
 
 
@@ -214,6 +223,8 @@ class ExtrafinanciamientoSerializer(serializers.Serializer):
         card = data.get('TARJETA', "").strip()
         amount = get_decimal_from_request_data(data, 'IMPORTE')
         tax = get_decimal_from_request_data(data, 'TASA')
+        emisor = data.get('EMISOR', '').strip()
+
         if isinstance(amount, Decimal):
             amounts = ("%.2f" % amount ).split('.')
             data['IMPORTE'] = amounts[0].zfill(17) + amounts[1].zfill(2)
@@ -230,6 +241,9 @@ class ExtrafinanciamientoSerializer(serializers.Serializer):
         # if not importe.isnumeric():
         #     raise CustomValidationError(detail=u'El importe no es numerico',
         #                                 code='400')
+
+        if len(emisor) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
         return data
 
 
@@ -256,6 +270,7 @@ class CambioLimitesSerializer(serializers.Serializer):
         limite_cr = get_decimal_from_request_data(data, 'LIMITE_CR')
         limite_con = get_decimal_from_request_data(data, 'LIMITE_CON')
         limite_extra = get_decimal_from_request_data(data, 'LIMITE_EXTRA')
+        emisor = data.get('EMISOR', '').strip()
 
         if isinstance(limite_cr, Decimal):
             limits_cr = ("%.2f" % get_decimal_from_request_data(data, 'LIMITE_CR')).split('.')
@@ -275,6 +290,9 @@ class CambioLimitesSerializer(serializers.Serializer):
         if len(card) == 0 and len(account) == 0:
             raise CustomValidationError(detail=u'El numero de tarjeta o cuenta es requerido',
                                         code='400')
+
+        if len(emisor) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
         return data
 
 
@@ -289,18 +307,22 @@ class CambioEstatusTDCSerializer(serializers.Serializer):
     ACCESO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
 
     class Meta:
-        fields = ('TARJETA', 'CUENTA', 'MOTIVO', 'REFERENCIA', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+        fields = ('TARJETA', 'CUENTA', 'ESTATUS', 'MOTIVO', 'REFERENCIA',
+                  'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
 
     def validate(self, data):
         data = super(CambioEstatusTDCSerializer, self).validate(data)
         card = data.get('TARJETA', "").strip()
         account = data.get('CUENTA', "").strip()
+        emisor = data.get('EMISOR', '').strip()
 
         data['TARJETA'] = card
         data['CUENTA'] = account
         if len(card) == 0 and len(account) == 0:
             raise CustomValidationError(detail=u'El numero de tarjeta o cuenta es requerido',
                                         code='400')
+        if len(emisor) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
         return data
 
 
@@ -325,12 +347,15 @@ class ReposicionTarjetasSerializer(serializers.Serializer):
         data = super(ReposicionTarjetasSerializer, self).validate(data)
         card = data.get('TARJETA', "").strip()
         # card_assigned = data.get('TARJETA_ASIGNADA', "").strip()
+        emisor = data.get('EMISOR', '').strip()
 
         data['TARJETA'] = card
         # data['TARJETA_ASIGNADA'] = card_assigned
         if len(card) == 0:
             raise CustomValidationError(detail=u'El numero de tarjeta es requerido',
                                         code='400')
+        if len(emisor) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
         return data
 
 
@@ -365,8 +390,8 @@ class GestionTransaccionesSerializer(serializers.Serializer):
     def validate(self, data):
         data = super(GestionTransaccionesSerializer, self).validate(data)
         card = data.get('TARJETA', "").strip()
-
         amount = get_decimal_from_request_data(data, 'IMPORTE')
+        emisor = data.get('EMISOR', '').strip()
 
         if isinstance(amount, Decimal):
             amounts = ("%.2f" % amount ).split('.')
@@ -381,4 +406,42 @@ class GestionTransaccionesSerializer(serializers.Serializer):
 
         data['TARJETA'] = card
 
+        if len(emisor) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
+        return data
+
+
+class ConsultaMovimientosSerializer(serializers.Serializer):
+    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    FECHA_DE_CORTE = serializers.CharField(max_length=8, required=False, default="", allow_blank=True)
+    MOVIMIENTOS = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
+    CONSECUTIVO_EDO_CUENTA = serializers.CharField(max_length=4, required=False, default="", allow_blank=True)
+    LLAVE_EDO_CUENTA = serializers.CharField(max_length=17, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('TARJETA', 'FECHA_DE_CORTE', 'MOVIMIENTOS', 'CONSECUTIVO_EDO_CUENTA', 'LLAVE_EDO_CUENTA',
+                  'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+
+    def validate(self, data):
+        data = super(ConsultaMovimientosSerializer, self).validate(data)
+        card = data.get('TARJETA', "").strip()
+        fecha_de_corte = data.get('FECHA_DE_CORTE', "").strip()
+        emisor = data.get('EMISOR', '').strip()
+
+        if len(card) == 0:
+            raise CustomValidationError(detail=u'El numero de tarjeta es requerido',
+                                        code='400')
+        data['TARJETA'] = card
+
+        if len(fecha_de_corte) == 0:
+            raise CustomValidationError(detail=u'La fecha de corte es requerido',
+                                        code='400')
+        data['FECHA_DE_CORTE'] = fecha_de_corte
+
+        if len(emisor) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
+        data['EMISOR'] = emisor
         return data
