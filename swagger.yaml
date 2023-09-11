@@ -830,7 +830,7 @@ paths:
                 "rsp_descripcion": "Given token not valid for any token type"
               }
         '200':
-          description: 'Gestion transacciones'
+          description: 'Consulta movimientos'
           examples:
             exitosa:
               {
@@ -956,6 +956,69 @@ paths:
               }
       tags:
         - VolcanManager::Acciones
+    parameters: []
+  /volcan/api/IntraExtras/:
+    post:
+      operationId: api_control_intra_extras_mock
+      description: Mock
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/Intra_Extras"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Intra_Extras"
+        required: true
+      summary: Mock
+      responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
+        '200':
+          description: 'Gestion transacciones'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_cuenta": "",
+                "rsp_tarjeta": "1234567890123456",
+                "rsp_importe": "10000.00",
+                "rsp_plan": "ORO",
+                "rsp_tasa": "24.00",
+                "rsp_plazo": "60",
+                "rsp_cuota": "1.00",
+                "rsp_disponible": "",
+                "rsp_moneda": "MXN",
+                "rsp_referencia": "REFERENCIA",
+                "rsp_autoriz": "",
+                "rsp_noextra": "",
+                "rsp_cuenta_iban": "",
+                "rsp_nombre_del_th": "",
+                "rsp_vendedor": "RICH"
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error gestion transacciones"
+              }
+      tags:
+        - VolcanManager::Mocks
     parameters: []
   /cms/api/v1/issuers/{issuer_id}/cards/credentials:
     post:
@@ -2138,6 +2201,55 @@ components:
       required:
         - tarjeta
         - fecha_de_corte
+        - emisor
+    Intra_Extras:
+      type: object
+      properties:
+        tarjeta:
+          type: string
+          description: 'Mandatorio. Número de Tarjeta Principal de la cuenta, cifrada con la llave compartida para Volcán'
+          maxLength: 16
+        codigo_plan:
+          type: string
+          description: 'Mandatorio. Codigo del plan de extra creado'
+          maxLength: 4
+        moneda:
+          type: string
+          description: 'Mandatorio. Moneda del importe de la transacción, en el estandar de ISO'
+          maxLength: 3
+        importe:
+          type: string
+          description: 'Mandatorio. Importe de la transacción el formato valido es por ejemplo USD$1,100.00, se deberá enviar = 1100.00. Formato 2 decimales'
+          example: '1.00'
+          maxLength: 20
+        plazo:
+          type: string
+          description: 'Mandatorio. Numero de pagos o cuotas extrafinanciamientos, valores validos de 01 al 60'
+          maxLength: 20
+        referencia:
+          type: string
+          description: 'Mandatorio. Folio único por cada transacción'
+          maxLength: 12
+        comercio:
+          type: string
+          description: 'Mandatorio. Nombre del comercio de la transacción'
+          maxLength: 12
+        vendedor:
+          type: string
+          description: 'Opcional. Corresponde a un codigo que envia el cliente y que se tiene que guardar a nivel de informacion del plan creado.'
+          maxLength: 17
+        emisor:
+          type: string
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+          maxLength: 3
+      required:
+        - tarjeta
+        - codigo_plan
+        - moneda
+        - importe
+        - plazo
+        - comercio
+        - referencia
         - emisor
     VerifyCard:
       type: object

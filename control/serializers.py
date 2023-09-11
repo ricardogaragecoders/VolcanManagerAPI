@@ -226,7 +226,7 @@ class ExtrafinanciamientoSerializer(serializers.Serializer):
         emisor = data.get('EMISOR', '').strip()
 
         if isinstance(amount, Decimal):
-            amounts = ("%.2f" % amount ).split('.')
+            amounts = ("%.2f" % amount).split('.')
             data['IMPORTE'] = amounts[0].zfill(17) + amounts[1].zfill(2)
 
         if isinstance(tax, Decimal):
@@ -394,7 +394,7 @@ class GestionTransaccionesSerializer(serializers.Serializer):
         emisor = data.get('EMISOR', '').strip()
 
         if isinstance(amount, Decimal):
-            amounts = ("%.2f" % amount ).split('.')
+            amounts = ("%.2f" % amount).split('.')
             data['IMPORTE'] = amounts[0].zfill(17) + amounts[1].zfill(2)
 
         if len(card) == 0:
@@ -444,4 +444,65 @@ class ConsultaMovimientosSerializer(serializers.Serializer):
         if len(emisor) == 0:
             raise CustomValidationError(detail=u'Emisor es requerido', code='400')
         data['EMISOR'] = emisor
+        return data
+
+
+class IntraExtrasSerializer(serializers.Serializer):
+    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    CODIGO_PLAN = serializers.CharField(max_length=5, required=False, default="", allow_blank=True)
+    MONEDA = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    IMPORTE = serializers.CharField(max_length=19, required=False, default="", allow_blank=True, allow_null=True)
+    PLAZO = serializers.CharField(max_length=2, required=False, default="", allow_blank=True, allow_null=True)
+    REFERENCIA = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
+    COMERCIO = serializers.CharField(max_length=40, required=False, default="", allow_blank=True)
+    VENDEDOR = serializers.CharField(max_length=5, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('TARJETA', 'CODIGO_PLAN', 'MONEDA', 'IMPORTE', 'PLAZO', 'REFERENCIA', 'COMERCIO', 'VENDEDOR',
+                  'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+
+    def validate(self, data):
+        data = super(IntraExtrasSerializer, self).validate(data)
+        card = data.get('TARJETA', "").strip()
+        plan_code = data.get('CODIGO_PLAN', "").strip()
+        currency = data.get('MONEDA', "").strip()
+        term = data.get('PLAZO', "").strip()
+        commerce = data.get('COMERCIO', "").strip()
+        amount = get_decimal_from_request_data(data, 'IMPORTE')
+        emisor = data.get('EMISOR', '').strip()
+
+        if isinstance(amount, Decimal):
+            amounts = ("%.2f" % amount).split('.')
+            data['IMPORTE'] = amounts[0].zfill(17) + amounts[1].zfill(2)
+
+        if len(card) == 0:
+            raise CustomValidationError(detail=u'El numero de tarjeta es requerido',
+                                        code='400')
+        data['TARJETA'] = card
+
+        if len(plan_code) == 0:
+            raise CustomValidationError(detail=u'El codigo de plan es requerido',
+                                        code='400')
+        data['CODIGO_PLAN'] = plan_code
+
+        if len(currency) == 0:
+            raise CustomValidationError(detail=u'La moneda es requerido',
+                                        code='400')
+        data['MONEDA'] = currency
+
+        if len(term) == 0:
+            raise CustomValidationError(detail=u'El plazo es requerido',
+                                        code='400')
+        data['PLAZO'] = term
+
+        if len(commerce) == 0:
+            raise CustomValidationError(detail=u'El comercio es requerido',
+                                        code='400')
+        data['COMERCIO'] = commerce
+
+        if len(emisor) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
         return data
