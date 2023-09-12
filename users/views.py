@@ -22,7 +22,7 @@ class CustomTokenObtainPairView(CustomViewSet, TokenObtainPairView):
     permission_classes = (AllowAny,)
     serializer_class = CustomTokenObtainPairSerializer
 
-    def create(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         """
             Send code 2factor verification
         """
