@@ -2354,12 +2354,15 @@ components:
         comercio:
           type: string
           description: Comercio
+        pais:
+          type: string
+          description: Pais
         user:
           type: string
           description: User
         password:
           type: string
-          description: Password¡
+          description: Password
       required:
         - monto
         - moneda
@@ -2373,6 +2376,7 @@ components:
         - numero_autorizacion
         - codigo_autorizacion
         - comercio
+        - pais
         - user
         - password
   securitySchemes:

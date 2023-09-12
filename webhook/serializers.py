@@ -7,7 +7,7 @@ from webhook.models import Webhook
 
 
 class WebhookSerializer(serializers.ModelSerializer):
-    emisor = serializers.CharField(source='account_issuer', required=True, write_only=True)
+    emisor = serializers.CharField(source='account_issuer', max_length=3, required=True, write_only=True)
     auth_username = serializers.CharField(max_length=45, required=False,
                                           allow_null=True, allow_blank=True, write_only=True)
     auth_password = serializers.CharField(max_length=45, required=False,
@@ -48,7 +48,7 @@ class WebhookSerializer(serializers.ModelSerializer):
         if len(key_webhook) == 0:
             key_webhook = model_code_generator(model=Webhook, digits=32, code='key_webhook')
 
-        data['account_issuer'] = account_issuer
+        data['account_issuer'] = account_issuer.upper()
         data['url_webhook'] = url_webhook
         data['key_webhook'] = key_webhook
         return data
@@ -79,23 +79,34 @@ class TransactionSerializer(serializers.Serializer):
     numero_autorizacion = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
     codigo_autorizacion = serializers.CharField(max_length=100, default='', required=False,  allow_blank=True)
     comercio = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
+    pais = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
     user = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
     password = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
 
     class Meta:
         fields = ('monto', 'moneda', 'emisor', 'estatus', 'tipo_transaccion', 'tarjeta', 'id_movimiento',
                   'fecha_transaccion', 'hora_transaccion', 'referencia', 'numero_autorizacion', 'codigo_autorizacion',
-                  'comercio', 'user', 'password')
+                  'comercio', 'pais', 'user', 'password')
 
     def validate(self, data):
         data = super(TransactionSerializer, self).validate(data)
         id_movimiento = data.get('id_movimiento', '')
         user = data.pop('user', settings.VOLCAN_USER_TRANSACTION)
         password = data.pop('password', settings.VOLCAN_PASSWORD_TRANSACTION)
+        emisor = data.get('emisor', '').upper()
 
         if user != settings.VOLCAN_USER_TRANSACTION or password != settings.VOLCAN_PASSWORD_TRANSACTION:
             raise CustomValidationError(detail=f'Usuario y/o password incorrectos.',
                                         code='401')
+        if len(emisor) == 0:
+            raise CustomValidationError(detail=f'Emisor es requerido.',
+                                        code='400')
+        data['emisor'] = emisor
+
+        if not Webhook.objects.filter(account_issuer=emisor).exists():
+            raise CustomValidationError(detail=f'El emisor no tiene definido un webhook.',
+                                        code='400')
+
         if len(id_movimiento) == 0:
             import uuid
             data['id_movimiento'] = str(uuid.uuid4())

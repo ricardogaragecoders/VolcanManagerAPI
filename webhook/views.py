@@ -318,6 +318,7 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
                         'numero_autorizacion': item['numero_autorizacion'],
                         'codigo_autorizacion': item['codigo_autorizacion'],
                         'comercio': item['comercio'],
+                        'pais': item['pais'] if 'pais' in item else '',
                         'entregado': item['entregado'],
                         'fecha_entregado': item['fecha_entregado'],
                         'codigo_error': item['codigo_error'],
