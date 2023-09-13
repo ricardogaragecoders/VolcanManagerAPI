@@ -15,5 +15,6 @@ urlpatterns = [
     path('ReposicionTarjetas/', ControlApiView.as_view({'post': 'reposicion_tarjetas'})),
     path('GestionTransacciones/', ControlApiView.as_view({'post': 'gestion_transacciones'})),
     path('ConsultaMovimientos/', ControlApiView.as_view({'post': 'consulta_movimientos'})),
+    path('ConsultaPuntos/', ControlApiView.as_view({'post': 'consulta_puntos'})),
     path('IntraExtras/', ControlApiView.as_view({'post': 'intra_extras'})),
 ]

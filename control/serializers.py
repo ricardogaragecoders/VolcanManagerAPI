@@ -447,6 +447,30 @@ class ConsultaMovimientosSerializer(serializers.Serializer):
         return data
 
 
+class ConsultaPuntosSerializer(serializers.Serializer):
+    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('TARJETA', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+
+    def validate(self, data):
+        data = super(ConsultaPuntosSerializer, self).validate(data)
+        card = data.get('TARJETA', "").strip()
+        emisor = data.get('EMISOR', '').strip()
+
+        if len(card) == 0:
+            raise CustomValidationError(detail=u'El numero de tarjeta es requerido', code='400')
+        data['TARJETA'] = card
+
+        if len(emisor) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
+        data['EMISOR'] = emisor
+        return data
+
+
 class IntraExtrasSerializer(serializers.Serializer):
     TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
     CODIGO_PLAN = serializers.CharField(max_length=5, required=False, default="", allow_blank=True)

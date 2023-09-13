@@ -103,6 +103,11 @@ class ControlApiView(CustomViewSet):
         return self.control_action(request=request, control_function=consulta_movimientos,
                                    name_control_function="consulta_movimientos")
 
+    def consulta_puntos(self, request, *args, **kwargs):
+        from control.utils import consulta_puntos
+        return self.control_action(request=request, control_function=consulta_puntos,
+                                   name_control_function="consulta_puntos")
+
     def intra_extras(self, request, *args, **kwargs):
         from control.utils import intra_extras_mock
         return self.control_action(request=request, control_function=intra_extras_mock,
