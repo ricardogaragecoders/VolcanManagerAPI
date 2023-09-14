@@ -14,8 +14,11 @@ def get_float_from_numeric_str(value: str) -> str:
     try:
         length = len(value)
         assert length >= 4, "El valor no tiene el minimo de largo"
-        value_s = "%s.%s" % (value[0:length-2], value[length-2:length])
-        value_f = Decimal(value_s)
+        if '.' not in value:
+            value_s = "%s.%s" % (value[0:length-2], value[length-2:length])
+            value_f = Decimal(value_s)
+        else:
+            value_f = Decimal(value)
         if value_f > Decimal('0'):
             return '%04.2f' % value_f
         else:
