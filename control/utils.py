@@ -5,7 +5,8 @@ from django.conf import settings
 from common.utils import get_response_data_errors
 from control.serializers import ConsultaCuentaSerializer, ConsultaTarjetaSerializer, \
     CambioPINSerializer, ExtrafinanciamientoSerializer, CambioLimitesSerializer, CambioEstatusTDCSerializer, \
-    ReposicionTarjetasSerializer, CreacionEnteSerializer, GestionTransaccionesSerializer
+    ReposicionTarjetasSerializer, CreacionEnteSerializer, GestionTransaccionesSerializer, ConsultaMovimientosSerializer, \
+    IntraExtrasSerializer, ConsultaPuntosSerializer
 
 
 def get_float_from_numeric_str(value: str) -> str:
@@ -13,8 +14,11 @@ def get_float_from_numeric_str(value: str) -> str:
     try:
         length = len(value)
         assert length >= 4, "El valor no tiene el minimo de largo"
-        value_s = "%s.%s" % (value[0:length-2], value[length-2:length])
-        value_f = Decimal(value_s)
+        if '.' not in value:
+            value_s = "%s.%s" % (value[0:length-2], value[length-2:length])
+            value_f = Decimal(value_s)
+        else:
+            value_f = Decimal(value)
         if value_f > Decimal('0'):
             return '%04.2f' % value_f
         else:
@@ -453,6 +457,176 @@ def gestion_transacciones(request, **kwargs):
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
                 if 'RSP_IMPORTE' in resp[1]:
                     resp[1]['RSP_IMPORTE'] = get_float_from_numeric_str(resp[1]['RSP_IMPORTE'])
+            elif resp[1]['RSP_ERROR'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
+            elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Transaccion erronea'}, resp[2]
+            else:
+                resp_copy = resp[1].copy()
+                for k in resp[1].keys():
+                    if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
+                        del resp_copy[k]
+                return resp[0], resp_copy, resp[2]
+    else:
+        resp = get_response_data_errors(serializer.errors)
+    return resp
+
+
+def consulta_movimientos(request, **kwargs):
+    times = kwargs.get('times', 0)
+    if 'request_data' not in kwargs:
+        request_data = request.data.copy()
+    else:
+        request_data = kwargs['request_data'].copy()
+    request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
+    request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
+    data = {k.upper(): v for k, v in request_data.items()}
+    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    api_url = f'{url_server}/web/services/Volcan_ConsultaMov_1'
+    serializer = ConsultaMovimientosSerializer(data=data)
+    if serializer.is_valid():
+        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        if 'RSP_ERROR' in resp[1]:
+            if resp[1]['RSP_ERROR'].upper() == 'OK':
+                resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
+                if 'RSP_WSMOVIMIENTOS' in resp[1]:
+                    movements = []
+                    for movement in resp[1]['RSP_WSMOVIMIENTOS']:
+                        if 'RSP_TARJETA' in movement and len(movement['RSP_NUM_TARJETA']) > 0:
+                            movements.append({k.lower(): v for k, v in movement.items()})
+                    resp[1]['RSP_WSMOVIMIENTOS'] = movements
+            elif resp[1]['RSP_ERROR'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
+            elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Transaccion erronea'}, resp[2]
+            else:
+                resp_copy = resp[1].copy()
+                for k in resp[1].keys():
+                    if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
+                        del resp_copy[k]
+                return resp[0], resp_copy, resp[2]
+    else:
+        resp = get_response_data_errors(serializer.errors)
+    return resp
+
+
+def consulta_puntos(request, **kwargs):
+    times = kwargs.get('times', 0)
+    if 'request_data' not in kwargs:
+        request_data = request.data.copy()
+    else:
+        request_data = kwargs['request_data'].copy()
+    request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
+    request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
+    data = {k.upper(): v for k, v in request_data.items()}
+    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    api_url = f'{url_server}/web/services/Volcan_ConsultaPuntos_1'
+    serializer = ConsultaPuntosSerializer(data=data)
+    if serializer.is_valid():
+        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        if 'RSP_ERROR' in resp[1]:
+            if resp[1]['RSP_ERROR'].upper() == 'OK' or (resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
+                resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
+                if 'RSP_SALDO_PUNTOS' in resp[1]:
+                    resp[1]['RSP_SALDO_PUNTOS'] = get_float_from_numeric_str(resp[1]['RSP_SALDO_PUNTOS'])
+            elif resp[1]['RSP_ERROR'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
+            elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Transaccion erronea'}, resp[2]
+            else:
+                resp_copy = resp[1].copy()
+                for k in resp[1].keys():
+                    if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
+                        del resp_copy[k]
+                return resp[0], resp_copy, resp[2]
+    else:
+        resp = get_response_data_errors(serializer.errors)
+    return resp
+
+
+def intra_extras(request, **kwargs):
+    times = kwargs.get('times', 0)
+    if 'request_data' not in kwargs:
+        request_data = request.data.copy()
+    else:
+        request_data = kwargs['request_data'].copy()
+    request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
+    request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
+    data = {k.upper(): v for k, v in request_data.items()}
+    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    api_url = f'{url_server}/web/services/Volcan_Intra_Extras'
+    serializer = IntraExtrasSerializer(data=data)
+    if serializer.is_valid():
+        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        if 'RSP_ERROR' in resp[1]:
+            if resp[1]['RSP_ERROR'].upper() == 'OK' or (resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
+                resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
+                if 'RSP_IMPORTE' in resp[1]:
+                    resp[1]['RSP_IMPORTE'] = get_float_from_numeric_str(resp[1]['RSP_IMPORTE'])
+                if 'RSP_TASA' in resp[1]:
+                    resp[1]['RSP_TASA'] = get_float_from_numeric_str(resp[1]['RSP_TASA'])
+                if 'RSP_COUTA' in resp[1]:
+                    resp[1]['RSP_COUTA'] = get_float_from_numeric_str(resp[1]['RSP_COUTA'])
+            elif resp[1]['RSP_ERROR'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
+            elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Transaccion erronea'}, resp[2]
+            else:
+                resp_copy = resp[1].copy()
+                for k in resp[1].keys():
+                    if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
+                        del resp_copy[k]
+                return resp[0], resp_copy, resp[2]
+    else:
+        resp = get_response_data_errors(serializer.errors)
+    return resp
+
+
+def intra_extras_mock(request, **kwargs):
+    times = kwargs.get('times', 0)
+    if 'request_data' not in kwargs:
+        request_data = request.data.copy()
+    else:
+        request_data = kwargs['request_data'].copy()
+    request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
+    request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
+    data = {k.upper(): v for k, v in request_data.items()}
+    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    api_url = f'{url_server}/web/services/Volcan_Intra_Extras'
+    serializer = IntraExtrasSerializer(data=data)
+    if serializer.is_valid():
+        data = serializer.validated_data
+        resp = ['', {}, 200]
+        resp[1] = {
+            'RSP_ERROR': 'OK',
+            'RSP_CODIGO': '0000000',
+            'RSP_DESCRIPCION': 'Aprobado',
+            'RSP_CUENTA': '',
+            'RSP_TARJETA': data.get('TARJETA'),
+            'RSP_IMPORTE': data.get('IMPORTE'),
+            'RSP_PLAN': data.get('CODIGO_PLAN'),
+            'RSP_TASA': '2400',
+            'RSP_PLAZO': data.get('PLAZO'),
+            'RSP_CUOTA': '0000000000000000100',
+            'RSP_DISPONIBLE': '',
+            'RSP_MONEDA': data.get('MONEDA'),
+            'RSP_REFERENCIA': data.get('REFERENCIA'),
+            'RSP_AUTORIZ': '',
+            'RSP_NOEXTRA': '',
+            'RSP_CUENTA_IBAN': '',
+            'RSP_NOMBRE_DEL_TH': '',
+            'RSP_VENDEDOR': data.get('VENDEDOR'),
+        }
+
+        if 'RSP_ERROR' in resp[1]:
+            if resp[1]['RSP_ERROR'].upper() == 'OK' or (resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
+                resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
+                if 'RSP_IMPORTE' in resp[1]:
+                    resp[1]['RSP_IMPORTE'] = get_float_from_numeric_str(resp[1]['RSP_IMPORTE'])
+                if 'RSP_TASA' in resp[1]:
+                    resp[1]['RSP_TASA'] = get_float_from_numeric_str(resp[1]['RSP_TASA'])
+                if 'RSP_COUTA' in resp[1]:
+                    resp[1]['RSP_COUTA'] = get_float_from_numeric_str(resp[1]['RSP_COUTA'])
             elif resp[1]['RSP_ERROR'] == '':
                 return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
             elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':

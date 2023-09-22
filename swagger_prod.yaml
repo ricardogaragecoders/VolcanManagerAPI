@@ -799,6 +799,277 @@ paths:
       tags:
         - VolcanManager::Acciones
     parameters: []
+  /volcan/api/ConsultaMovimientos/:
+    post:
+      operationId: api_control_consulta_movimientos
+      description: Consulta Movimientos
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ConsultaMovimientos"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsultaMovimientos"
+        required: true
+      summary: Consulta Movimientos
+      responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
+        '200':
+          description: 'Consulta movimientos'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_cuenta": "string",
+                "rsp_estado_cuenta": "st",
+                "rsp_desc_estado": "string",
+                "rsp_mnd_lmt_cred": "str",
+                "rsp_desc_mnd": "string",
+                "rsp_lmt_cred": "string",
+                "rsp_ciclo_corte": "st",
+                "rsp_fec_ult_corte": "string",
+                "rsp_venc_pago_min": "string",
+                "rsp_venc_pago_cont": "string",
+                "rsp_clasif_consumo": "s",
+                "rsp_clasif_pago": "s",
+                "rsp_nom_cliente": "string",
+                "rsp_plan_cuenta": "string",
+                "rsp_desc_plan": "string",
+                "rsp_lmt_extra": "string",
+                "rsp_fec_corte_loc": "string",
+                "rsp_mnd_corte_loc": "str",
+                "rsp_desc_mnd_loc": "string",
+                "rsp_fec_venc_min_loc": "string",
+                "rsp_fec_venc_cont_loc": "string",
+                "rsp_saldo_ini_loc": "string",
+                "rsp_deb_local": "string",
+                "rsp_cred_local": "string",
+                "rsp_pago_min_loc": "string",
+                "rsp_pago_cont_loc": "string",
+                "rsp_imp_venc_loc": "st",
+                "rsp_monto_venc_loc": "string",
+                "rsp_sobregiros_loc": "string",
+                "rsp_ade_efectivo_loc": "string",
+                "rsp_interes_periodo_local": "string",
+                "rsp_interes_bonif_loc": "string",
+                "rsp_interes_post_bonif_loc": "string",
+                "rsp_interes_mora_loc": "string",
+                "rsp_fec_corte_ant_loc": "string",
+                "rsp_saldo_ini_extra_loc": "string",
+                "rsp_deb_extra_loc": "string",
+                "rsp_cred_extra_loc": "string",
+                "rsp_saldo_ini_puntos_loc": "string",
+                "rsp_deb_puntos_loc": "string",
+                "rsp_cred_puntos_loc": "string",
+                "rsp_fec_corte_int": "string",
+                "rsp_mnd_corte_int": "str",
+                "rsp_desc_mnd_corte_int": "string",
+                "rsp_fec_venc_min_corte_int": "string",
+                "rsp_fec_venc_pago_cont_corte_int": "string",
+                "rsp_saldo_ini_corte_int": "string",
+                "rsp_deb_corte_int": "string",
+                "rsp_cred_corte_int": "string",
+                "rsp_pago_min_corte_int": "string",
+                "rsp_pago_cont_corte_int": "string",
+                "rsp_imp_venc_corte_int": "st",
+                "rsp_monto_venc_corte_int": "string",
+                "rsp_sobregiro_corte_int": "string",
+                "rsp_ade_efec_corte_int": "string",
+                "rsp_interes_periodo_int": "string",
+                "rsp_interes_bonif_int": "string",
+                "rsp_interes_post_boniff_int": "string",
+                "rsp_interes_mora_int": "string",
+                "rsp_fec_corte_ant_int": "string",
+                "rsp_saldo_ini_extra_int": "string",
+                "rsp_deb_extra_int": "string",
+                "rsp_cred_extra_int": "string",
+                "rsp_saldo_ini_puntos_int": "string",
+                "rsp_cred_puntos_int": "string",
+                "rsp_saldo_mnd_loc_puc": "str",
+                "rsp_deb_loc_puc": "string",
+                "rsp_cred_loc_puc": "string",
+                "rsp_saldo_ini_flot_loc_puc": "string",
+                "rsp_deb_flot_loc_puc": "string",
+                "rsp_cred_flot_loc_puc": "string",
+                "rsp_monto_pago_loc_puc": "string",
+                "rsp_ult_pago_min_loc_puc": "string",
+                "rsp_ult_pag_cont_loc_puc": "string",
+                "rsp_saldo_mnd_int_puc": "str",
+                "rsp_saldo_ini_int_puc": "string",
+                "rsp_deb_int_puc": "string",
+                "rsp_cred_int_puc": "string",
+                "rsp_saldo_ini_flot_int_puc": "string",
+                "rsp_deb_flot_int_puc": "string",
+                "rsp_cred_flot_int_puc": "string",
+                "rsp_monto_pag_int_puc": "string",
+                "rsp_ade_efectivo_int_puc": "string",
+                "rsp_imp_venc_int_puc": "st",
+                "rsp_monto_venc_int_puc": "string",
+                "rsp_ult_pago_min_int_puc": "string",
+                "rsp_ult_pago_cont_int_puc": "string",
+                "rsp_deb_puntos_int_puc": "string",
+                "rsp_consecutivo": "stri",
+                "rsp_llave": "string",
+                "rsp_wsmovimientos": [
+                  {
+                    "rsp_cod_mov": "str",
+                    "rsp_ori_mov": "str",
+                    "rsp_num_mov": "string",
+                    "rsp_mnd_mov": "str",
+                    "rsp_monto_orig": "string",
+                    "rsp_tasa_mov": "strin",
+                    "rsp_tasa_mora_mov": "strin",
+                    "rsp_plazo_mov": "st",
+                    "rsp_fec_uso": "string",
+                    "rsp_fec_mov": "string",
+                    "rsp_cod_com": "stri",
+                    "rsp_desc_com": "string",
+                    "rsp_num_tarjeta": "string",
+                    "rsp_num_aut": "string",
+                    "rsp_tipo_mov": "s",
+                    "rsp_mov_anulado": "s"
+                  }
+                ]
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error consulta movimientos"
+              }
+      tags:
+        - VolcanManager::Acciones
+    parameters: []
+  /volcan/api/ConsultaPuntos/:
+    post:
+      operationId: api_control_consulta_puntos
+      description: Consulta Puntos
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ConsultaPuntos"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsultaPuntos"
+        required: true
+      summary: Consulta Puntos
+      responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
+        '200':
+          description: 'Consulta puntos'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_cuenta": "",
+                "rsp_saldo_puntos": ""
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error consulta puntos"
+              }
+      tags:
+        - VolcanManager::Acciones
+    parameters: []
+  /volcan/api/IntraExtras/:
+    post:
+      operationId: api_control_intra_extras_mock
+      description: Mock
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/Intra_Extras"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Intra_Extras"
+        required: true
+      summary: Mock
+      responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
+        '200':
+          description: 'Gestion transacciones'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_cuenta": "",
+                "rsp_tarjeta": "1234567890123456",
+                "rsp_importe": "10000.00",
+                "rsp_plan": "ORO",
+                "rsp_tasa": "24.00",
+                "rsp_plazo": "60",
+                "rsp_cuota": "1.00",
+                "rsp_disponible": "",
+                "rsp_moneda": "MXN",
+                "rsp_referencia": "REFERENCIA",
+                "rsp_autoriz": "",
+                "rsp_noextra": "",
+                "rsp_cuenta_iban": "",
+                "rsp_nombre_del_th": "",
+                "rsp_vendedor": "RICH"
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error gestion transacciones"
+              }
+      tags:
+        - VolcanManager::Mocks
+    parameters: []
 #  /cms/api/v1/issuers/{issuer_id}/cards/credentials:
 #    post:
 #      operationId: api_thalesapi_verify_card
@@ -934,6 +1205,289 @@ paths:
 #        description: Card ID
 #        schema:
 #          type: string
+#  /testing/cms/api/v1/issuers/{issuer_id}/cards/{card_id}/credentials:
+#    post:
+#      operationId: api_thalesapi_get_card_credentials_testing
+#      description: Thales API Endpoint GetCardCredentials_testing
+#      summary: Thales API Endpoint GetCardCredentials Testing
+#      requestBody:
+#        content:
+#          application/json:
+#            schema:
+#              $ref: "#/components/schemas/CardCredentialsTesting"
+#        required: true
+#      responses:
+#        '200':
+#          description: 'Thales response'
+#        '400':
+#          description: 'Thales response'
+#        '404':
+#          description: 'Thales response'
+#        '500':
+#          description: 'Thales response'
+#      tags:
+#        - VolcanManager::ThalesAPI
+#    parameters:
+#      - name: issuer_id
+#        in: path
+#        required: true
+#        description: Issuer ID
+#        schema:
+#          type: string
+#      - name: card_id
+#        in: path
+#        required: true
+#        description: Card ID
+#        schema:
+#          type: string
+#  /volcan/api/Webhooks/:
+#    get:
+#      operationId: api_webhooks_read
+#      description: Return all webhooks.
+#      summary: Return all webhooks
+#      parameters:
+#        - name: limit
+#          in: query
+#          description: Number of results to return per page.
+#          required: false
+#          schema:
+#            type: integer
+#        - name: offset
+#          in: query
+#          description: The initial index from which to return the results.
+#          required: false
+#          schema:
+#            type: integer
+#        - name: emisor
+#          description: Emisor
+#          in: query
+#          required: false
+#          schema:
+#            type: string
+#        - name: q
+#          description: Find by program name
+#          in: query
+#          required: false
+#          schema:
+#            type: string
+#        - name: orderBy
+#          description: Order By field
+#          in: query
+#          required: false
+#          schema:
+#            type: string
+#            enum: [ 'account_issuer', 'updated_at' ]
+#            default: account_issuer
+#        - name: orderByDesc
+#          description: Order desc
+#          in: query
+#          schema:
+#            type: boolean
+#            enum: [ true, false ]
+#            default: false
+#      responses:
+#        '200':
+#          description: 'Return all webhooks'
+#      tags:
+#        - VolcanManager::Webhook
+#    post:
+#      operationId: api_control_webhooks
+#      description: Create webhook by emisor.
+#      requestBody:
+#        content:
+#          application/x-www-form-urlencoded:
+#            schema:
+#              $ref: "#/components/schemas/Webhook"
+#          application/json:
+#            schema:
+#              $ref: "#/components/schemas/Webhook"
+#        required: true
+#      summary: Create webhook by emisor
+#      responses:
+#        '200':
+#          description: 'Create webhook by emisor'
+#      tags:
+#        - VolcanManager::Webhook
+#    parameters: []
+#  /volcan/api/Webhooks/{webhook_id}/:
+#    get:
+#      operationId: api_webhook_read
+#      description: Return a webhook.
+#      summary: Return a webhook.
+#      parameters: []
+#      responses:
+#        '200':
+#          description: 'Returns a webhook.'
+#      tags:
+#        - VolcanManager::Webhook
+#    patch:
+#      operationId: api_webhook_update
+#      description: Update a webhook.
+#      requestBody:
+#        content:
+#          application/x-www-form-urlencoded:
+#            schema:
+#              $ref: "#/components/schemas/Webhook"
+#          application/json:
+#            schema:
+#              $ref: "#/components/schemas/Webhook"
+#        required: true
+#      summary: Update a loyalty program.
+#      responses:
+#        '200':
+#          description: 'Update a loyalty program.'
+#      tags:
+#        - VolcanManager::Webhook
+#    delete:
+#      operationId: api_webhook_delete
+#      description: Delete a webhook.
+#      summary: Delete a webhook.
+#      parameters: []
+#      responses:
+#        '200':
+#          description: 'Delete a webhook.'
+#      tags:
+#        - VolcanManager::Webhook
+#    parameters:
+#      - name: webhook_id
+#        in: path
+#        required: true
+#        description: ID Webhook
+#        schema:
+#          type: string
+#  /volcan/api/Notificaciones/:
+#    get:
+#      operationId: api_notifications_read
+#      description: Return all notifications.
+#      summary: Return all notifications
+#      parameters:
+#        - name: limit
+#          in: query
+#          description: Number of results to return per page.
+#          required: false
+#          schema:
+#            type: integer
+#        - name: offset
+#          in: query
+#          description: The initial index from which to return the results.
+#          required: false
+#          schema:
+#            type: integer
+#        - name: emisor
+#          description: Emisor
+#          in: query
+#          required: false
+#          schema:
+#            type: string
+#        - name: q
+#          description: Find by program name
+#          in: query
+#          required: false
+#          schema:
+#            type: string
+#        - name: orderBy
+#          description: Order By field
+#          in: query
+#          required: false
+#          schema:
+#            type: string
+#            enum: [ 'emisor', 'updated_at' ]
+#            default: emisor
+#        - name: orderByDesc
+#          description: Order desc
+#          in: query
+#          schema:
+#            type: boolean
+#            enum: [ true, false ]
+#            default: false
+#      responses:
+#        '200':
+#          description: 'Return all notifications'
+#      tags:
+#        - VolcanManager::Notificaciones
+#    post:
+#      operationId: api_control_notifications
+#      description: Create a notification.
+#      requestBody:
+#        content:
+#          application/x-www-form-urlencoded:
+#            schema:
+#              $ref: "#/components/schemas/Notification"
+#          application/json:
+#            schema:
+#              $ref: "#/components/schemas/Notification"
+#        required: true
+#      summary: Create a notification
+#      responses:
+#        '200':
+#          description: 'Create a notification'
+#      tags:
+#        - VolcanManager::Notificaciones
+#    parameters: []
+#  /volcan/api/Notificaciones/{notification_id}/:
+#    get:
+#      operationId: api_notification_read
+#      description: Return a notification.
+#      summary: Return a notification.
+#      parameters: []
+#      responses:
+#        '200':
+#          description: 'Returns a notification.'
+#      tags:
+#        - VolcanManager::Notificaciones
+#    parameters:
+#      - name: notification_id
+#        in: path
+#        required: true
+#        description: ID Notificacion
+#        schema:
+#          type: string
+#  /volcan/api/Notificaciones/{notification_id}/reenviar/:
+#    patch:
+#      operationId: api_notification_resend
+#      description: Resend notification.
+#      requestBody:
+#        content:
+#          application/x-www-form-urlencoded:
+#            schema:
+#              $ref: "#/components/schemas/Notification"
+#          application/json:
+#            schema:
+#              $ref: "#/components/schemas/Notification"
+#        required: true
+#      summary: Resend a notification.
+#      responses:
+#        '200':
+#          description: 'Resend a notification.'
+#      tags:
+#        - VolcanManager::Notificaciones
+#    parameters:
+#      - name: notification_id
+#        in: path
+#        required: true
+#        description: ID Notificacion
+#        schema:
+#          type: string
+#  /volcan/api/Notificaciones/reenviar/emisor/:
+#    patch:
+#      operationId: api_notification_resend_by_emmisor
+#      description: Resend notification by emisor.
+#      requestBody:
+#        content:
+#          application/x-www-form-urlencoded:
+#            schema:
+#              $ref: "#/components/schemas/Notification"
+#          application/json:
+#            schema:
+#              $ref: "#/components/schemas/Notification"
+#        required: true
+#      summary: Resend a notification by emisor.
+#      responses:
+#        '200':
+#          description: 'Resend a notification by emisor.'
+#      tags:
+#        - VolcanManager::Notificaciones
+#    parameters: []
 components:
   schemas:
     LoginToken:
@@ -1664,6 +2218,103 @@ components:
         - pais
         - sucursal
         - emisor
+    ConsultaMovimientos:
+      type: object
+      properties:
+        tarjeta:
+          type: string
+          description: 'Mandatorio. Número de Tarjeta Principal de la cuenta, cifrada con la llave compartida para Volcán'
+          maxLength: 16
+        fecha_de_corte:
+          type: string
+          format: date
+          pattern: '^\d{4}\d{2}\d{2}$'
+          description: 'Mandatorio. Fecha de corte de requerimiento de la consulta formato AAAAMMDD'
+          maxLength: 8
+        movimientos:
+          type: string
+          description: 'Opcional. Indicador para incluir el detalle de los movimientos, S=Se incluye movimientos/N=no se incluye los movimientos'
+          enum: ['S', 'N']
+          maxLength: 1
+        consecutivo_edo_cuenta:
+          type: string
+          description: 'Opcional. Número de registros que retorna la consulta, de bloques de datos pendientes, esto se deberá de enviar en el siguiente bloque de datos'
+          maxLength: 4
+        llave_edo_cuenta:
+          type: string
+          description: 'Opcional. Campo reservado que se utiliza idicador de página del bloque de datos a responder, esto se replica en el requerimiento para obtener más datos del bloques pendientes.'
+          maxLength: 17
+        emisor:
+          type: string
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+          maxLength: 3
+      required:
+        - tarjeta
+        - fecha_de_corte
+        - emisor
+    ConsultaPuntos:
+      type: object
+      properties:
+        tarjeta:
+          type: string
+          description: 'Mandatorio. Número de Tarjeta Principal de la cuenta, cifrada con la llave compartida para Volcán'
+          maxLength: 16
+        emisor:
+          type: string
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+          maxLength: 3
+      required:
+        - tarjeta
+        - emisor
+    Intra_Extras:
+      type: object
+      properties:
+        tarjeta:
+          type: string
+          description: 'Mandatorio. Número de Tarjeta Principal de la cuenta, cifrada con la llave compartida para Volcán'
+          maxLength: 16
+        codigo_plan:
+          type: string
+          description: 'Mandatorio. Codigo del plan de extra creado'
+          maxLength: 4
+        moneda:
+          type: string
+          description: 'Mandatorio. Moneda del importe de la transacción, en el estandar de ISO'
+          maxLength: 3
+        importe:
+          type: string
+          description: 'Mandatorio. Importe de la transacción el formato valido es por ejemplo USD$1,100.00, se deberá enviar = 1100.00. Formato 2 decimales'
+          example: '1.00'
+          maxLength: 20
+        plazo:
+          type: string
+          description: 'Mandatorio. Numero de pagos o cuotas extrafinanciamientos, valores validos de 01 al 60'
+          maxLength: 20
+        referencia:
+          type: string
+          description: 'Mandatorio. Folio único por cada transacción'
+          maxLength: 12
+        comercio:
+          type: string
+          description: 'Mandatorio. Nombre del comercio de la transacción'
+          maxLength: 12
+        vendedor:
+          type: string
+          description: 'Opcional. Corresponde a un codigo que envia el cliente y que se tiene que guardar a nivel de informacion del plan creado.'
+          maxLength: 17
+        emisor:
+          type: string
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+          maxLength: 3
+      required:
+        - tarjeta
+        - codigo_plan
+        - moneda
+        - importe
+        - plazo
+        - comercio
+        - referencia
+        - emisor
 #    VerifyCard:
 #      type: object
 #      properties:
@@ -1684,6 +2335,114 @@ components:
 #        - encryptedData
 #        - cardId
 #        - cardBin
+#    CardCredentialsTesting:
+#      type: object
+#      properties:
+#        RSP_TARJETA:
+#          type: string
+#          maxLength: 20
+#        RSP_VENCIMIENTO:
+#          type: string
+#          maxLength: 4
+#        RSP_NOMBRE:
+#          type: string
+#          maxLength: 30
+#        RSP_CVV:
+#          type: string
+#          maxLength: 3
+#      required:
+#        - RSP_TARJETA
+#        - RSP_VENCIMIENTO
+#        - RSP_NOMBRE
+#        - RSP_CVV
+#    Webhook:
+#      type: object
+#      properties:
+#        emisor:
+#          type: string
+#          description: Emisor
+#        url_webhook:
+#          type: string
+#          description: URL webhook
+#        auth_username:
+#          type: string
+#          description: Auth username
+#        auth_password:
+#          type: string
+#          description: Auth password
+#        activo:
+#          type: boolean
+#          enum: [true, false]
+#      required:
+#        - emisor
+#        - url_webhook
+#    Notification:
+#      type: object
+#      properties:
+#        monto:
+#          type: string
+#          description: Monto
+#        moneda:
+#          type: string
+#          description: Moneda
+#        emisor:
+#          type: string
+#          description: Emisor
+#        estatus:
+#          type: string
+#          description: Estatus
+#        tipo_transaccion:
+#          type: string
+#          description: Tipo de transaccion
+#        tarjeta:
+#          type: string
+#          description: Tarjeta
+#        id_movimiento:
+#          type: string
+#          description: ID Movimiento
+#        fecha_transaccion:
+#          type: string
+#          description: Fecha de transaccion
+#        hora_transaccion:
+#          type: string
+#          description: Hora de transaccion
+#        referencia:
+#          type: string
+#          description: Referencia
+#        numero_autorizacion:
+#          type: string
+#          description: Numero de autorizacion
+#        codigo_autorizacion:
+#          type: string
+#          description: Codigo de autorizacion
+#        comercio:
+#          type: string
+#          description: Comercio
+#        pais:
+#          type: string
+#          description: Pais
+#        user:
+#          type: string
+#          description: User
+#        password:
+#          type: string
+#          description: Password
+#      required:
+#        - monto
+#        - moneda
+#        - emisor
+#        - estatus
+#        - tipo_transaccion
+#        - tarjeta
+#        - id_movimiento
+#        - fecha_transaccion
+#        - referencia
+#        - numero_autorizacion
+#        - codigo_autorizacion
+#        - comercio
+#        - pais
+#        - user
+#        - password
   securitySchemes:
     bearerAuth:            # arbitrary name for the security scheme
       type: http

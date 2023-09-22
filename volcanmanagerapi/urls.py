@@ -29,6 +29,7 @@ urlpatterns = [
     path('volcan/api/users/', include('users.urls')),
 
     path('volcan/api/', include('control.urls')),
+    path('volcan/api/', include('webhook.urls')),
 
     path('', include('thalesapi.urls')),
 

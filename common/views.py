@@ -2,9 +2,7 @@ from collections import OrderedDict
 from typing import Union
 
 from django.core import exceptions
-from django.http import HttpResponse
 from django.utils import timezone
-from django.utils.translation import gettext_lazy as _
 from rest_framework import viewsets
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.pagination import LimitOffsetPagination
@@ -12,14 +10,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from common.export_excel import WriteToExcel
-from common.export_pdf import WriteToPdf
 from common.middleware import get_request
 from common.models import Status
 from common.serializers import StatusSerializer
-from common.utils import make_day_start, make_day_end, \
-    get_response_data_errors, get_date_from_querystring, is_valid_uuid, handler_exception_general, handler_exception_404
-from users.permissions import IsVerified, IsChangePassword, IsAdministrator
+from common.utils import get_response_data_errors, handler_exception_general, handler_exception_404
+from users.permissions import IsVerified, IsChangePassword
 
 
 class LimitOffsetSetPagination(LimitOffsetPagination):
@@ -40,6 +35,7 @@ class CustomViewSet(viewsets.GenericViewSet):
     authentication_classes = (SessionAuthentication, BasicAuthentication, JWTAuthentication)
     field_pk = 'id'
     lookup_field = 'id'
+    pk = None
 
     def get_response(self, message: str = '', data: Union[dict, list] = {}, status: int = 200):
         request = get_request()
@@ -135,12 +131,15 @@ class CustomViewSet(viewsets.GenericViewSet):
     def list(self, request, *args, **kwargs):
         try:
             queryset = self.get_queryset(*args, **kwargs)
-            serializer = self.get_list_serializer(queryset, many=True)
-            self.make_response_success(data=serializer.data)
+            self.serializer = self.get_list_serializer(queryset, many=True)
+            self.perform_list(request, *args, **kwargs)
         except Exception as e:
             self.resp = handler_exception_general(__name__, e)
         finally:
             return self.get_response()
+
+    def perform_list(self, request, *args, **kwargs):
+        self.make_response_success(data=self.serializer.data)
 
     def get_select_related_one(self):
         return []
@@ -162,24 +161,27 @@ class CustomViewSet(viewsets.GenericViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         try:
-            pk = kwargs.pop(self.field_pk)
-            simple = request.query_params.get('simple', 'false')
-            register = self.get_object(pk=pk)
-            if simple == 'false':
-                self.serializer = self.get_one_serializer(register)
-            else:
-                self.serializer = self.get_serializer(register)
-            self.make_response_success(data=self.serializer.data)
+            self.pk = kwargs.pop(self.field_pk)
+            self.perform_retrieve(request, *args, **kwargs)
         except self.model_class.DoesNotExist:
             self.make_response_not_found()
         except exceptions.ValidationError as e:
-            self.resp = handler_exception_404(__name__, self.lookup_field, pk, e)
+            self.resp = handler_exception_404(__name__, self.lookup_field, self.pk, e)
         except Exception as e:
             self.resp = handler_exception_general(__name__, e)
         finally:
             return self.get_response()
 
-    def post(self, request, *args, **kwargs):
+    def perform_retrieve(self, request, *args, **kwargs):
+        simple = request.query_params.get('simple', 'false')
+        register = self.get_object(pk=self.pk)
+        if simple == 'false':
+            self.serializer = self.get_one_serializer(register)
+        else:
+            self.serializer = self.get_serializer(register)
+        self.make_response_success(data=self.serializer.data)
+
+    def create(self, request, *args, **kwargs):
         try:
             request_data = request.data if 'request_data' not in kwargs else kwargs['request_data']
             self.serializer = self.get_create_serializer(data=request_data)
@@ -213,8 +215,8 @@ class CustomViewSet(viewsets.GenericViewSet):
     def update(self, request, *args, **kwargs):
         try:
             request_data = request.data if 'request_data' not in kwargs else kwargs['request_data']
-            pk = kwargs.pop(self.field_pk)
-            register = self.get_object(pk=pk)
+            self.pk = kwargs.pop(self.field_pk)
+            register = self.get_object(pk=self.pk)
             self.serializer = self.get_update_serializer(register, data=request_data, partial=True)
             if self.serializer.is_valid():
                 self.perform_update(request, *args, **kwargs)
@@ -223,7 +225,7 @@ class CustomViewSet(viewsets.GenericViewSet):
         except self.model_class.DoesNotExist:
             self.make_response_not_found()
         except exceptions.ValidationError as e:
-            self.resp = handler_exception_404(__name__, self.lookup_field, pk, e)
+            self.resp = handler_exception_404(__name__, self.lookup_field, self.pk, e)
         except Exception as e:
             self.resp = handler_exception_general(__name__, e)
         finally:
@@ -243,8 +245,8 @@ class CustomViewSet(viewsets.GenericViewSet):
 
     def destroy(self, request, *args, **kwargs):
         try:
-            pk = kwargs.pop(self.field_pk)
-            register = self.get_object(pk=pk)
+            self.pk = kwargs.pop(self.field_pk)
+            register = self.get_object(pk=self.pk)
             if hasattr(register, 'status') or hasattr(register, 'active'):
                 self.perform_destroy(request, register=register, *args, **kwargs)
             else:
@@ -252,7 +254,7 @@ class CustomViewSet(viewsets.GenericViewSet):
         except self.model_class.DoesNotExist:
             self.make_response_not_found()
         except exceptions.ValidationError as e:
-            self.resp = handler_exception_404(__name__, self.lookup_field, pk, e)
+            self.resp = handler_exception_404(__name__, self.lookup_field, self.pk, e)
         except Exception as e:
             self.resp = handler_exception_general(__name__, e)
         finally:

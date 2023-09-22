@@ -108,3 +108,61 @@ class ModelDiffMixin(object):
 #         return 'Action: {} Endpoint: {} Description: {}'.format(self.action, self.endpoint, self.description)
 
 
+class MongoConnection(object):
+    def __init__(self):
+        from volcanmanagerapi import DB_MONGO_CLIENT as client
+        self.db = client['volcanmanagerapidb']
+        self.collection = None
+
+    def get_collection(self, name):
+        self.collection = self.db[name]
+
+
+class MonitorCollection(MongoConnection):
+
+    def __init__(self):
+        super(MonitorCollection, self).__init__()
+        self.get_collection('monitor')
+
+    def insert_one(self, data):
+        return self.collection.insert_one(data)
+
+    def find(self, filters, sort='updated_at', direction=-1, per_page=20, page=0):
+        import pytz
+        from bson.codec_options import CodecOptions
+        time_zone = pytz.timezone('America/Mexico_City')
+        try:
+            collection = self.collection.with_options(codec_options=CodecOptions(tz_aware=True, tzinfo=time_zone))
+            data = collection.find(filters).limit(per_page).skip(per_page * page).sort(sort, direction)
+        except Exception as e:
+            print(e.args.__str__())
+            data = {}
+        return data
+
+    def find_all(self, filters, sort='updated_at', direction=-1):
+        import pytz
+        from bson.codec_options import CodecOptions
+        time_zone = pytz.timezone('America/Mexico_City')
+        try:
+            collection = self.collection.with_options(codec_options=CodecOptions(tz_aware=True, tzinfo=time_zone))
+            data = collection.find(filters).sort(sort, direction)
+        except Exception as e:
+            print(e.args.__str__())
+            data = {}
+        return data
+
+    def find_one(self, filters):
+        return self.collection.find_one(filters)
+
+    def count_all(self, filters):
+        from bson.codec_options import CodecOptions
+        import pytz
+        time_zone = pytz.timezone('America/Mexico_City')
+        collection = self.collection.with_options(codec_options=CodecOptions(tz_aware=True, tzinfo=time_zone))
+        return collection.find(filters).count()
+
+    def update_one(self, filters, data):
+        if self.collection.find(filters).count():
+            return self.collection.update_one(filters, data)
+        return False
+

@@ -1,8 +1,7 @@
-from django.shortcuts import render
+from rest_framework.exceptions import ParseError
+from rest_framework.permissions import IsAuthenticated
 
 from common.views import CustomViewSet
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import ParseError
 from users.permissions import IsVerified, IsOperator
 
 
@@ -17,7 +16,8 @@ class ControlApiView(CustomViewSet):
         try:
             response_message, response_data, response_status = control_function(request)
             if 'RSP_CODIGO' in response_data:
-                if (response_data['RSP_CODIGO'].isnumeric() and int(response_data['RSP_CODIGO']) == 0) or response_data['RSP_CODIGO'] == '':
+                if (response_data['RSP_CODIGO'].isnumeric() and int(response_data['RSP_CODIGO']) == 0) \
+                        or response_data['RSP_CODIGO'] == '':
                     import logging
                     logger = logging.getLogger(__name__)
                     logger.info(request.user.profile.get_full_name())
@@ -97,3 +97,18 @@ class ControlApiView(CustomViewSet):
         from control.utils import gestion_transacciones
         return self.control_action(request=request, control_function=gestion_transacciones,
                                    name_control_function="gestion_transacciones")
+
+    def consulta_movimientos(self, request, *args, **kwargs):
+        from control.utils import consulta_movimientos
+        return self.control_action(request=request, control_function=consulta_movimientos,
+                                   name_control_function="consulta_movimientos")
+
+    def consulta_puntos(self, request, *args, **kwargs):
+        from control.utils import consulta_puntos
+        return self.control_action(request=request, control_function=consulta_puntos,
+                                   name_control_function="consulta_puntos")
+
+    def intra_extras(self, request, *args, **kwargs):
+        from control.utils import intra_extras_mock
+        return self.control_action(request=request, control_function=intra_extras_mock,
+                                   name_control_function="intra_extras_mock")
