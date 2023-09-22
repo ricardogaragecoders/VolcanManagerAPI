@@ -37,8 +37,6 @@ DEBUG = env('DEBUG')
 
 ALLOWED_HOSTS = env('ALLOWED_HOSTS').split(',')
 
-CORS_ORIGIN_ALLOW_ALL = False
-CORS_ORIGIN_WHITELIST = env('CORS_ALLOWED_ORIGINS').split(',')
 
 # Application definition
 
@@ -337,7 +335,7 @@ LOGGING = {
 URL_BACKEND = env.str('URL_BACKEND', 'http://localhost:8000')
 EMAIL_CONTACT = env.str('EMAIL_CONTACT', 'info@volcangroup.io')
 SERVER_VOLCAN_AZ7_URL = env.str('SERVER_VOLCAN_AZ7_URL', 'http://10.23.102.10:21005')
-SERVER_VOLCAN_PAYCARD_URL = env.str('SERVER_VOLCAN_AZ7_URL', 'http://10.23.106.33/wsParabiliumVolcan')
+SERVER_VOLCAN_PAYCARD_URL = env.str('SERVER_VOLCAN_PAYCARD_URL', 'http://10.23.106.33/wsParabiliumVolcan')
 
 PUB_KEY_D1_SERVER_TO_ISSUER_SERVER_PEM = env.str('PUB_KEY_D1_SERVER_TO_ISSUER_SERVER_PEM', '')
 PRIV_KEY_D1_SERVER_TO_ISSUER_SERVER_PEM = env.str('PRIV_KEY_D1_SERVER_TO_ISSUER_SERVER_PEM', '')
@@ -362,7 +360,8 @@ VERIFICATION_ADMINISTRATOR_DEFAULT = env.bool('VERIFICATION_ADMINISTRATOR_DEFAUL
 PATH_IMAGE_LOGO = env.str('PATH_IMAGE_LOGO')
 
 from corsheaders.defaults import default_headers, default_methods
-
+CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_WHITELIST = env('CORS_ALLOWED_ORIGINS').split(',')
 CORS_ALLOWED_ORIGINS = env('CORS_ALLOWED_ORIGINS').split(',')
 CORS_ALLOW_HEADERS = list(default_headers)
 CORS_ALLOW_METHODS = list(default_methods)
