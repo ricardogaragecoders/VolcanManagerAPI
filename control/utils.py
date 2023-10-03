@@ -489,6 +489,9 @@ def consulta_movimientos(request, **kwargs):
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK':
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
+                for k1, v1 in resp[1].items():
+                    if '.' in v1 and len(v1) == 21:
+                        resp[1][k1] = get_float_from_numeric_str(v1)
                 if 'RSP_WSMOVIMIENTOS' in resp[1]:
                     movements = []
                     for movement in resp[1]['RSP_WSMOVIMIENTOS']:
