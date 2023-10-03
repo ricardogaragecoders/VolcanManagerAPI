@@ -6,7 +6,6 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from common.exceptions import CustomValidationError
 from common.middleware import get_request
-from common.models import Status
 from common.serializers import StatusSerializer, CreatedAndUpdatedReadOnlyMixin
 from .models import Profile, WhiteListedToken, ProfileVerification
 from .utils import get_role_and_data

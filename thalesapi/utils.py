@@ -2,7 +2,7 @@ import json
 import requests
 from django.conf import settings
 
-from common.utils import get_response_data_errors
+from common.utils import get_response_data_errors, get_country_code_by_name
 from control.utils import get_volcan_api_headers
 from thalesapi.serializers import VerifyCardCreditSerializer, GetConsumerInfoSerializer, GetDataCredentialsSerializer
 
@@ -216,6 +216,7 @@ def get_consumer_information_credit(request, *args, **kwargs):
                 city = get_value_by_default(response_data['RSP_CIUDAD'], default=u'Panamá') if 'RSP_CIUDAD' in response_data else u'Panamá'
                 state = get_value_by_default(response_data['RSP_ESTADO'], default=u'Panamá') if 'RSP_ESTADO' in response_data else u'Panamá'
                 zip_code = get_value_by_default(response_data['RSP_CPOSTAL'], default='7215') if 'RSP_CPOSTAL' in response_data else '7215'
+                country = get_value_by_default(response_data['RSP_PAIS'], default=u'Panamá') if 'RSP_PAIS' in response_data else u'Panamá'
                 data = {
                     "language": "en-US",
                     "firstName": response_data['RSP_NOMBRE1'] if 'RSP_NOMBRE1' in response_data else '',
@@ -235,7 +236,7 @@ def get_consumer_information_credit(request, *args, **kwargs):
                         "city": city,
                         "state": state,
                         "zipCode": zip_code,
-                        "countryCode": "PA"
+                        "countryCode": get_country_code_by_name(country_name=country)
                     }
                 }
                 response_data = data
