@@ -387,7 +387,7 @@ def get_month_string(digit=0, abreviature=False):
     return months_name[digit] if not abreviature else months_abr[digit]
 
 
-def get_country_code_by_name(country_name, letters=2):
+def get_country_code_by_name_from_csv(country_name, letters=2):
     import pandas as pd  # CVS Column Names
     col_names = [
         'Code',

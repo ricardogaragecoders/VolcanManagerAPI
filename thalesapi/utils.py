@@ -2,8 +2,9 @@ import json
 import requests
 from django.conf import settings
 
-from common.utils import get_response_data_errors, get_country_code_by_name
+from common.utils import get_response_data_errors
 from control.utils import get_volcan_api_headers
+from thalesapi.models import ISOCountry
 from thalesapi.serializers import VerifyCardCreditSerializer, GetConsumerInfoSerializer, GetDataCredentialsSerializer
 
 
@@ -344,3 +345,13 @@ def get_card_credentials_prepaid(request, *args, **kwargs):
     response_data, response_status = process_prepaid_api_request(data=dict(), url=api_url,
                                                                  request=request, http_verb='GET')
     return response_data, response_status
+
+
+def get_country_code_by_name(country_name, letters=2):
+    iso_country = ISOCountry.objects.filter(country_name__unaccent__icontains=country_name).first()
+    if iso_country:
+        if letters == 2:
+            return iso_country.alfa2
+        elif letters == 3:
+            return iso_country.alfa3
+    return 'PA'
