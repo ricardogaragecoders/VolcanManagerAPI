@@ -495,7 +495,10 @@ def consulta_movimientos(request, **kwargs):
                 if 'RSP_WSMOVIMIENTOS' in resp[1]:
                     movements = []
                     for movement in resp[1]['RSP_WSMOVIMIENTOS']:
-                        if 'RSP_TARJETA' in movement and len(movement['RSP_NUM_TARJETA']) > 0:
+                        for k2, v2 in movement.items():
+                            if '.' in v2 and len(v2) == 21:
+                                movement[k2] = get_float_from_numeric_str(v2)
+                        if 'RSP_NUM_TARJETA' in movement and len(movement['RSP_NUM_TARJETA']) > 0:
                             movements.append({k.lower(): v for k, v in movement.items()})
                     resp[1]['RSP_WSMOVIMIENTOS'] = movements
             elif resp[1]['RSP_ERROR'] == '':
