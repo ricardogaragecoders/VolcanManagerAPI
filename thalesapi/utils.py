@@ -4,6 +4,7 @@ from django.conf import settings
 
 from common.utils import get_response_data_errors
 from control.utils import get_volcan_api_headers
+from thalesapi.models import ISOCountry
 from thalesapi.serializers import VerifyCardCreditSerializer, GetConsumerInfoSerializer, GetDataCredentialsSerializer
 
 
@@ -216,6 +217,7 @@ def get_consumer_information_credit(request, *args, **kwargs):
                 city = get_value_by_default(response_data['RSP_CIUDAD'], default=u'Panamá') if 'RSP_CIUDAD' in response_data else u'Panamá'
                 state = get_value_by_default(response_data['RSP_ESTADO'], default=u'Panamá') if 'RSP_ESTADO' in response_data else u'Panamá'
                 zip_code = get_value_by_default(response_data['RSP_CPOSTAL'], default='7215') if 'RSP_CPOSTAL' in response_data else '7215'
+                country = get_value_by_default(response_data['RSP_PAIS'], default=u'Panamá') if 'RSP_PAIS' in response_data else u'Panamá'
                 data = {
                     "language": "en-US",
                     "firstName": response_data['RSP_NOMBRE1'] if 'RSP_NOMBRE1' in response_data else '',
@@ -235,7 +237,7 @@ def get_consumer_information_credit(request, *args, **kwargs):
                         "city": city,
                         "state": state,
                         "zipCode": zip_code,
-                        "countryCode": "PA"
+                        "countryCode": get_country_code_by_name(country_name=country)
                     }
                 }
                 response_data = data
@@ -343,3 +345,13 @@ def get_card_credentials_prepaid(request, *args, **kwargs):
     response_data, response_status = process_prepaid_api_request(data=dict(), url=api_url,
                                                                  request=request, http_verb='GET')
     return response_data, response_status
+
+
+def get_country_code_by_name(country_name, letters=2):
+    iso_country = ISOCountry.objects.filter(country_name__unaccent__icontains=country_name).first()
+    if iso_country:
+        if letters == 2:
+            return iso_country.alfa2
+        elif letters == 3:
+            return iso_country.alfa3
+    return 'PA'

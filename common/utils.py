@@ -385,3 +385,23 @@ def get_month_string(digit=0, abreviature=False):
     months_name = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio',
                    'Agosto', 'Septiempre', 'Octubre', 'Noviembre', 'Diciembre']
     return months_name[digit] if not abreviature else months_abr[digit]
+
+
+def get_country_code_by_name_from_csv(country_name, letters=2):
+    import pandas as pd  # CVS Column Names
+    col_names = [
+        'Code',
+        'Country',
+        'Alfa3',
+        'Alfa2'
+    ]
+    # Use Pandas to parse the CSV file
+    csv_data = pd.read_csv(settings.PATH_ISO_COUNTRIES_CSV, names=col_names, header=0, encoding='utf8')
+    country = csv_data[(csv_data.Country == country_name)]
+    if not country.empty:
+        row = country.index.to_list()[0]
+        if letters == 2:
+            return country['Alfa2'][row]
+        elif letters == 3:
+            return country['Alfa3'][row]
+    return 'PA'

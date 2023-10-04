@@ -62,3 +62,17 @@ class CardDetail(BaseModelWithDeleted, ModelDiffMixin):
 
     class Meta:
         ordering = ('-created_at',)
+
+
+class ISOCountry(models.Model):
+    id = models.AutoField(primary_key=True)
+    code = models.CharField(max_length=4)
+    country_name = models.CharField(max_length=100)
+    alfa2 = models.CharField(max_length=2)
+    alfa3 = models.CharField(max_length=3)
+
+    def __str__(self):
+        return self.country_name
+
+    class Meta:
+        ordering = ('country_name',)
