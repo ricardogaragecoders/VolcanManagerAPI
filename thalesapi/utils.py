@@ -154,7 +154,7 @@ def post_verify_card_credit(request, *args, **kwargs):
     else:
         request_data = kwargs['request_data'].copy()
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/VerifyCard_1'
+    api_url = f'{url_server}{settings.URL_THALES_API_VERIFY_CARD}'
     serializer = VerifyCardCreditSerializer(data=request_data)
     if serializer.is_valid():
         response_data, response_status = process_volcan_api_request(data=serializer.validated_data,
@@ -206,7 +206,7 @@ def post_verify_card_prepaid(request, *args, **kwargs):
 def get_consumer_information_credit(request, *args, **kwargs):
     card_detail = kwargs.get('card_detail')
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/Volcan_GetConsumer_1'
+    api_url = f'{url_server}{settings.URL_THALES_API_GET_CONSUMER}'
     data = {'cardId': card_detail.card_id, 'consumerId': card_detail.consumer_id}
     serializer = GetConsumerInfoSerializer(data=data)
     if serializer.is_valid():
@@ -261,7 +261,7 @@ def get_consumer_information_prepaid(request, *args, **kwargs):
 def get_card_credentials_credit(request, *args, **kwargs):
     card_detail = kwargs.get('card_detail')
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/GetCardCredentials_1'
+    api_url = f'{url_server}{settings.URL_THALES_API_GET_CARD_CREDENTIALS}'
     data = {'cardId': card_detail.card_id, 'consumerId': card_detail.consumer_id}
     serializer = GetDataCredentialsSerializer(data=data)
     if serializer.is_valid():
