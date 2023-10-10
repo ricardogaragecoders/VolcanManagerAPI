@@ -117,7 +117,7 @@ class ThalesApiView(CustomViewSet):
     def post_notify_card_operation(self, request, *args, **kwargs):
         # from thalesapi.utils import get_card_credentials_credit_testing
 
-        return Response(data={'error': 'Servicio no disponible'}, status=400)
+        return Response(status=204)
 
     def get_card_credentials_testing(self, request, *args, **kwargs):
         from thalesapi.utils import get_card_credentials_credit_testing
