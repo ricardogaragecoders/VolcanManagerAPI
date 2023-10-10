@@ -114,6 +114,11 @@ class ThalesApiView(CustomViewSet):
             response_data, response_status = {'error': f'Registro no encontrado'}, 404
         return Response(data=response_data, status=response_status)
 
+    def post_notify_card_operation(self, request, *args, **kwargs):
+        # from thalesapi.utils import get_card_credentials_credit_testing
+
+        return Response(data={'error': 'Servicio no disponible'}, status=400)
+
     def get_card_credentials_testing(self, request, *args, **kwargs):
         from thalesapi.utils import get_card_credentials_credit_testing
         response_data, response_status = self.control_action(request=request,
