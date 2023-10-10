@@ -38,10 +38,13 @@ class ThalesApiView(CustomViewSet):
             request_data = request.data.copy()
         else:
             request_data = kwargs['request_data'].copy()
+        print('Verify Card')
+        print(request_data)
+
         if 'cardBin' in request_data and is_card_bin_valid(request_data['cardBin']):
             # aqui revisamos si es credito o prepago
             card_bin = request_data['cardBin']
-            card_type = CardType.CT_PREPAID if card_bin == '53876436' else CardType.CT_CREDIT
+            card_type = CardType.CT_PREPAID if card_bin in '53876436' else CardType.CT_CREDIT
             if card_type == CardType.CT_CREDIT:
                 from thalesapi.utils import post_verify_card_credit
                 response_data, response_status = self.control_action(request=request,
@@ -67,9 +70,14 @@ class ThalesApiView(CustomViewSet):
 
     def get_consumer_information(self, request, *args, **kwargs):
         consumer_id = kwargs.get('consumer_id', '')
-        card_id = request.query_params.get('cardId', '')
+        card_id = request.query_params.get('cardId', None)
         issuer_id = kwargs.get('issuer_id', '')
-        card_detail = CardDetail.objects.filter(consumer_id=consumer_id, card_id=card_id, issuer_id=issuer_id).first()
+        print("Get Consumer Info")
+        print(request.get_full_path())
+        if not card_id:
+            card_detail = CardDetail.objects.filter(consumer_id=consumer_id, issuer_id=issuer_id).first()
+        else:
+            card_detail = CardDetail.objects.filter(consumer_id=consumer_id, card_id=card_id, issuer_id=issuer_id).first()
         if card_detail:
             if card_detail.card_type == CardType.CT_CREDIT:
                 from thalesapi.utils import get_consumer_information_credit

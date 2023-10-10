@@ -16,7 +16,7 @@ def get_str_from_date_az7(s_date):
 
 
 def is_card_bin_valid(card_bin):
-    return card_bin in ['53876436', '53139427', '53139435', '53139497', '53582937']
+    return card_bin in ['53876436', '538764', '53139427', '531394', '53139435', '53139497', '53582937', '535829']
 
 
 def get_thales_api_headers(request=None):
@@ -109,7 +109,7 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
 def process_volcan_api_request(data, url, request, times=0):
     response_data = dict()
     response_status = 500
-    headers = get_volcan_api_headers()
+    headers = get_thales_api_headers(request)
     data_json = json.dumps(data)
     print(f"Request: {url}")
     print(f"Headers: {headers}")
@@ -154,7 +154,7 @@ def post_verify_card_credit(request, *args, **kwargs):
     else:
         request_data = kwargs['request_data'].copy()
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/VerifyCard_1'
+    api_url = f'{url_server}/web/services/Volcan_VerifyCard'
     serializer = VerifyCardCreditSerializer(data=request_data)
     if serializer.is_valid():
         response_data, response_status = process_volcan_api_request(data=serializer.validated_data,
@@ -206,7 +206,7 @@ def post_verify_card_prepaid(request, *args, **kwargs):
 def get_consumer_information_credit(request, *args, **kwargs):
     card_detail = kwargs.get('card_detail')
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/Volcan_GetConsumer_1'
+    api_url = f'{url_server}/web/services/Volcan_GetConsumer'
     data = {'cardId': card_detail.card_id, 'consumerId': card_detail.consumer_id}
     serializer = GetConsumerInfoSerializer(data=data)
     if serializer.is_valid():
@@ -261,7 +261,7 @@ def get_consumer_information_prepaid(request, *args, **kwargs):
 def get_card_credentials_credit(request, *args, **kwargs):
     card_detail = kwargs.get('card_detail')
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/GetCardCredentials_1'
+    api_url = f'{url_server}/web/services/Volcan_GetCardCredentials'
     data = {'cardId': card_detail.card_id, 'consumerId': card_detail.consumer_id}
     serializer = GetDataCredentialsSerializer(data=data)
     if serializer.is_valid():
@@ -276,6 +276,9 @@ def get_card_credentials_credit(request, *args, **kwargs):
                     "name": response_data['RSP_NOMBRE'] if 'RSP_NOMBRE' in response_data else '',
                     "cvv": response_data['RSP_CVV'] if 'RSP_CVV' in response_data else ''
                 }
+
+                if len(payload["exp"]) == 4:
+                    paycard["exp"] = paycard[2:4] + paycard[0:2]
 
                 card_real = get_card_triple_des_process(payload['pan'], is_descript=True)
                 if card_real:
