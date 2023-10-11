@@ -218,10 +218,10 @@ def get_consumer_information_credit(request, *args, **kwargs):
                 state = get_value_by_default(response_data['RSP_ESTADO'], default=u'Panamá') if 'RSP_ESTADO' in response_data else u'Panamá'
                 zip_code = get_value_by_default(response_data['RSP_CPOSTAL'], default='7215') if 'RSP_CPOSTAL' in response_data else '7215'
                 country = get_value_by_default(response_data['RSP_PAIS'], default=u'Panamá') if 'RSP_PAIS' in response_data else u'Panamá'
+
                 data = {
                     "language": "en-US",
                     "firstName": response_data['RSP_NOMBRE1'] if 'RSP_NOMBRE1' in response_data else '',
-                    "middleName": response_data['RSP_NOMBRE2'] if 'RSP_NOMBRE2' in response_data else '',
                     "lastName": response_data['RSP_APELLIDO1'] if 'RSP_APELLIDO1' in response_data else '',
                     "dateOfBirth": get_str_from_date_az7(
                         response_data['RSP_FECHA_NAC']) if 'RSP_FECHA_NAC' in response_data else '',
@@ -240,6 +240,9 @@ def get_consumer_information_credit(request, *args, **kwargs):
                         "countryCode": get_country_code_by_name(country_name=country)
                     }
                 }
+                if 'RSP_NOMBRE2' in response_data and len(response_data['RSP_NOMBRE2']) > 0:
+                    data["middleName"] = response_data['RSP_NOMBRE2']
+
                 response_data = data
             else:
                 response_status = 400
