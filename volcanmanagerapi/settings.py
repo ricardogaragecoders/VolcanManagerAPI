@@ -37,7 +37,6 @@ DEBUG = env('DEBUG')
 
 ALLOWED_HOSTS = env('ALLOWED_HOSTS').split(',')
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -361,6 +360,7 @@ PATH_IMAGE_LOGO = env.str('PATH_IMAGE_LOGO')
 PATH_ISO_COUNTRIES_CSV = env.str('PATH_ISO_COUNTRIES_CSV', '')
 
 from corsheaders.defaults import default_headers, default_methods
+
 CORS_ORIGIN_ALLOW_ALL = False
 CORS_ORIGIN_WHITELIST = env('CORS_ALLOWED_ORIGINS').split(',')
 CORS_ALLOWED_ORIGINS = env('CORS_ALLOWED_ORIGINS').split(',')
@@ -369,3 +369,8 @@ CORS_ALLOW_METHODS = list(default_methods)
 CORS_EXPOSE_HEADERS = list(default_headers) + ['content-disposition', ]
 
 BROKER_URL = env.str('RABBITMQ_URL')
+
+URL_THALES_API_VERIFY_CARD = env.str('URL_THALES_API_VERIFY_CARD', '/web/services/VerifyCard_1')
+URL_THALES_API_GET_CONSUMER = env.str('URL_THALES_API_GET_CONSUMER', '/web/services/Volcan_GetConsumer_1')
+URL_THALES_API_GET_CARD_CREDENTIALS = env.str('URL_THALES_API_GET_CARD_CREDENTIALS',
+                                              '/web/services/GetCardCredentials_1')
