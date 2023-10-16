@@ -157,7 +157,8 @@ def post_verify_card_credit(request, *args, **kwargs):
     api_url = f'{url_server}/web/services/Volcan_VerifyCard'
     serializer = VerifyCardCreditSerializer(data=request_data)
     if serializer.is_valid():
-        response_data, response_status = process_volcan_api_request(data=serializer.validated_data,
+        validated_data = serializer.validated_data
+        response_data, response_status = process_volcan_api_request(data=validated_data,
                                                                     url=api_url, request=request)
         # aqui falta hacer el proceso para cambiar la respuesta como la necesita Thales
         if response_status == 200:
@@ -181,6 +182,8 @@ def post_verify_card_credit(request, *args, **kwargs):
                         }
                     }
                 }
+                if 'CVV' in validated_data and len(validated_data['CVV']) == 0:
+                    data['verificationResults']['securityCode']['valid'] = True
                 response_data = data
             else:
                 response_status = 400
