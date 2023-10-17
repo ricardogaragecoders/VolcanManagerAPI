@@ -2370,6 +2370,12 @@ components:
         auth_password:
           type: string
           description: Auth password
+        key_webhook:
+          type: string
+          description: Webhook header value
+        header_webhook:
+          type: string
+          description: Webhook header
         activo:
           type: boolean
           enum: [true, false]

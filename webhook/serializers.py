@@ -8,15 +8,19 @@ from webhook.models import Webhook
 
 class WebhookSerializer(serializers.ModelSerializer):
     emisor = serializers.CharField(source='account_issuer', max_length=3, required=True, write_only=True)
-    auth_username = serializers.CharField(max_length=45, required=False,
-                                          allow_null=True, allow_blank=True, write_only=True)
-    auth_password = serializers.CharField(max_length=45, required=False,
-                                          allow_null=True, allow_blank=True, write_only=True)
+    auth_username = serializers.CharField(max_length=45, required=False, write_only=True,
+                                          allow_null=True, allow_blank=True)
+    auth_password = serializers.CharField(max_length=45, required=False, write_only=True,
+                                          allow_null=True, allow_blank=True)
+    key_webhook = serializers.CharField(min_length=5, required=False, write_only=True,
+                                        allow_null=True, allow_blank=True)
+    header_webhook = serializers.CharField(max_length=20, required=False, default='Authorization', write_only=True,
+                                           allow_null=True, allow_blank=True)
     activo = serializers.BooleanField(source='active', required=False, default=True, write_only=True)
 
     class Meta:
         model = Webhook
-        fields = ('emisor', 'url_webhook', 'auth_username', 'auth_password', 'activo')
+        fields = ('emisor', 'url_webhook', 'auth_username', 'auth_password', 'key_webhook', 'header_webhook', 'activo')
 
     def validate(self, data):
         data = super(WebhookSerializer, self).validate(data)
@@ -25,6 +29,7 @@ class WebhookSerializer(serializers.ModelSerializer):
         auth_username = data.pop('auth_username', None)
         auth_password = data.pop('auth_password', None)
         key_webhook = data.get('key_webhook', '' if not self.instance else self.instance.key_webhook)
+        header_webhook = data.pop('header_webhook', 'Authorization')
 
         if not self.instance:
             if Webhook.objects.filter(account_issuer=account_issuer, deleted_at__isnull=True).exists():
@@ -44,13 +49,21 @@ class WebhookSerializer(serializers.ModelSerializer):
             import base64
             usr_pass = bytes(f"{auth_username}:{auth_password}", 'UTF-8')
             key_webhook = base64.b64encode(usr_pass).decode('utf-8')
+            key_webhook = f'Basic {key_webhook}'
+            header_webhook = 'Authorization'
 
         if len(key_webhook) == 0:
             key_webhook = model_code_generator(model=Webhook, digits=32, code='key_webhook')
+            key_webhook = f'Basic {key_webhook}'
+            header_webhook = 'Authorization'
+
+        if len(header_webhook) == 0:
+            raise CustomValidationError(detail={'header_webhook': f'El nombre del header es requerido.'}, code='422')
 
         data['account_issuer'] = account_issuer.upper()
         data['url_webhook'] = url_webhook
         data['key_webhook'] = key_webhook
+        data['header_webhook'] = header_webhook
         return data
 
 

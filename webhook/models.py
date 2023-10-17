@@ -8,7 +8,8 @@ class Webhook(BaseModelWithDeleted):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
     account_issuer = models.CharField(max_length=100)
     url_webhook = models.URLField(blank=True, null=True)
-    key_webhook = models.CharField(max_length=100, blank=True, null=True)
+    key_webhook = models.TextField(blank=True, null=True)
+    header_webhook = models.CharField(max_length=20, default='Authorization')
     active = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):
