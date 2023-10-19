@@ -51,7 +51,7 @@ def send_transaction_url_webhook(data, webhook: Webhook):
         print(res.text)
         print(res.headers)
         if 'Content-Type' in res.headers:
-            if res.headers['Content-Type'] == 'application/json':
+            if 'application/json' in res.headers['Content-Type']:
                 response_data = res.json()
             else:
                 response_data = res.content
