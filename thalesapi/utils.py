@@ -163,21 +163,25 @@ def post_verify_card_credit(request, *args, **kwargs):
         # aqui falta hacer el proceso para cambiar la respuesta como la necesita Thales
         if response_status == 200:
             if 'RSP_ERROR' in response_data and response_data['RSP_ERROR'].upper() == 'OK':
+                valid_cvv = int(response_data['RSP_VALID_CVV'] if 'RSP_VALID_CVV' in response_data and len(response_data['RSP_VALID_CVV']) > 0 else '0')
+                num_attempts = int(response_data['RSP_NUM_ATTEMPS'] if 'RSP_NUM_ATTEMPS' in response_data and len(response_data['RSP_NUM_ATTEMPS']) > 0 else '0')
+                lost_or_stolen = int(response_data['RSP_LOST_STOLEN'] if 'RSP_LOST_STOLEN' in response_data and len(response_data['RSP_LOST_STOLEN']) > 0 else '1')
+                expired = int(response_data['RSP_EXPIRADA'] if 'RSP_EXPIRADA' in response_data and len(response_data['RSP_EXPIRADA']) > 0 else '1')
+                invalid = int(response_data['RSP_TAR_VALID'] if 'RSP_TAR_VALID' in response_data and len(response_data['RSP_TAR_VALID']) > 0 else '1')
+
                 data = {
                     "cardId": response_data['RSP_TARJETAID'] if 'RSP_TARJETAID' in response_data else '',
                     "consumerId": response_data['RSP_CLIENTEID'] if 'RSP_CLIENTEID' in response_data else '',
                     "accountId": response_data['RSP_CUENTAID'] if 'RSP_CUENTAID' in response_data else '',
                     "verificationResults": {
                         "securityCode": {
-                            "valid": ('RSP_VALID_CVV' in response_data and response_data['RSP_VALID_CVV'] == '1'),
-                            "verificationAttemptsExceeded": (
-                                    'RSP_NUM_ATTEMPS' in response_data and response_data['RSP_NUM_ATTEMPS'] != '0')
+                            "valid": valid_cvv == 1,
+                            "verificationAttemptsExceeded": num_attempts > 3
                         },
                         "card": {
-                            "lostOrStolen": (
-                                    'RSP_LOST_STOLEN' in response_data and response_data['RSP_LOST_STOLEN'] != '1'),
-                            "expired": ('RSP_EXPIRADA' in response_data and response_data['RSP_EXPIRADA'] != '1'),
-                            "invalid": ('RSP_TAR_VALID' in response_data and response_data['RSP_TAR_VALID'] != '1'),
+                            "lostOrStolen": lost_or_stolen != 1,
+                            "expired": expired != 1,
+                            "invalid": invalid != 1,
                             "fraudSuspect": False
                         }
                     }
