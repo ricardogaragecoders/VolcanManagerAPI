@@ -38,6 +38,8 @@ class VerifyCardCreditSerializer(serializers.Serializer):
                 data['FECHA_EXP'] = payload['exp'] if 'exp' in payload else ''
                 data['NOMBRE'] = payload['name'] if 'name' in payload else ''
                 data['CVV'] = payload['cvv'] if 'cvv' in payload else ''
+                if len(data['FECHA_EXP']) == 4:
+                    data['FECHA_EXP'] = data['FECHA_EXP'][2:4] + data['FECHA_EXP'][0:2]
         except Exception as e:
             import logging
             logger = logging.getLogger(__name__)
