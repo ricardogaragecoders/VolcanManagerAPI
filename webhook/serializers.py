@@ -2,7 +2,7 @@ from django.conf import settings
 from rest_framework import serializers
 
 from common.exceptions import CustomValidationError
-from common.utils import model_code_generator
+from common.utils import model_code_generator, is_float
 from webhook.models import Webhook
 
 
@@ -107,6 +107,8 @@ class TransactionSerializer(serializers.Serializer):
         user = data.pop('user', settings.VOLCAN_USER_TRANSACTION)
         password = data.pop('password', settings.VOLCAN_PASSWORD_TRANSACTION)
         emisor = data.get('emisor', '').upper()
+        monto = data.get('monto', '').lower()
+        tarjeta = data.get('tarjeta', '').upper()
 
         if user != settings.VOLCAN_USER_TRANSACTION or password != settings.VOLCAN_PASSWORD_TRANSACTION:
             raise CustomValidationError(detail=f'Usuario y/o password incorrectos.',
@@ -119,6 +121,15 @@ class TransactionSerializer(serializers.Serializer):
         if not Webhook.objects.filter(account_issuer=emisor).exists():
             raise CustomValidationError(detail=f'El emisor no tiene definido un webhook.',
                                         code='400')
+
+        if len(monto) == 0 and not is_float(monto):
+            raise CustomValidationError(detail=f'Solo se aceptan valores numericos.',
+                                        code='400')
+        data['monto'] = monto
+        if len(tarjeta) < 16:
+            raise CustomValidationError(detail=f'El numero de tarjeta es requerido.',
+                                        code='400')
+        data['tarjeta'] = tarjeta
 
         if len(id_movimiento) == 0:
             import uuid

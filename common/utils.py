@@ -405,3 +405,10 @@ def get_country_code_by_name_from_csv(country_name, letters=2):
         elif letters == 3:
             return country['Alfa3'][row]
     return 'PA'
+
+
+def is_float(number: str):
+    if number.replace(".", "").isnumeric():
+        return True
+    else:
+        return False
