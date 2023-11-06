@@ -2427,6 +2427,12 @@ components:
         pais:
           type: string
           description: Pais
+        email:
+          type: string
+          description: Email
+        tarjetahabiente:
+          type: string
+          description: Nombre de titular de tarjeta
         user:
           type: string
           description: User
@@ -2447,6 +2453,8 @@ components:
         - codigo_autorizacion
         - comercio
         - pais
+        - email
+        - tarjetahabiente
         - user
         - password
   securitySchemes:

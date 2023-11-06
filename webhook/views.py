@@ -181,13 +181,15 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
         direction = pymongo.ASCENDING if order_by_desc == 'false' else pymongo.DESCENDING
 
         if q:
-            filters['$or'] = [
+            filters['$or'] = {
                 {'tarjeta': {'$regex': q, '$options': 'i'}},
                 {'referencia': {'$regex': q, '$options': 'i'}},
                 {'numero_autorizacion': {'$regex': q, '$options': 'i'}},
                 {'codigo_autorizacion': {'$regex': q, '$options': 'i'}},
+                {'email': {'$regex': q, '$options': 'i'}},
+                {'tarjetahabiente': {'$regex': q, '$options': 'i'}},
                 {'comercio': {'$regex': q, '$options': 'i'}}
-            ]
+            }
 
         db = TransactionCollection()
         self._total = db.find(filters).count()
@@ -319,6 +321,8 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
                         'codigo_autorizacion': item['codigo_autorizacion'],
                         'comercio': item['comercio'],
                         'pais': item['pais'] if 'pais' in item else '',
+                        'email': item['email'] if 'email' in item else '',
+                        'tarjetahabiente': item['tarjetahabiente'] if 'tarjetahabiente' in item else '',
                         'entregado': item['entregado'],
                         'fecha_entregado': item['fecha_entregado'],
                         'codigo_error': item['codigo_error'],
