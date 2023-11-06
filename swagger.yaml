@@ -1733,8 +1733,8 @@ components:
           maxLength: 20
         tarjeta_virtual:
           type: string
-          description: 'Mandatorio. S=Si/N=Emite Física'
-          enum: ['S', 'N']
+          description: 'Mandatorio. V=Virtual/F=Fisica/A=Ambas, para adicinales solo se permite fisicas'
+          enum: ['V', 'F', 'A']
           maxLength: 1
         producto_bin:
           type: string
@@ -1743,11 +1743,11 @@ components:
         limite_cred_titular:
           type: string
           description: 'Opcional. Importe con 2 decimales. Requerido para tarjeta titular'
-          maxlength: 20
+          maxLength: 20
         limite_consumo_adicional:
           type: string
           description: 'Opcional. Importe con 2 decimales. Requerido para tarjeta adicional, no puede ser mayor al límite del crédito del titular'
-          maxlength: 20
+          maxLength: 20
         ciclo_corte_titular:
           type: string
           description: 'Opcional. Día del mes para el corte para emitir EDC, es requerido para tarjeta titular'
