@@ -1,7 +1,7 @@
 import json
 import requests
 from django.conf import settings
-
+import logging
 from common.utils import get_response_data_errors
 from control.serializers import ConsultaCuentaSerializer, ConsultaTarjetaSerializer, \
     CambioPINSerializer, ExtrafinanciamientoSerializer, CambioLimitesSerializer, CambioEstatusTDCSerializer, \
@@ -36,49 +36,50 @@ def get_volcan_api_headers():
 
 
 def process_volcan_api_request(data, url, request, times=0):
+    logger = logging.getLogger(__name__)
     headers = get_volcan_api_headers()
     data_json = json.dumps(data)
-    print(f"Request: {url}")
-    print(f"Data json: {data_json}")
+    logger.debug(f"Request: {url}")
+    logger.debug(f"Data json: {data_json}")
     try:
         r = requests.post(url=url, data=data_json, headers=headers)
         response_status = r.status_code
         if 200 <= response_status <= 299:
             response_data = r.json()
             if len(response_data) == 0:
-                print(f"Response: empty")
+                logger.debug(f"Response: empty")
                 response_data = {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}
             else:
-                print(f"Response: {response_data}")
+                logger.debug(f"Response: {response_data}")
         elif response_status == 404:
             response_data = {'RSP_CODIGO': '404', 'RSP_DESCRIPCION': 'Recurso no disponible'}
-            print(f"Response: 404 Recurso no disponible")
+            logger.error(f"Response: 404 Recurso no disponible")
         else:
             response_data = {'RSP_CODIGO': str(response_status), 'RSP_DESCRIPCION': 'Error desconocido'}
-            print(f"Response: {str(response_status)} Error desconocido")
-            print(f"Data server: {str(r.text)}")
+            logger.error(f"Response: {str(response_status)} Error desconocido")
+            logger.error(f"Data server: {str(r.text)}")
         response_message = ''
     except requests.exceptions.Timeout:
         response_data = {'RSP_CODIGO': "408",
                          'RSP_DESCRIPCION': 'Error de conexion con servidor VOLCAN (Timeout)'}
         response_status = 408
         response_message = 'Error de conexion con servidor VOLCAN (Timeout)'
-        print(response_message)
+        logger.error(response_message)
     except requests.exceptions.TooManyRedirects:
         response_data = {'RSP_CODIGO': "429",
                          'RSP_DESCRIPCION': 'Error de conexion con servidor VOLCAN (TooManyRedirects)'}
         response_status = 429
         response_message = 'Error de conexion con servidor VOLCAN (TooManyRedirects)'
-        print(response_message)
+        logger.error(response_message)
     except requests.exceptions.RequestException as e:
         response_data = {'RSP_CODIGO': "400",
                          'RSP_DESCRIPCION': 'Error de conexion con servidor VOLCAN (RequestException)'}
         response_status = 400
         response_message = 'Error de conexion con servidor VOLCAN (RequestException)'
-        print(response_message)
+        logger.error(response_message)
     except Exception as e:
-        print("Error peticion")
-        print(e.args.__str__())
+        logger.error("Error peticion")
+        logger.error(e.args.__str__())
         response_status = 500
         response_message = 'error'
         response_data = {'RSP_CODIGO': '500', 'RSP_DESCRIPCION': e.args.__str__()}

@@ -102,3 +102,57 @@ class GetDataCredentialsSerializer(serializers.Serializer):
         # data['AUTORIZACION'] = settings.THALESAPI_AUTORIZACION_DEFAULT
 
         return data
+
+
+class GetDataTokenizationSerializer(serializers.Serializer):
+    TARJETA = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    FECHA_EXP = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    NOMBRE = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    FOLIO = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('TARJETA', 'FECHA_EXP', 'NOMBRE',
+                  'FOLIO', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+
+    def validate(self, data):
+        data = super(GetDataTokenizationSerializer, self).validate(data)
+        profile = self.context['request'].user.profile
+        card = data.get('TARJETA', '').strip()
+        exp_date = data.get('FECHA_EXP', '').strip()
+        name = data.get('NOMBRE', '').strip()
+        transmitter = data.get('EMISOR', '').strip().upper()
+        folio = data.get('FOLIO', '').strip()
+
+        if len(card) == 0:
+            raise CustomValidationError(detail=u'TARJETA es requerido', code='400')
+
+        if len(exp_date) != 4:
+            raise CustomValidationError(detail=u'FECHA_EXP es requerido', code='400')
+
+        exp_date = exp_date[2:4] + exp_date[0:2]
+
+        if len(name) <= 3:
+            raise CustomValidationError(detail=u'NOMBRE es requerido', code='400')
+
+        if not profile.isSuperadmin():
+            if profile.first_name != transmitter:
+                raise CustomValidationError(detail=u'EMISOR desconocido', code='400')
+
+        if transmitter not in ['CMF',]:
+            raise CustomValidationError(detail=u'EMISOR no autorizado', code='400')
+
+        if len(folio) == 0:
+            folio = code_generator(characters=12, option='num')
+
+        data['FECHA_EXP'] = exp_date
+        data['CVV'] = ''
+        data['FOLIO'] = folio
+        data['EMISOR'] = transmitter
+        data['USUARIO_ATZ'] = settings.VOLCAN_USUARIO_ATZ
+        data['ACCESO_ATZ'] = settings.VOLCAN_ACCESO_ATZ
+        # data['AUTORIZACION'] = settings.THALESAPI_AUTORIZACION_DEFAULT
+
+        return data

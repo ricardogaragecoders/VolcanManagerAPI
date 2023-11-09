@@ -18,4 +18,7 @@ urlpatterns = [
     path('testing/cms/api/v1/issuers/<str:issuer_id>/cards/<str:card_id>/credentials',
          ThalesApiView.as_view({'post': 'get_card_credentials_testing'})),
 
+    path('volcan/api/obtenerDatosTokenizacion/',
+         ThalesApiViewPrivate.as_view({'post': 'get_card_data_tokenization'})),
+
 ]

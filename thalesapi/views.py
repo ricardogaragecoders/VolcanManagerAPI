@@ -1,10 +1,12 @@
 from rest_framework.exceptions import ParseError
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from common.views import CustomViewSet
 from thalesapi.models import CardType, CardDetail
+from thalesapi.serializers import GetDataTokenizationSerializer
 from thalesapi.utils import is_card_bin_valid
+from users.permissions import IsVerified, IsOperator
 
 
 # Create your views here.
@@ -77,7 +79,8 @@ class ThalesApiView(CustomViewSet):
         if not card_id:
             card_detail = CardDetail.objects.filter(consumer_id=consumer_id, issuer_id=issuer_id).first()
         else:
-            card_detail = CardDetail.objects.filter(consumer_id=consumer_id, card_id=card_id, issuer_id=issuer_id).first()
+            card_detail = CardDetail.objects.filter(consumer_id=consumer_id, card_id=card_id,
+                                                    issuer_id=issuer_id).first()
         if card_detail:
             if card_detail.card_type == CardType.CT_CREDIT:
                 from thalesapi.utils import get_consumer_information_credit
@@ -125,3 +128,40 @@ class ThalesApiView(CustomViewSet):
                                                              control_function=get_card_credentials_credit_testing,
                                                              *args, **kwargs)
         return Response(data=response_data, status=response_status)
+
+
+class ThalesApiViewPrivate(ThalesApiView):
+    permission_classes = (IsAuthenticated, IsVerified, IsOperator)
+    serializer_class = GetDataTokenizationSerializer
+
+    def get_card_data_tokenization(self, request, *args, **kwargs):
+        from django.conf import settings
+        from control.utils import process_volcan_api_request
+        from common.utils import get_response_data_errors
+        request_data = request.data.copy()
+        request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
+        request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
+        data = {k.upper(): v for k, v in request_data.items()}
+        serializer = self.get_serializer(data=data)
+        if serializer.is_valid():
+            url_server = settings.SERVER_VOLCAN_AZ7_URL
+            api_url = f'{url_server}{settings.URL_THALES_API_VERIFY_CARD}'
+            resp_msg, response_data, response_status = process_volcan_api_request(data=serializer.validated_data,
+                                                                                  url=api_url, request=request, times=0)
+            if response_status == 200:
+                if response_data['RSP_ERROR'].upper() == 'OK':
+                    response_data['RSP_DESCRIPCION'] = u'Transacción aprobada'
+                data = {
+                    'RSP_ERROR': response_data['RSP_ERROR'],
+                    'RSP_CODIGO': response_data['RSP_CODIGO'],
+                    'RSP_DESCRIPCION': response_data['RSP_DESCRIPCION'],
+                    'rsp_folio': response_data['RSP_FOLIO'],
+                    "cardId": response_data['RSP_TARJETAID'] if 'RSP_TARJETAID' in response_data else '',
+                    "consumerId": response_data['RSP_CLIENTEID'] if 'RSP_CLIENTEID' in response_data else '',
+                    "accountId": response_data['RSP_CUENTAID'] if 'RSP_CUENTAID' in response_data else ''
+                }
+                response_data = data
+        else:
+            resp_msg, response_data, response_status = get_response_data_errors(serializer.errors)
+            response_data, response_status = {}, 400
+        return self.get_response(message=resp_msg, data=response_data, status=response_status, lower_response=False)

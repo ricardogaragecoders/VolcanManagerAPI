@@ -1,12 +1,15 @@
 import json
 import requests
+import logging
 from django.conf import settings
 
 from common.utils import get_response_data_errors
 from control.utils import get_volcan_api_headers
 from thalesapi.models import ISOCountry
-from thalesapi.serializers import VerifyCardCreditSerializer, GetConsumerInfoSerializer, GetDataCredentialsSerializer
+from thalesapi.serializers import VerifyCardCreditSerializer, GetConsumerInfoSerializer, GetDataCredentialsSerializer, \
+    GetDataTokenizationSerializer
 
+logger = logging.getLogger(__name__)
 
 def get_str_from_date_az7(s_date):
     if len(s_date) >= 8:
@@ -67,9 +70,9 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
     response_data = dict()
     response_status = 500
     headers = get_thales_api_headers(request)
-    print(f"Request: {url}")
-    print(f"Headers: {headers}")
-    print(f"Data json: {data}")
+    logger.debug(f"Request: {url}")
+    logger.debug(f"Headers: {headers}")
+    logger.debug(f"Data json: {data}")
     try:
         if http_verb == 'POST':
             r = requests.post(url=url, data=data, headers=headers)
@@ -79,29 +82,29 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
         if 200 <= response_status <= 299:
             response_data = r.json()
             if len(response_data) == 0:
-                print(f"Response: empty")
+                logger.debug(f"Response: empty")
                 response_data = {'error': 'Error en datos de origen'}
             else:
-                print(f"Response: {response_data}")
+                logger.debug(f"Response: {response_data}")
         elif response_status == 404:
             response_data = {'error': 'Recurso no disponible'}
-            print(f"Response: 404 Recurso no disponible")
+            logger.error(f"Response: 404 Recurso no disponible")
         else:
             response_data = {'error': 'Error desconocido'}
-            print(f"Response: {str(response_status)} Error desconocido")
-            print(f"Data server: {str(r.text)}")
+            logger.error(f"Response: {str(response_status)} Error desconocido")
+            logger.error(f"Data server: {str(r.text)}")
     except requests.exceptions.Timeout:
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (Timeout)'}, 408
-        print(response_data)
+        logger.error(response_data)
     except requests.exceptions.TooManyRedirects:
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (TooManyRedirects)'}, 429
-        print(response_data)
+        logger.error(response_data)
     except requests.exceptions.RequestException as e:
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (RequestException)'}, 400
-        print(response_data)
+        logger.error(response_data)
     except Exception as e:
         response_data, response_status = {'error': e.args.__str__()}, 500
-        print(response_data)
+        logger.error(response_data)
     finally:
         return response_data, response_status
 
@@ -111,38 +114,38 @@ def process_volcan_api_request(data, url, request, times=0):
     response_status = 500
     headers = get_thales_api_headers(request)
     data_json = json.dumps(data)
-    print(f"Request: {url}")
-    print(f"Headers: {headers}")
-    print(f"Data json: {data_json}")
+    logger.debug(f"Request: {url}")
+    logger.debug(f"Headers: {headers}")
+    logger.debug(f"Data json: {data_json}")
     try:
         r = requests.post(url=url, data=data_json, headers=headers)
         response_status = r.status_code
         if 200 <= response_status <= 299:
             response_data = r.json()
             if len(response_data) == 0:
-                print(f"Response: empty")
+                logger.debug(f"Response: empty")
                 response_data = {'error': 'Error en datos de origen'}
             else:
-                print(f"Response: {response_data}")
+                logger.debug(f"Response: {response_data}")
         elif response_status == 404:
             response_data = {'error': 'Recurso no disponible'}
-            print(f"Response: 404 Recurso no disponible")
+            logger.debug(f"Response: 404 Recurso no disponible")
         else:
             response_data = {'error': 'Error desconocido'}
-            print(f"Response: {str(response_status)} Error desconocido")
-            print(f"Data server: {str(r.text)}")
+            logger.error(f"Response: {str(response_status)} Error desconocido")
+            logger.error(f"Data server: {str(r.text)}")
     except requests.exceptions.Timeout:
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (Timeout)'}, 408
-        print(response_data)
+        logger.error(response_data)
     except requests.exceptions.TooManyRedirects:
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (TooManyRedirects)'}, 429
-        print(response_data)
+        logger.error(response_data)
     except requests.exceptions.RequestException as e:
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (RequestException)'}, 400
-        print(response_data)
+        logger.error(response_data)
     except Exception as e:
         response_data, response_status = {'error': e.args.__str__()}, 500
-        print(response_data)
+        logger.error(response_data)
     finally:
         return response_data, response_status
 
@@ -368,3 +371,28 @@ def get_country_code_by_name(country_name, letters=2):
         elif letters == 3:
             return iso_country.alfa3
     return 'PA'
+
+
+# def get_card_data_tokenization(request, *args, **kwargs):
+#     if 'request_data' not in kwargs:
+#         request_data = request.data.copy()
+#     else:
+#         request_data = kwargs['request_data'].copy()
+#     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
+#     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
+#     data = {k.upper(): v for k, v in request_data.items()}
+#     serializer = GetDataTokenizationSerializer(data=data)
+#     if serializer.is_valid():
+#         url_server = settings.SERVER_VOLCAN_AZ7_URL
+#         api_url = f'{url_server}{settings.URL_THALES_API_VERIFY_CARD}'
+#         response_data, response_status = process_volcan_api_request(data=data, url=api_url, request=request, times=0)
+#         if response_status == 200:
+#             data = {
+#                 "cardId": response_data['RSP_TARJETAID'] if 'RSP_TARJETAID' in response_data else '',
+#                 "consumerId": response_data['RSP_CLIENTEID'] if 'RSP_CLIENTEID' in response_data else '',
+#                 "accountId": response_data['RSP_CUENTAID'] if 'RSP_CUENTAID' in response_data else ''
+#             }
+#     else:
+#         response_message, response_data, response_status = get_response_data_errors(serializer.errors)
+#         response_data, response_status = {'error': response_message}, 400
+#     return data, response_status

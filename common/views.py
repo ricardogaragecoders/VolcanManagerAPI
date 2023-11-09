@@ -37,7 +37,7 @@ class CustomViewSet(viewsets.GenericViewSet):
     lookup_field = 'id'
     pk = None
 
-    def get_response(self, message: str = '', data: Union[dict, list] = {}, status: int = 200):
+    def get_response(self, message: str = '', data: Union[dict, list] = {}, status: int = 200, lower_response=True):
         request = get_request()
         if len(self.resp) > 0:
             message = self.resp[0]
@@ -109,8 +109,15 @@ class CustomViewSet(viewsets.GenericViewSet):
             else:
                 response_data['RSP_DATA'] = data
         response_data_2 = {}
-        for k, v in response_data.items():
-            response_data_2[k.lower()] = v
+        if lower_response:
+            for k, v in response_data.items():
+                response_data_2[k.lower()] = v
+        else:
+            for k, v in response_data.items():
+                if k in ['RSP_SUCCESS', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
+                    response_data_2[k.lower()] = v
+                else:
+                    response_data_2[k] = v
         if status == 422 or status == 400 or status == 403:
             status = 200
         return Response(response_data_2, status=status)
