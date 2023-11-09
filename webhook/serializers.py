@@ -93,13 +93,15 @@ class TransactionSerializer(serializers.Serializer):
     codigo_autorizacion = serializers.CharField(max_length=100, default='', required=False,  allow_blank=True)
     comercio = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
     pais = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
+    email = serializers.CharField(max_length=150, default='', required=False, allow_blank=True)
+    tarjetahabiente = serializers.CharField(max_length=150, default='', required=False, allow_blank=True)
     user = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
     password = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
 
     class Meta:
         fields = ('monto', 'moneda', 'emisor', 'estatus', 'tipo_transaccion', 'tarjeta', 'id_movimiento',
                   'fecha_transaccion', 'hora_transaccion', 'referencia', 'numero_autorizacion', 'codigo_autorizacion',
-                  'comercio', 'pais', 'user', 'password')
+                  'comercio', 'pais', 'email', 'tarjetahabiente', 'user', 'password')
 
     def validate(self, data):
         data = super(TransactionSerializer, self).validate(data)

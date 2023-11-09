@@ -122,7 +122,9 @@ def send_transaction_emisor(transaction_id=None, emisor=''):
             'numero_autorizacion': item['numero_autorizacion'],
             'codigo_autorizacion': item['codigo_autorizacion'],
             'comercio': item['comercio'],
-            'pais': item['pais'] if 'pais' in item else ''
+            'pais': item['pais'] if 'pais' in item else '',
+            'email': item['email'] if 'email' in item else '',
+            'tarjetahabiente': item['tarjetahabiente'] if 'tarjetahabiente' in item else ''
         })
     if len(results) > 0 and not webhook:
         webhook = Webhook.objects.filter(account_issuer=results[0]['emisor'], deleted_at__isnull=True).first()

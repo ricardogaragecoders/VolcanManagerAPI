@@ -1240,6 +1240,58 @@ paths:
 #        description: Card ID
 #        schema:
 #          type: string
+  /volcan/api/obtenerDatosTokenizacion/:
+    post:
+      operationId: api_thalesapi_get_card_data_tokenization
+      description: Thales API Endpoint GetCardDataTokenization
+      summary: Thales API Endpoint GetCardDataTokenization
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/GetCardDataTokenization"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetCardDataTokenization"
+        required: true
+      responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
+        '200':
+          description: 'Consulta datos tokenizacion'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_folio": "388929552430",
+                "cardId": "000000000000000000000",
+                "consumerId": "0000000",
+                "accountId": "000000000000000"
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error"
+              }
+      tags:
+        - VolcanManager::ThalesAPI
+    parameters: []
 #  /volcan/api/Webhooks/:
 #    get:
 #      operationId: api_webhooks_read
@@ -1733,8 +1785,8 @@ components:
           maxLength: 20
         tarjeta_virtual:
           type: string
-          description: 'Mandatorio. S=Si/N=Emite Física'
-          enum: ['S', 'N']
+          description: 'Mandatorio. V=Virtual/F=Fisica/A=Ambas, para adicinales solo se permite fisicas'
+          enum: ['V', 'F', 'A']
           maxLength: 1
         producto_bin:
           type: string
@@ -1743,11 +1795,11 @@ components:
         limite_cred_titular:
           type: string
           description: 'Opcional. Importe con 2 decimales. Requerido para tarjeta titular'
-          maxlength: 20
+          maxLength: 20
         limite_consumo_adicional:
           type: string
           description: 'Opcional. Importe con 2 decimales. Requerido para tarjeta adicional, no puede ser mayor al límite del crédito del titular'
-          maxlength: 20
+          maxLength: 20
         ciclo_corte_titular:
           type: string
           description: 'Opcional. Día del mes para el corte para emitir EDC, es requerido para tarjeta titular'
@@ -2355,6 +2407,34 @@ components:
 #        - RSP_VENCIMIENTO
 #        - RSP_NOMBRE
 #        - RSP_CVV
+    GetCardDataTokenization:
+      type: object
+      properties:
+        tarjeta:
+          type: string
+          description: 'Mandatorio. Número de Tarjeta'
+          maxLength: 16
+        fecha_exp:
+          type: string
+          description: 'Mandatorio. Fecha de expiracion formato MMAA'
+          maxLength: 4
+        nombre:
+          type: string
+          description: 'Mandatorio. Nombre de la tarjeta.'
+          maxLength: 30
+        folio:
+          type: string
+          description: 'Opcional. Folio de la operacion'
+          maxLength: 30
+        emisor:
+          type: string
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+          maxLength: 3
+      required:
+        - tarjeta
+        - fecha_exp
+        - nombre
+        - emisor
 #    Webhook:
 #      type: object
 #      properties:
