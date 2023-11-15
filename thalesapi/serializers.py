@@ -31,9 +31,9 @@ class VerifyCardCreditSerializer(serializers.Serializer):
             with open(settings.PRIV_KEY_D1_SERVER_TO_ISSUER_SERVER_PEM, "rb") as pemfile:
                 private_key = jwk.JWK.from_pem(pemfile.read())
             if private_key:
-                jwetoken = jwe.JWE()
-                jwetoken.deserialize(encrypted_data, key=private_key)
-                payload = json.loads(jwetoken.payload)
+                jwe_token = jwe.JWE()
+                jwe_token.deserialize(encrypted_data, key=private_key)
+                payload = json.loads(jwe_token.payload)
                 data['TARJETA'] = payload['pan'] if 'pan' in payload else ''
                 data['FECHA_EXP'] = payload['exp'] if 'exp' in payload else ''
                 data['NOMBRE'] = payload['name'] if 'name' in payload else ''
