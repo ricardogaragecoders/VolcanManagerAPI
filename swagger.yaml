@@ -220,8 +220,11 @@ paths:
                 "rsp_success": true,
                 "rsp_codigo": "00",
                 "rsp_descripcion": "Transacción aprobada",
-                "rsp_cuenta": "5...8",
-                "rsp_tarjeta": "E...I"
+                "rsp_cuenta": "...",
+                "rsp_tarjeta_f": "...",
+                "rsp_tarjeta_v": "...",
+                "rsp_vento_v": "...",
+                "rsp_cvv2_v": ""
               }
             no_exitosa:
               {
@@ -1779,6 +1782,10 @@ components:
           description: 'Mandatorio. P=Principal/A=Adicional'
           enum: ['P', 'A']
           maxLength: 1
+        tarjeta_preexpedida:
+          type: string
+          description: 'Tarjeta preexpedida'
+          maxLength: 16
         id_ente_additional:
           type: string
           description: 'Opcional. Identificador unico del ente de cliente titular en caso de una adicional'

@@ -6,7 +6,7 @@ from common.utils import get_response_data_errors
 from control.serializers import ConsultaCuentaSerializer, ConsultaTarjetaSerializer, \
     CambioPINSerializer, ExtrafinanciamientoSerializer, CambioLimitesSerializer, CambioEstatusTDCSerializer, \
     ReposicionTarjetasSerializer, CreacionEnteSerializer, GestionTransaccionesSerializer, ConsultaMovimientosSerializer, \
-    IntraExtrasSerializer, ConsultaPuntosSerializer
+    IntraExtrasSerializer, ConsultaPuntosSerializer, AltaCuentaTarjetaSerializer
 
 
 def get_float_from_numeric_str(value: str) -> str:
@@ -129,21 +129,25 @@ def creation_cta_tar(request, **kwargs):
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/Alta_Cuenta_1'
-    resp = process_volcan_api_request(data=data, url=api_url, request=request, times=times)
-    if 'RSP_ERROR' in resp[1]:
-        if resp[1]['RSP_ERROR'].upper() == 'OK':
-            resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
-        elif resp[1]['RSP_ERROR'] == '':
-            return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
-        elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':
-            return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Transaccion erronea'}, resp[2]
-        else:
-            resp_copy = resp[1].copy()
-            for k in resp[1].keys():
-                if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION', 'RSP_CUENTA']:
-                    del resp_copy[k]
-            return resp[0], resp_copy, resp[2]
+    api_url = f'{url_server}/web/services/Volcan_Alta_Cuenta_1'
+    serializer = AltaCuentaTarjetaSerializer(data=data)
+    if serializer.is_valid():
+        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        if 'RSP_ERROR' in resp[1]:
+            if resp[1]['RSP_ERROR'].upper() == 'OK':
+                resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
+            elif resp[1]['RSP_ERROR'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
+            elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Transaccion erronea'}, resp[2]
+            else:
+                resp_copy = resp[1].copy()
+                for k in resp[1].keys():
+                    if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION', 'RSP_CUENTA']:
+                        del resp_copy[k]
+                return resp[0], resp_copy, resp[2]
+    else:
+        resp = get_response_data_errors(serializer.errors)
     return resp
 
 
