@@ -101,7 +101,7 @@ class AltaCuentaTarjetaSerializer(serializers.Serializer):
     TARJETA_PREEXPEDIDA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
     ID_ENTE_ADDITIONAL = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
     TARJETA_VIRTUAL = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
-    PRODUCT_BIN = serializers.CharField(max_length=9, required=False, default="", allow_blank=True)
+    PRODUCTO_BIN = serializers.CharField(max_length=9, required=False, default="", allow_blank=True)
     LIMITE_CRED_TITULAR = serializers.CharField(max_length=19, required=False, default="", allow_blank=True)
     LIMITE_CONSUMO_ADICIONAL = serializers.CharField(max_length=19, required=False, default="", allow_blank=True)
     CICLO_CORTE_TITULAR = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
