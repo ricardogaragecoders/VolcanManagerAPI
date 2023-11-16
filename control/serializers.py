@@ -130,7 +130,7 @@ class AltaCuentaTarjetaSerializer(serializers.Serializer):
                   'ENVIO_EDC_TITULAR', 'EMAIL_EDC_TITULAR','DIRECCION_1_EDC_TITULAR','DIRECCION_2_EDC_TITULAR',
                   'CIUDAD_EDC_TITULAR', 'PROVINCIA_EDC_TITULAR', 'CODIGO_POSTAL_EDC_TITULAR', 'PAIS_EDC_TITULAR',
                   'IBAN_INTERNACIONAL', 'IBAN_LOCAL', 'VENDEDORES_TC', 'INDICADOR_POLIZA',
-                   'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+                  'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
 
     def validate(self, data):
         data = super(AltaCuentaTarjetaSerializer, self).validate(data)
@@ -166,14 +166,14 @@ class AltaCuentaTarjetaSerializer(serializers.Serializer):
 
 
 class ConsultaCuentaSerializer(serializers.Serializer):
-    CUENTA = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
-    CIF = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
-    ID_OWNER = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
-    TIPO_IDENTIFICACION = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
-    DOC_IDENTIFICACION = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
-    MONEDA = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
-    EMISOR = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
-    USUARIO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    CUENTA = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    CIF = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    ID_OWNER = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    TIPO_IDENTIFICACION = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
+    DOC_IDENTIFICACION = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    MONEDA = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
     ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
 
     class Meta:

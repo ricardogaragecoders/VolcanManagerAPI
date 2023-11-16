@@ -8,6 +8,8 @@ from control.serializers import ConsultaCuentaSerializer, ConsultaTarjetaSeriali
     ReposicionTarjetasSerializer, CreacionEnteSerializer, GestionTransaccionesSerializer, ConsultaMovimientosSerializer, \
     IntraExtrasSerializer, ConsultaPuntosSerializer, AltaCuentaTarjetaSerializer
 
+logger = logging.getLogger(__name__)
+
 
 def get_float_from_numeric_str(value: str) -> str:
     from decimal import Decimal
@@ -36,50 +38,49 @@ def get_volcan_api_headers():
 
 
 def process_volcan_api_request(data, url, request, times=0):
-    logger = logging.getLogger(__name__)
     headers = get_volcan_api_headers()
     data_json = json.dumps(data)
-    logger.debug(f"Request: {url}")
-    logger.debug(f"Data json: {data_json}")
+    print(f"Request: {url}")
+    print(f"Data json: {data_json}")
     try:
         r = requests.post(url=url, data=data_json, headers=headers)
         response_status = r.status_code
         if 200 <= response_status <= 299:
             response_data = r.json()
             if len(response_data) == 0:
-                logger.debug(f"Response: empty")
+                print(f"Response: empty")
                 response_data = {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}
             else:
-                logger.debug(f"Response: {response_data}")
+                print(f"Response: {response_data}")
         elif response_status == 404:
             response_data = {'RSP_CODIGO': '404', 'RSP_DESCRIPCION': 'Recurso no disponible'}
-            logger.error(f"Response: 404 Recurso no disponible")
+            print(f"Response: 404 Recurso no disponible")
         else:
             response_data = {'RSP_CODIGO': str(response_status), 'RSP_DESCRIPCION': 'Error desconocido'}
-            logger.error(f"Response: {str(response_status)} Error desconocido")
-            logger.error(f"Data server: {str(r.text)}")
+            print(f"Response: {str(response_status)} Error desconocido")
+            print(f"Data server: {str(r.text)}")
         response_message = ''
     except requests.exceptions.Timeout:
         response_data = {'RSP_CODIGO': "408",
                          'RSP_DESCRIPCION': 'Error de conexion con servidor VOLCAN (Timeout)'}
         response_status = 408
         response_message = 'Error de conexion con servidor VOLCAN (Timeout)'
-        logger.error(response_message)
+        print(response_message)
     except requests.exceptions.TooManyRedirects:
         response_data = {'RSP_CODIGO': "429",
                          'RSP_DESCRIPCION': 'Error de conexion con servidor VOLCAN (TooManyRedirects)'}
         response_status = 429
         response_message = 'Error de conexion con servidor VOLCAN (TooManyRedirects)'
-        logger.error(response_message)
+        print(response_message)
     except requests.exceptions.RequestException as e:
         response_data = {'RSP_CODIGO': "400",
                          'RSP_DESCRIPCION': 'Error de conexion con servidor VOLCAN (RequestException)'}
         response_status = 400
         response_message = 'Error de conexion con servidor VOLCAN (RequestException)'
-        logger.error(response_message)
+        print(response_message)
     except Exception as e:
-        logger.error("Error peticion")
-        logger.error(e.args.__str__())
+        print("Error peticion")
+        print(e.args.__str__())
         response_status = 500
         response_message = 'error'
         response_data = {'RSP_CODIGO': '500', 'RSP_DESCRIPCION': e.args.__str__()}
@@ -161,7 +162,7 @@ def consulta_cuenta(request, **kwargs):
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/Consulta_Cuenta_1'
+    api_url = f'{url_server}/web/services/Volcan_Consulta_Cuenta_1'
     serializer = ConsultaCuentaSerializer(data=data)
     if serializer.is_valid():
         resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
