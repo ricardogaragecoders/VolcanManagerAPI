@@ -1010,6 +1010,76 @@ paths:
       tags:
         - VolcanManager::Acciones
     parameters: []
+  /volcan/api/ConsultaIntraExtraF1/:
+    post:
+      operationId: api_control_consulta_intra_extra_f1
+      description: ConsultaIntraExtraF1.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ConsultaIntraExtraF1"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsultaIntraExtraF1"
+        required: true
+      summary: ConsultaIntraExtraF1.
+      responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
+        '200':
+          description: 'ConsultaIntraExtraF1'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_pagina": "00000000000000000000000000000",
+                "rsp_folio": "000000000000",
+                "rsp_moconf": [
+                  {
+                    "rsp_cuenta": "000000000000000",
+                    "rsp_doc_finan": "0000000000",
+                    "rsp_fec_registro": "00000000",
+                    "rsp_tipo_finan": "000",
+                    "rsp_estado": "0",
+                    "rsp_importe": "00.00",
+                    "rsp_moneda": "MEX",
+                    "rsp_tasa": "00.00",
+                    "rsp_plazo": "00",
+                    "rsp_cuota_act": "00.00",
+                    "rsp_capital_pag": "00.00",
+                    "rsp_interes_pag": "00.00",
+                    "rsp_ncuota_pag": "00",
+                    "rsp_sld_capital": "00.00",
+                    "rsp_cuota_pend": "00",
+                    "rsp_origen_mov": "000"
+                  }
+                ]
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error en ConsultaIntraExtraF1"
+              }
+      tags:
+        - VolcanManager::Acciones
+    parameters: []
   /volcan/api/IntraExtras/:
     post:
       operationId: api_control_intra_extras_mock
@@ -2324,6 +2394,52 @@ components:
           maxLength: 3
       required:
         - tarjeta
+        - emisor
+    ConsultaIntraExtraF1:
+      type: object
+      properties:
+        tarjeta:
+          type: string
+          description: 'Condicional. Consulta por número de Tarjeta Cifrada con la llame de Emisor'
+          maxLength: 16
+        cif:
+          type: string
+          description: 'Condicional. Consulta por CIF devuelve todas las tarjetas relacionaldas'
+          maxLength: 15
+        id_owner:
+          type: string
+          description: 'Condicional. Consulta por Identificador único del sistema, devuelve todas las tarjetas relacionadas al cliente'
+          maxLength: 15
+        tipo_identificacion:
+          type: string
+          description: 'Condicional. Consulta de cuentas por documento de identificación del cliente, se debe de enviar el código de catálogo del tipo de identificación'
+          maxLength: 2
+        doc_identificacion:
+          type: string
+          description: 'Condicional. Consulta de cuentas por documento de identificación del TH, devuelve todas las tarjetas relacionadas, 
+                        para esta consulta es necesario enviar el tipo de identificación'
+          maxLength: 20
+        doc_finan:
+          type: string
+          description: 'Doc finan'
+          maxLength: 10
+        tipo_finan:
+          type: string
+          description: 'Tipo finan'
+          maxLength: 3
+        pagina:
+          type: string
+          description: 'Pagina'
+          maxLength: 30
+        direccion:
+          type: string
+          description: 'Direccion'
+          maxLength: 1
+        emisor:
+          type: string
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+          maxLength: 3
+      required:
         - emisor
     Intra_Extras:
       type: object
