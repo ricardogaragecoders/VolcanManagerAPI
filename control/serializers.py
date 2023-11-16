@@ -439,6 +439,7 @@ class GestionTransaccionesSerializer(serializers.Serializer):
     HORA_TRX = serializers.CharField(max_length=6, required=False, default="", allow_blank=True)
     CVV2 = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
     FECVENTO = serializers.CharField(max_length=4, required=False, default="", allow_blank=True)
+    FINANCIABLE = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
     CHEQUE = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
     PLAZA = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
     NO_FINANCIAMIENTO = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
@@ -455,7 +456,7 @@ class GestionTransaccionesSerializer(serializers.Serializer):
 
     class Meta:
         fields = ('TARJETA', 'TRANSACCION', 'IMPORTE', 'MONEDA', 'FECHA_TRX', 'HORA_TRX', 'CVV2', 'FECVENTO',
-                  'CHEQUE', 'PLAZA', 'NO_FINANCIAMIENTO', 'REFERENCIA', 'DOC_OPER', 'AUTORIZACION',
+                  'FINANCIABLE', 'CHEQUE', 'PLAZA', 'NO_FINANCIAMIENTO', 'REFERENCIA', 'DOC_OPER', 'AUTORIZACION',
                   'COMERCIO', 'CIUDAD', 'PAIS', 'SUCURSAL', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
 
     def validate(self, data):
