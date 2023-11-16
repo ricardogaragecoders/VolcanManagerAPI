@@ -110,19 +110,28 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
         return response_data, response_status
 
 
-def process_volcan_api_request(data, url, request, times=0):
+def process_volcan_api_request(data, url, request=None, headers=None, method='POST', times=0):
     response_data = dict()
     response_status = 500
-    headers = get_thales_api_headers(request)
-    data_json = json.dumps(data)
+    if not headers:
+        headers = get_thales_api_headers(request)
+    if headers['Content-Type'] == 'application/json':
+        data_json = json.dumps(data)
+    else:
+        data_json = data
     print(f"Request: {url}")
     print(f"Headers: {headers}")
     print(f"Data json: {data_json}")
     try:
-        r = requests.post(url=url, data=data_json, headers=headers)
+        if method == 'POST':
+            r = requests.post(url=url, data=data_json, headers=headers)
+        elif method == 'PUT':
+            r = requests.put(url=url, data=data_json, headers=headers)
+        else:
+            r = requests.patch(url=url, data=data_json, headers=headers)
         response_status = r.status_code
         if 200 <= response_status <= 299:
-            response_data = r.json()
+            response_data = r.json() if response_status != 204 else {}
             if len(response_data) == 0:
                 print(f"Response: empty")
                 response_data = {'error': 'Error en datos de origen'}
@@ -317,9 +326,9 @@ def get_card_credentials_credit(request, *args, **kwargs):
                             "enc": "A256GCM",
                             "kid": settings.THALESAPI_ENCRYPTED_K01_KID
                         }
-                        jwetoken = jwe.JWE(payload.encode('utf-8'), recipient=public_key,
-                                           protected=protected_header_back)
-                        enc = jwetoken.serialize(compact=True)
+                        jwe_token = jwe.JWE(payload.encode('utf-8'), recipient=public_key,
+                                            protected=protected_header_back)
+                        enc = jwe_token.serialize(compact=True)
                         response_data = {'encryptedData': enc}
                 else:
                     response_status = 400
@@ -355,8 +364,8 @@ def get_card_credentials_credit_testing(request, *args, **kwargs):
                 "alg": "ECDH-ES",
                 "enc": "A256GCM"
             }
-            jwetoken = jwe.JWE(payload.encode('utf-8'), recipient=public_key, protected=protected_header_back)
-            enc = jwetoken.serialize(compact=True)
+            jwe_token = jwe.JWE(payload.encode('utf-8'), recipient=public_key, protected=protected_header_back)
+            enc = jwe_token.serialize(compact=True)
             response_data = {'encryptedData': enc}
         return response_data, 200
     else:

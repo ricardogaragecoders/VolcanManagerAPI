@@ -1058,7 +1058,7 @@ paths:
                     "rsp_tipo_finan": "000",
                     "rsp_estado": "0",
                     "rsp_importe": "00.00",
-                    "rsp_moneda": "MEX",
+                    "rsp_moneda": "MXN",
                     "rsp_tasa": "00.00",
                     "rsp_plazo": "00",
                     "rsp_cuota_act": "00.00",
