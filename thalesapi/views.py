@@ -149,7 +149,9 @@ class ThalesApiViewPrivate(ThalesApiView):
             resp_msg, response_data, response_status = process_volcan_api_request(data=serializer.validated_data,
                                                                                   url=api_url, request=request, times=0)
             if response_status == 200:
-                if response_data['RSP_ERROR'].upper() == 'OK':
+                if response_data['RSP_ERROR'].upper() == 'OK' or len(response_data['RSP_TARJETAID']) > 0:
+                    response_data['RSP_ERROR'] = 'OK'
+                    response_data['RSP_CODIGO'] = '0000000000'
                     response_data['RSP_DESCRIPCION'] = u'Transacción aprobada'
                 data = {
                     'RSP_ERROR': response_data['RSP_ERROR'],
@@ -181,25 +183,34 @@ class ThalesApiViewPrivate(ThalesApiView):
             api_url = f'{url_server}{settings.URL_THALES_API_VERIFY_CARD}'
             validated_data = serializer.validated_data
             resp_msg, resp_data, response_status = process_volcan_api_request(data=validated_data,
-                                                                              url=api_url, request=request, times=0)
+                                                                                url=api_url, request=request, times=0)
+
             if response_status == 200:
-                if resp_data['RSP_ERROR'].upper() == 'OK':
+                if resp_data['RSP_ERROR'].upper() == 'OK' or len(resp_data['RSP_TARJETAID']) > 0:
+                    resp_data['RSP_ERROR'] = 'OK'
+                    resp_data['RSP_CODIGO'] = '0000000000'
                     resp_data['RSP_DESCRIPCION'] = u'Transacción aprobada'
-                resp = self.register_consumer_thalesapi(response_data=resp_data, validated_data=validated_data)
-                if resp[1] == 200:
+                if resp_data['RSP_ERROR'] == 'OK':
+                    resp = self.register_consumer_thalesapi(response_data=resp_data, validated_data=validated_data)
+                    if resp[1] == 200:
+                        response_data = {
+                            'RSP_ERROR': resp_data['RSP_ERROR'],
+                            'RSP_CODIGO': resp_data['RSP_CODIGO'],
+                            'RSP_DESCRIPCION': resp_data['RSP_DESCRIPCION'],
+                            'rsp_folio': resp_data['RSP_FOLIO'],
+                            "cardId": resp_data['RSP_TARJETAID'] if 'RSP_TARJETAID' in resp_data else '',
+                            "consumerId": resp_data['RSP_CLIENTEID'] if 'RSP_CLIENTEID' in resp_data else '',
+                            "accountId": resp_data['RSP_CUENTAID'] if 'RSP_CUENTAID' in resp_data else ''
+                        }
+                    else:
+                        response_data = resp[0]
+                        response_status = resp[1]
+                else:
                     response_data = {
                         'RSP_ERROR': resp_data['RSP_ERROR'],
                         'RSP_CODIGO': resp_data['RSP_CODIGO'],
-                        'RSP_DESCRIPCION': resp_data['RSP_DESCRIPCION'],
-                        'rsp_folio': resp_data['RSP_FOLIO'],
-                        "cardId": resp_data['RSP_TARJETAID'] if 'RSP_TARJETAID' in resp_data else '',
-                        "consumerId": resp_data['RSP_CLIENTEID'] if 'RSP_CLIENTEID' in resp_data else '',
-                        "accountId": resp_data['RSP_CUENTAID'] if 'RSP_CUENTAID' in resp_data else ''
+                        'RSP_DESCRIPCION': resp_data['RSP_DESCRIPCION']
                     }
-                else:
-                    response_data = resp[0]
-                    response_status = resp[1]
-
         else:
             resp_msg, response_data, response_status = get_response_data_errors(serializer.errors)
             response_data, response_status = {}, 400
