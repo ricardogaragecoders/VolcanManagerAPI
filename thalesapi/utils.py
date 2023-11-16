@@ -71,9 +71,9 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
     response_data = dict()
     response_status = 500
     headers = get_thales_api_headers(request)
-    logger.debug(f"Request: {url}")
-    logger.debug(f"Headers: {headers}")
-    logger.debug(f"Data json: {data}")
+    print(f"Request: {url}")
+    print(f"Headers: {headers}")
+    print(f"Data json: {data}")
     try:
         if http_verb == 'POST':
             r = requests.post(url=url, data=data, headers=headers)
@@ -83,29 +83,29 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
         if 200 <= response_status <= 299:
             response_data = r.json()
             if len(response_data) == 0:
-                logger.debug(f"Response: empty")
+                print(f"Response: empty")
                 response_data = {'error': 'Error en datos de origen'}
             else:
-                logger.debug(f"Response: {response_data}")
+                print(f"Response: {response_data}")
         elif response_status == 404:
             response_data = {'error': 'Recurso no disponible'}
-            logger.error(f"Response: 404 Recurso no disponible")
+            print(f"Response: 404 Recurso no disponible")
         else:
             response_data = {'error': 'Error desconocido'}
-            logger.error(f"Response: {str(response_status)} Error desconocido")
-            logger.error(f"Data server: {str(r.text)}")
+            print(f"Response: {str(response_status)} Error desconocido")
+            print(f"Data server: {str(r.text)}")
     except requests.exceptions.Timeout:
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (Timeout)'}, 408
-        logger.error(response_data)
+        print(response_data)
     except requests.exceptions.TooManyRedirects:
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (TooManyRedirects)'}, 429
-        logger.error(response_data)
+        print(response_data)
     except requests.exceptions.RequestException as e:
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (RequestException)'}, 400
-        logger.error(response_data)
+        print(response_data)
     except Exception as e:
         response_data, response_status = {'error': e.args.__str__()}, 500
-        logger.error(response_data)
+        print(response_data)
     finally:
         return response_data, response_status
 
@@ -119,9 +119,9 @@ def process_volcan_api_request(data, url, request=None, headers=None, method='PO
         data_json = json.dumps(data)
     else:
         data_json = data
-    logger.debug(f"Request: {url}")
-    logger.debug(f"Headers: {headers}")
-    logger.debug(f"Data json: {data_json}")
+    print(f"Request: {url}")
+    print(f"Headers: {headers}")
+    print(f"Data json: {data_json}")
     try:
         if method == 'POST':
             r = requests.post(url=url, data=data_json, headers=headers)
@@ -133,29 +133,29 @@ def process_volcan_api_request(data, url, request=None, headers=None, method='PO
         if 200 <= response_status <= 299:
             response_data = r.json() if response_status != 204 else {}
             if len(response_data) == 0:
-                logger.debug(f"Response: empty")
+                print(f"Response: empty")
                 response_data = {'error': 'Error en datos de origen'}
             else:
-                logger.debug(f"Response: {response_data}")
+                print(f"Response: {response_data}")
         elif response_status == 404:
             response_data = {'error': 'Recurso no disponible'}
-            logger.debug(f"Response: 404 Recurso no disponible")
+            print(f"Response: 404 Recurso no disponible")
         else:
             response_data = {'error': 'Error desconocido'}
-            logger.error(f"Response: {str(response_status)} Error desconocido")
-            logger.error(f"Data server: {str(r.text)}")
+            print(f"Response: {str(response_status)} Error desconocido")
+            print(f"Data server: {str(r.text)}")
     except requests.exceptions.Timeout:
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (Timeout)'}, 408
-        logger.error(response_data)
+        print(response_data)
     except requests.exceptions.TooManyRedirects:
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (TooManyRedirects)'}, 429
-        logger.error(response_data)
+        print(response_data)
     except requests.exceptions.RequestException as e:
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (RequestException)'}, 400
-        logger.error(response_data)
+        print(response_data)
     except Exception as e:
         response_data, response_status = {'error': e.args.__str__()}, 500
-        logger.error(response_data)
+        print(response_data)
     finally:
         return response_data, response_status
 
