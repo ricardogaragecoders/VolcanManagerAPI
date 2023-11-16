@@ -134,7 +134,39 @@ class ThalesApiViewPrivate(ThalesApiView):
     permission_classes = (IsAuthenticated, IsVerified, IsOperator)
     serializer_class = GetDataTokenizationSerializer
 
-    def get_card_data_tokenization(self, request, *args, **kwargs):
+    def get_card_data_tokenization_v1(self, request, *args, **kwargs):
+        from django.conf import settings
+        from control.utils import process_volcan_api_request
+        from common.utils import get_response_data_errors
+        request_data = request.data.copy()
+        request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
+        request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
+        data = {k.upper(): v for k, v in request_data.items()}
+        serializer = self.get_serializer(data=data)
+        if serializer.is_valid():
+            url_server = settings.SERVER_VOLCAN_AZ7_URL
+            api_url = f'{url_server}{settings.URL_THALES_API_VERIFY_CARD}'
+            resp_msg, response_data, response_status = process_volcan_api_request(data=serializer.validated_data,
+                                                                                  url=api_url, request=request, times=0)
+            if response_status == 200:
+                if response_data['RSP_ERROR'].upper() == 'OK':
+                    response_data['RSP_DESCRIPCION'] = u'Transacción aprobada'
+                data = {
+                    'RSP_ERROR': response_data['RSP_ERROR'],
+                    'RSP_CODIGO': response_data['RSP_CODIGO'],
+                    'RSP_DESCRIPCION': response_data['RSP_DESCRIPCION'],
+                    'rsp_folio': response_data['RSP_FOLIO'],
+                    "cardId": response_data['RSP_TARJETAID'] if 'RSP_TARJETAID' in response_data else '',
+                    "consumerId": response_data['RSP_CLIENTEID'] if 'RSP_CLIENTEID' in response_data else '',
+                    "accountId": response_data['RSP_CUENTAID'] if 'RSP_CUENTAID' in response_data else ''
+                }
+                response_data = data
+        else:
+            resp_msg, response_data, response_status = get_response_data_errors(serializer.errors)
+            response_data, response_status = {}, 400
+        return self.get_response(message=resp_msg, data=response_data, status=response_status, lower_response=False)
+
+    def get_card_data_tokenization_v2(self, request, *args, **kwargs):
         from django.conf import settings
         from control.utils import process_volcan_api_request
         from common.utils import get_response_data_errors
@@ -180,8 +212,8 @@ class ThalesApiViewPrivate(ThalesApiView):
         import jwt
         jwt_token = None
 
-        # url = "https://stoplight.io/mocks/thales-dis-dbp/d1-api-public/59474133/oauth2/token"
-        url = "https://api.d1-stg.thalescloud.io/authz/v1/oauth2/token"
+        url = "https://stoplight.io/mocks/thales-dis-dbp/d1-api-public/59474133/oauth2/token"
+        # url = "https://api.d1-stg.thalescloud.io/authz/v1/oauth2/token"
 
         auth_data = {
             "iat": int(datetime.utcnow().timestamp()),
@@ -211,7 +243,7 @@ class ThalesApiViewPrivate(ThalesApiView):
             }
             headers = {
                 "x-correlation-id": response_data['RSP_FOLIO'] if response_data else '12345',
-                # "Prefer": "code=200",
+                "Prefer": "code=200",
                 "Content-Type": "application/x-www-form-urlencoded",
                 "Accept": "application/json"
             }
@@ -241,11 +273,11 @@ class ThalesApiViewPrivate(ThalesApiView):
         print(f'EncryptedData: {encrypted_data}')
 
         access_token = self.get_authorization_token(response_data=response_data)
-        return {'access_token': access_token}, 200
+        # return {'access_token': access_token}, 200
         issuer_id = 'VOLCA_PA-1'
         if access_token:
-            # url = f"https://stoplight.io/mocks/thales-dis-dbp/d1-api-public/59474135/issuers/{issuer_id}/consumers/{response_data['RSP_CLIENTEID']}/cards"
-            url = f"https://api.d1-stg.thalescloud.io/banking/v1/issuers/{issuer_id}/consumers/{response_data['RSP_CLIENTEID']}/cards"
+            url = f"https://stoplight.io/mocks/thales-dis-dbp/d1-api-public/59474135/issuers/{issuer_id}/consumers/{response_data['RSP_CLIENTEID']}/cards"
+            # url = f"https://api.d1-stg.thalescloud.io/banking/v1/issuers/{issuer_id}/consumers/{response_data['RSP_CLIENTEID']}/cards"
             public_key = None
             payload = {}
             with open(settings.PUB_KEY_ISSUER_SERVER_TO_D1_SERVER_PEM, "rb") as pemfile:
@@ -271,7 +303,7 @@ class ThalesApiViewPrivate(ThalesApiView):
                 }
             headers = {
                 "x-correlation-id": response_data['RSP_FOLIO'] if response_data else '12345',
-                # "Prefer": "",
+                "Prefer": "",
                 "Content-Type": "application/json",
                 "Accept": "application/json",
                 "Authorization": f"Bearer {access_token}"
