@@ -206,7 +206,7 @@ def extrafinanciamientos(request, **kwargs):
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/Extrafinanciamiento_1'
+    api_url = f'{url_server}/web/services/Volcan_ExtraFinanciamiento_1'
     serializer = ExtrafinanciamientoSerializer(data=data)
     if serializer.is_valid():
         resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
@@ -244,7 +244,7 @@ def intrafinanciamientos(request, **kwargs):
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/Intrafinanciamiento_1'
+    api_url = f'{url_server}/web/services/Volcan_Intrafinanciamiento_1'
     serializer = ExtrafinanciamientoSerializer(data=data)
     if serializer.is_valid():
         resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
