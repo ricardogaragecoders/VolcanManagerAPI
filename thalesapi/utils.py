@@ -11,6 +11,7 @@ from thalesapi.serializers import VerifyCardCreditSerializer, GetConsumerInfoSer
 
 logger = logging.getLogger(__name__)
 
+
 def get_str_from_date_az7(s_date):
     if len(s_date) >= 8:
         return f"{s_date[0:4]}-{s_date[4:6]}-{s_date[6:8]}"
@@ -70,9 +71,9 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
     response_data = dict()
     response_status = 500
     headers = get_thales_api_headers(request)
-    logger.debug(f"Request: {url}")
-    logger.debug(f"Headers: {headers}")
-    logger.debug(f"Data json: {data}")
+    print(f"Request: {url}")
+    print(f"Headers: {headers}")
+    print(f"Data json: {data}")
     try:
         if http_verb == 'POST':
             r = requests.post(url=url, data=data, headers=headers)
@@ -82,70 +83,79 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
         if 200 <= response_status <= 299:
             response_data = r.json()
             if len(response_data) == 0:
-                logger.debug(f"Response: empty")
+                print(f"Response: empty")
                 response_data = {'error': 'Error en datos de origen'}
             else:
-                logger.debug(f"Response: {response_data}")
+                print(f"Response: {response_data}")
         elif response_status == 404:
             response_data = {'error': 'Recurso no disponible'}
-            logger.error(f"Response: 404 Recurso no disponible")
+            print(f"Response: 404 Recurso no disponible")
         else:
             response_data = {'error': 'Error desconocido'}
-            logger.error(f"Response: {str(response_status)} Error desconocido")
-            logger.error(f"Data server: {str(r.text)}")
+            print(f"Response: {str(response_status)} Error desconocido")
+            print(f"Data server: {str(r.text)}")
     except requests.exceptions.Timeout:
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (Timeout)'}, 408
-        logger.error(response_data)
+        print(response_data)
     except requests.exceptions.TooManyRedirects:
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (TooManyRedirects)'}, 429
-        logger.error(response_data)
+        print(response_data)
     except requests.exceptions.RequestException as e:
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (RequestException)'}, 400
-        logger.error(response_data)
+        print(response_data)
     except Exception as e:
         response_data, response_status = {'error': e.args.__str__()}, 500
-        logger.error(response_data)
+        print(response_data)
     finally:
         return response_data, response_status
 
 
-def process_volcan_api_request(data, url, request, times=0):
+def process_volcan_api_request(data, url, request=None, headers=None, method='POST', times=0):
     response_data = dict()
     response_status = 500
-    headers = get_thales_api_headers(request)
-    data_json = json.dumps(data)
-    logger.debug(f"Request: {url}")
-    logger.debug(f"Headers: {headers}")
-    logger.debug(f"Data json: {data_json}")
+    if not headers:
+        headers = get_thales_api_headers(request)
+    if headers['Content-Type'] == 'application/json':
+        data_json = json.dumps(data)
+    else:
+        data_json = data
+    print(f"Request: {url}")
+    print(f"Headers: {headers}")
+    print(f"Data json: {data_json}")
     try:
-        r = requests.post(url=url, data=data_json, headers=headers)
+        if method == 'POST':
+            r = requests.post(url=url, data=data_json, headers=headers)
+        elif method == 'PUT':
+            r = requests.put(url=url, data=data_json, headers=headers)
+        else:
+            r = requests.patch(url=url, data=data_json, headers=headers)
         response_status = r.status_code
         if 200 <= response_status <= 299:
-            response_data = r.json()
+            response_data = r.json() if response_status != 204 else {}
             if len(response_data) == 0:
-                logger.debug(f"Response: empty")
+                print(f"Response: empty")
                 response_data = {'error': 'Error en datos de origen'}
             else:
-                logger.debug(f"Response: {response_data}")
+                print(f"Response: {response_data}")
         elif response_status == 404:
             response_data = {'error': 'Recurso no disponible'}
-            logger.debug(f"Response: 404 Recurso no disponible")
+            print(f"Response: 404 Recurso no disponible")
         else:
             response_data = {'error': 'Error desconocido'}
-            logger.error(f"Response: {str(response_status)} Error desconocido")
-            logger.error(f"Data server: {str(r.text)}")
+            print(f"Response: {str(response_status)} Error desconocido")
+            print(f"Data server: {str(r.text)}")
     except requests.exceptions.Timeout:
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (Timeout)'}, 408
-        logger.error(response_data)
+        print(response_data)
     except requests.exceptions.TooManyRedirects:
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (TooManyRedirects)'}, 429
-        logger.error(response_data)
+        print(response_data)
     except requests.exceptions.RequestException as e:
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (RequestException)'}, 400
-        logger.error(response_data)
+        print(response_data)
     except Exception as e:
         response_data, response_status = {'error': e.args.__str__()}, 500
-        logger.error(response_data)
+        print(response_data)
     finally:
         return response_data, response_status
 
@@ -166,11 +176,16 @@ def post_verify_card_credit(request, *args, **kwargs):
         # aqui falta hacer el proceso para cambiar la respuesta como la necesita Thales
         if response_status == 200:
             if 'RSP_ERROR' in response_data and response_data['RSP_ERROR'].upper() == 'OK':
-                valid_cvv = int(response_data['RSP_VALID_CVV'] if 'RSP_VALID_CVV' in response_data and len(response_data['RSP_VALID_CVV']) > 0 else '0')
-                num_attempts = int(response_data['RSP_NUM_ATTEMPS'] if 'RSP_NUM_ATTEMPS' in response_data and len(response_data['RSP_NUM_ATTEMPS']) > 0 else '0')
-                lost_or_stolen = int(response_data['RSP_LOST_STOLEN'] if 'RSP_LOST_STOLEN' in response_data and len(response_data['RSP_LOST_STOLEN']) > 0 else '1')
-                expired = int(response_data['RSP_EXPIRADA'] if 'RSP_EXPIRADA' in response_data and len(response_data['RSP_EXPIRADA']) > 0 else '1')
-                invalid = int(response_data['RSP_TAR_VALID'] if 'RSP_TAR_VALID' in response_data and len(response_data['RSP_TAR_VALID']) > 0 else '1')
+                valid_cvv = int(response_data['RSP_VALID_CVV'] if 'RSP_VALID_CVV' in response_data and len(
+                    response_data['RSP_VALID_CVV']) > 0 else '0')
+                num_attempts = int(response_data['RSP_NUM_ATTEMPS'] if 'RSP_NUM_ATTEMPS' in response_data and len(
+                    response_data['RSP_NUM_ATTEMPS']) > 0 else '0')
+                lost_or_stolen = int(response_data['RSP_LOST_STOLEN'] if 'RSP_LOST_STOLEN' in response_data and len(
+                    response_data['RSP_LOST_STOLEN']) > 0 else '1')
+                expired = int(response_data['RSP_EXPIRADA'] if 'RSP_EXPIRADA' in response_data and len(
+                    response_data['RSP_EXPIRADA']) > 0 else '1')
+                invalid = int(response_data['RSP_TAR_VALID'] if 'RSP_TAR_VALID' in response_data and len(
+                    response_data['RSP_TAR_VALID']) > 0 else '1')
 
                 data = {
                     "cardId": response_data['RSP_TARJETAID'] if 'RSP_TARJETAID' in response_data else '',
@@ -224,10 +239,14 @@ def get_consumer_information_credit(request, *args, **kwargs):
                                                                     request=request)
         if response_status == 200:
             if 'RSP_ERROR' in response_data and response_data['RSP_ERROR'].upper() == 'OK':
-                city = get_value_by_default(response_data['RSP_CIUDAD'], default=u'Panamá') if 'RSP_CIUDAD' in response_data else u'Panamá'
-                state = get_value_by_default(response_data['RSP_ESTADO'], default=u'Panamá') if 'RSP_ESTADO' in response_data else u'Panamá'
-                zip_code = get_value_by_default(response_data['RSP_CPOSTAL'], default='7215') if 'RSP_CPOSTAL' in response_data else '7215'
-                country = get_value_by_default(response_data['RSP_PAIS'], default=u'Panamá') if 'RSP_PAIS' in response_data else u'Panamá'
+                city = get_value_by_default(response_data['RSP_CIUDAD'],
+                                            default=u'Panamá') if 'RSP_CIUDAD' in response_data else u'Panamá'
+                state = get_value_by_default(response_data['RSP_ESTADO'],
+                                             default=u'Panamá') if 'RSP_ESTADO' in response_data else u'Panamá'
+                zip_code = get_value_by_default(response_data['RSP_CPOSTAL'],
+                                                default='7215') if 'RSP_CPOSTAL' in response_data else '7215'
+                country = get_value_by_default(response_data['RSP_PAIS'],
+                                               default=u'Panamá') if 'RSP_PAIS' in response_data else u'Panamá'
 
                 data = {
                     "language": "en-US",
@@ -307,9 +326,9 @@ def get_card_credentials_credit(request, *args, **kwargs):
                             "enc": "A256GCM",
                             "kid": settings.THALESAPI_ENCRYPTED_K01_KID
                         }
-                        jwetoken = jwe.JWE(payload.encode('utf-8'), recipient=public_key,
-                                           protected=protected_header_back)
-                        enc = jwetoken.serialize(compact=True)
+                        jwe_token = jwe.JWE(payload.encode('utf-8'), recipient=public_key,
+                                            protected=protected_header_back)
+                        enc = jwe_token.serialize(compact=True)
                         response_data = {'encryptedData': enc}
                 else:
                     response_status = 400
@@ -345,8 +364,8 @@ def get_card_credentials_credit_testing(request, *args, **kwargs):
                 "alg": "ECDH-ES",
                 "enc": "A256GCM"
             }
-            jwetoken = jwe.JWE(payload.encode('utf-8'), recipient=public_key, protected=protected_header_back)
-            enc = jwetoken.serialize(compact=True)
+            jwe_token = jwe.JWE(payload.encode('utf-8'), recipient=public_key, protected=protected_header_back)
+            enc = jwe_token.serialize(compact=True)
             response_data = {'encryptedData': enc}
         return response_data, 200
     else:
@@ -371,7 +390,6 @@ def get_country_code_by_name(country_name, letters=2):
         elif letters == 3:
             return iso_country.alfa3
     return 'PA'
-
 
 # def get_card_data_tokenization(request, *args, **kwargs):
 #     if 'request_data' not in kwargs:

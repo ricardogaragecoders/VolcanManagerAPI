@@ -112,3 +112,8 @@ class ControlApiView(CustomViewSet):
         from control.utils import intra_extras_mock
         return self.control_action(request=request, control_function=intra_extras_mock,
                                    name_control_function="intra_extras_mock")
+
+    def consulta_intra_extra_f1(self, request, *args, **kwargs):
+        from control.utils import consulta_intra_extra_f1
+        return self.control_action(request=request, control_function=consulta_intra_extra_f1,
+                                   name_control_function="consulta_intra_extra_f1")

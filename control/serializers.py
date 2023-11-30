@@ -94,15 +94,85 @@ class CreacionEnteSerializer(serializers.Serializer):
         return data
 
 
+class AltaCuentaTarjetaSerializer(serializers.Serializer):
+    ID_ENTE_OWNER = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    NOMBRE_TARJETA = serializers.CharField(max_length=30, required=False, default="", allow_blank=True)
+    TIPO_TARJETA = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
+    TARJETA_PREEXPEDIDA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    ID_ENTE_ADDITIONAL = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    TARJETA_VIRTUAL = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
+    PRODUCTO_BIN = serializers.CharField(max_length=9, required=False, default="", allow_blank=True)
+    LIMITE_CRED_TITULAR = serializers.CharField(max_length=19, required=False, default="", allow_blank=True)
+    LIMITE_CONSUMO_ADICIONAL = serializers.CharField(max_length=19, required=False, default="", allow_blank=True)
+    CICLO_CORTE_TITULAR = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
+    PLAN_TITULAR = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    CODIGO_LEALTAD_TITULAR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    ENVIO_EDC_TITULAR = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
+    EMAIL_EDC_TITULAR = serializers.CharField(max_length=100, required=False, default="", allow_blank=True)
+    DIRECCION_1_EDC_TITULAR = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    DIRECCION_2_EDC_TITULAR = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    CIUDAD_EDC_TITULAR = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    PROVINCIA_EDC_TITULAR = serializers.CharField(max_length=40, required=False, default="", allow_blank=True)
+    CODIGO_POSTAL_EDC_TITULAR = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    PAIS_EDC_TITULAR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    IBAN_INTERNACIONAL = serializers.CharField(max_length=40, required=False, default="", allow_blank=True)
+    IBAN_LOCAL = serializers.CharField(max_length=40, required=False, default="", allow_blank=True)
+    VENDEDORES_TC = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    INDICADOR_POLIZA = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('ID_ENTE_OWNER', 'NOMBRE_TARJETA', 'TIPO_TARJETA', 'TARJETA_PREEXPEDIDA',
+                  'ID_ENTE_ADDITIONAL', 'TARJETA_VIRTUAL', 'PRODUCT_BIN', 'LIMITE_CRED_TITULAR',
+                  'LIMITE_CONSUMO_ADICIONAL', 'CICLO_CORTE_TITULAR', 'PLAN_TITULAR', 'CODIGO_LEALTAD_TITULAR',
+                  'ENVIO_EDC_TITULAR', 'EMAIL_EDC_TITULAR', 'DIRECCION_1_EDC_TITULAR', 'DIRECCION_2_EDC_TITULAR',
+                  'CIUDAD_EDC_TITULAR', 'PROVINCIA_EDC_TITULAR', 'CODIGO_POSTAL_EDC_TITULAR', 'PAIS_EDC_TITULAR',
+                  'IBAN_INTERNACIONAL', 'IBAN_LOCAL', 'VENDEDORES_TC', 'INDICADOR_POLIZA',
+                  'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+
+    def validate(self, data):
+        data = super(AltaCuentaTarjetaSerializer, self).validate(data)
+        card_name = data.get('NOMBRE_TARJETA', "").strip()
+        type_card = data.get('TIPO_TARJETA', "").strip()
+        card_virtual = data.get('TARJETA_VIRTUAL', "").strip()
+        titular_shipment = data.get('ENVIO_EDC_TITULAR', "").strip()
+        emisor = data.get('EMISOR', '').strip()
+
+        data['NOMBRE_TARJETA'] = card_name
+        data['TIPO_TARJETA'] = type_card
+        data['TARJETA_VIRTUAL'] = card_virtual
+        data['ENVIO_EDC_TITULAR'] = titular_shipment
+        data['EMISOR'] = emisor
+
+        if len(card_name) == 0:
+            raise CustomValidationError(detail=u'Nombre de tarjeta es requerido', code='400')
+
+        if len(type_card) == 0:
+            raise CustomValidationError(detail=u'Tipo de tarjeta es requerido', code='400')
+
+        # if len(card_virtual) == 0:
+        #     raise CustomValidationError(detail=u'Valor tarjeta virtual es requerido', code='400')
+        #
+        # if len(titular_shipment) == 0:
+        #     raise CustomValidationError(detail=u'Valor tarjeta virtual es requerido', code='400')
+
+        if len(emisor) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
+
+        return data
+
+
 class ConsultaCuentaSerializer(serializers.Serializer):
-    CUENTA = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
-    CIF = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
-    ID_OWNER = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
-    TIPO_IDENTIFICACION = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
-    DOC_IDENTIFICACION = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
-    MONEDA = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
-    EMISOR = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
-    USUARIO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    CUENTA = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    CIF = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    ID_OWNER = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    TIPO_IDENTIFICACION = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
+    DOC_IDENTIFICACION = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    MONEDA = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
     ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
 
     class Meta:
@@ -134,13 +204,13 @@ class ConsultaCuentaSerializer(serializers.Serializer):
 
 
 class ConsultaTarjetaSerializer(serializers.Serializer):
-    TARJETA = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
-    CIF = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
-    ID_OWNER = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
-    TIPO_IDENTIFICACION = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
-    DOC_IDENTIFICACION = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
-    EMISOR = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
-    USUARIO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    CIF = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    ID_OWNER = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    TIPO_IDENTIFICACION = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
+    DOC_IDENTIFICACION = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
     ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
 
     class Meta:
@@ -368,6 +438,7 @@ class GestionTransaccionesSerializer(serializers.Serializer):
     HORA_TRX = serializers.CharField(max_length=6, required=False, default="", allow_blank=True)
     CVV2 = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
     FECVENTO = serializers.CharField(max_length=4, required=False, default="", allow_blank=True)
+    FINANCIABLE = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
     CHEQUE = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
     PLAZA = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
     NO_FINANCIAMIENTO = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
@@ -384,7 +455,7 @@ class GestionTransaccionesSerializer(serializers.Serializer):
 
     class Meta:
         fields = ('TARJETA', 'TRANSACCION', 'IMPORTE', 'MONEDA', 'FECHA_TRX', 'HORA_TRX', 'CVV2', 'FECVENTO',
-                  'CHEQUE', 'PLAZA', 'NO_FINANCIAMIENTO', 'REFERENCIA', 'DOC_OPER', 'AUTORIZACION',
+                  'FINANCIABLE', 'CHEQUE', 'PLAZA', 'NO_FINANCIAMIENTO', 'REFERENCIA', 'DOC_OPER', 'AUTORIZACION',
                   'COMERCIO', 'CIUDAD', 'PAIS', 'SUCURSAL', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
 
     def validate(self, data):
@@ -527,6 +598,49 @@ class IntraExtrasSerializer(serializers.Serializer):
                                         code='400')
         data['COMERCIO'] = commerce
 
+        if len(emisor) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
+        return data
+
+
+class ConsultaIntraExtraF1Serializer(serializers.Serializer):
+    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    CIF = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    ID_OWNER = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    TIPO_IDENTIFICACION = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
+    DOC_IDENTIFICACION = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    DOC_FINAN = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    TIPO_FINAN = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    PAGINA = serializers.CharField(max_length=30, required=False, default="", allow_blank=True)
+    DIRECCION = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('TARJETA', 'CIF', 'ID_OWNER', 'TIPO_IDENTIFICACION', 'DOC_IDENTIFICACION',
+                  'DOC_FINAN', 'TIPO_FINAN', 'PAGINA', 'DIRECCION',
+                  'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+
+    def validate(self, data):
+        data = super(ConsultaIntraExtraF1Serializer, self).validate(data)
+        tarjeta = data.get('TARJETA', "").strip()
+        cif = data.get('CIF', "").strip()
+        id_owner = data.get('ID_OWNER', "").strip()
+        tipo_identificacion = data.get('TIPO_IDENTIFICACION', "").strip()
+        doc_identificacion = data.get('DOC_IDENTIFICACION', "").strip()
+        emisor = data.get('EMISOR', '').upper().strip()
+
+        data['TARJETA'] = tarjeta
+        data['CIF'] = cif
+        data['ID_OWNER'] = id_owner
+        data['TIPO_IDENTIFICACION'] = tipo_identificacion
+        data['DOC_IDENTIFICACION'] = doc_identificacion
+
+        if len(tarjeta) == 0 and len(cif) == 0 and len(id_owner) == 0 and len(tipo_identificacion) == 0 and len(
+                doc_identificacion) == 0:
+            raise CustomValidationError(detail=u'No fue proporcionado ningun filtro para hacer la busqueda',
+                                        code='400')
         if len(emisor) == 0:
             raise CustomValidationError(detail=u'Emisor es requerido', code='400')
         return data
