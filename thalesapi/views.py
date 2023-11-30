@@ -183,8 +183,7 @@ class ThalesApiViewPrivate(ThalesApiView):
             api_url = f'{url_server}{settings.URL_THALES_API_VERIFY_CARD}'
             validated_data = serializer.validated_data
             resp_msg, resp_data, response_status = process_volcan_api_request(data=validated_data,
-                                                                                url=api_url, request=request, times=0)
-
+                                                                              url=api_url, request=request, times=0)
             if response_status == 200:
                 if resp_data['RSP_ERROR'].upper() == 'OK' or len(resp_data['RSP_TARJETAID']) > 0:
                     resp_data['RSP_ERROR'] = 'OK'
@@ -213,7 +212,7 @@ class ThalesApiViewPrivate(ThalesApiView):
                     }
         else:
             resp_msg, response_data, response_status = get_response_data_errors(serializer.errors)
-            response_data, response_status = {}, 400
+            # response_data, response_status = {}, 400
         return self.get_response(message=resp_msg, data=response_data, status=response_status, lower_response=False)
 
     def get_authorization_token(self, response_data=None):
@@ -255,7 +254,7 @@ class ThalesApiViewPrivate(ThalesApiView):
             headers = {
                 "x-correlation-id": response_data['RSP_FOLIO'] if response_data else '12345',
                 "Prefer": "code=200",
-                "Content-Type": "application/x-www-form-urlencoded",
+                "Content-Type": "application/json",
                 "Accept": "application/json"
             }
             resp_data, resp_status = process_volcan_api_request(data=payload, url=url, headers=headers)
@@ -324,5 +323,5 @@ class ThalesApiViewPrivate(ThalesApiView):
             if resp_status == 204:
                 return resp_data, 200
             else:
-                return resp_status, resp_status
+                return resp_data, resp_status
         return None, 400

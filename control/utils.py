@@ -73,6 +73,7 @@ def process_volcan_api_request(data, url, request, times=0):
         response_message = 'Error de conexion con servidor VOLCAN (TooManyRedirects)'
         print(response_message)
     except requests.exceptions.RequestException as e:
+        print(e.args.__str__())
         response_data = {'RSP_CODIGO': "400",
                          'RSP_DESCRIPCION': 'Error de conexion con servidor VOLCAN (RequestException)'}
         response_status = 400
