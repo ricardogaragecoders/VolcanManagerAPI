@@ -145,13 +145,14 @@ def process_volcan_api_request(data, url, request=None, headers=None, method='PO
             print(f"Response: {str(response_status)} Error desconocido")
             print(f"Data server: {str(r.text)}")
     except requests.exceptions.Timeout:
-        response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (Timeout)'}, 408
+        response_data, response_status = {'error': 'Error de conexion con servidor (Timeout)'}, 408
         print(response_data)
     except requests.exceptions.TooManyRedirects:
-        response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (TooManyRedirects)'}, 429
+        response_data, response_status = {'error': 'Error de conexion con servidor (TooManyRedirects)'}, 429
         print(response_data)
     except requests.exceptions.RequestException as e:
-        response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (RequestException)'}, 400
+        print(e.args.__str__())
+        response_data, response_status = {'error': 'Error de conexion con servidor (RequestException)'}, 400
         print(response_data)
     except Exception as e:
         response_data, response_status = {'error': e.args.__str__()}, 500

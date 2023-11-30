@@ -1907,7 +1907,7 @@ components:
         tarjeta_preexpedida:
           type: string
           description: 'Tarjeta preexpedida'
-          maxLength: 16
+          maxLength: 22
         id_ente_additional:
           type: string
           description: 'Opcional. Identificador unico del ente de cliente titular en caso de una adicional'
@@ -2042,7 +2042,7 @@ components:
         tarjeta:
           type: string
           description: 'Mandatorio. Número de cuenta relacionada al cliente'
-          maxLength: 16
+          maxLength: 22
         moneda:
           type: string
           description: 'Mandatorio. Código de la moneda en ISO, para la consulta de saldo local o internacional'
@@ -2089,7 +2089,7 @@ components:
         tarjeta:
           type: string
           description: 'Mandatorio. Número de cuenta relacionada al cliente'
-          maxLength: 16
+          maxLength: 22
         moneda:
           type: string
           description: 'Mandatorio. Código de la moneda en ISO, para la consulta de saldo local o internacional'
@@ -2136,7 +2136,7 @@ components:
         tarjeta:
           type: string
           description: 'Condicional. Consulta por número de Tarjeta Cifrada con la llame de Emisor'
-          maxLength: 16
+          maxLength: 22
         cif:
           type: string
           description: 'Condicional. Consulta por CIF devuelve todas las tarjetas relacionaldas'
@@ -2166,7 +2166,7 @@ components:
         tarjeta:
           type: string
           description: 'Mandatorio. Número de tarjeta del Cliente, puede ser principal o adicional cifrador TDES'
-          maxLength: 16
+          maxLength: 22
         pin:
           type: string
           description: 'Mandatorio. PIN de la tarjeta cifrado TDES'
@@ -2189,7 +2189,7 @@ components:
         tarjeta:
           type: string
           description: 'Condiconal. Solo aplica para tarjetas adicionales, no es necesario el campo de cuenta'
-          maxLength: 16
+          maxLength: 22
         limite_cr:
           type: string
           description: 'Condicional. Nuevo importe de límite de crédito por cuenta formato valido por ejemplo USD1,100 = 1100.00. Formato 2 decimales'
@@ -2226,7 +2226,7 @@ components:
         tarjeta:
           type: string
           description: 'Opcional. Tarjeta de Crédito debe de enviarse cifrada con la llave del emisor RKEY/WSV, no se requiere si es por cuenta'
-          maxLength: 16
+          maxLength: 22
         cuenta:
           type: string
           description: 'Opcional. Número de cuenta para cambiar el estado, no se requiere el númer de TDC'
@@ -2258,7 +2258,7 @@ components:
         tarjeta:
           type: string
           description: 'Mandatorio. Tarjeta a remplazar cifrada, campo debe de viajar en HITARJ relaciona el dueño de la tarjeta'
-          maxLength: 16
+          maxLength: 22
         tipo_uso:
           type: string
           description: 'Mandatorio. Tipo de uso F=Fisica/V=Virtual (deberá de heredar el uso de la tarjeta origen)'
@@ -2272,7 +2272,7 @@ components:
         tarjeta_asignada:
           type: string
           description: 'Opcional. Número de tarjeta pre-Expedida que se le asignara al cliente, cifrada, en el caso que la sucursal tenga tarjetas físicas'
-          maxLength: 16
+          maxLength: 22
         motivo_repo:
           type: string
           description: 'Mandatorio. Código de motivo de reposición basado en catálogo del sistema de crédito Volcán'
@@ -2307,7 +2307,7 @@ components:
         tarjeta:
           type: string
           description: 'Mandatorio. Tarjeta de Crédito debe de enviarse cifrada con la llave del emisor RKEY/WSV'
-          maxLength: 16
+          maxLength: 22
         transaccion:
           type: string
           description: 'Mandatorio. Enviar lo siguiente: COM = Compras normales/ADE=Adelanto de Efectivo/PAG=Pagos a la TDC'
@@ -2405,7 +2405,7 @@ components:
         tarjeta:
           type: string
           description: 'Mandatorio. Número de Tarjeta Principal de la cuenta, cifrada con la llave compartida para Volcán'
-          maxLength: 16
+          maxLength: 22
         fecha_de_corte:
           type: string
           format: date
@@ -2439,7 +2439,7 @@ components:
         tarjeta:
           type: string
           description: 'Mandatorio. Número de Tarjeta Principal de la cuenta, cifrada con la llave compartida para Volcán'
-          maxLength: 16
+          maxLength: 22
         emisor:
           type: string
           description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
@@ -2453,7 +2453,7 @@ components:
         tarjeta:
           type: string
           description: 'Condicional. Consulta por número de Tarjeta Cifrada con la llame de Emisor'
-          maxLength: 16
+          maxLength: 22
         cif:
           type: string
           description: 'Condicional. Consulta por CIF devuelve todas las tarjetas relacionaldas'
@@ -2499,7 +2499,7 @@ components:
         tarjeta:
           type: string
           description: 'Mandatorio. Número de Tarjeta Principal de la cuenta, cifrada con la llave compartida para Volcán'
-          maxLength: 16
+          maxLength: 22
         codigo_plan:
           type: string
           description: 'Mandatorio. Codigo del plan de extra creado'
@@ -2588,7 +2588,7 @@ components:
         tarjeta:
           type: string
           description: 'Mandatorio. Número de Tarjeta'
-          maxLength: 16
+          maxLength: 22
         fecha_exp:
           type: string
           description: 'Mandatorio. Fecha de expiracion formato MMAA'

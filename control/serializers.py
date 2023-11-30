@@ -98,7 +98,7 @@ class AltaCuentaTarjetaSerializer(serializers.Serializer):
     ID_ENTE_OWNER = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
     NOMBRE_TARJETA = serializers.CharField(max_length=30, required=False, default="", allow_blank=True)
     TIPO_TARJETA = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
-    TARJETA_PREEXPEDIDA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    TARJETA_PREEXPEDIDA = serializers.CharField(max_length=22, required=False, default="", allow_blank=True)
     ID_ENTE_ADDITIONAL = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
     TARJETA_VIRTUAL = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
     PRODUCTO_BIN = serializers.CharField(max_length=9, required=False, default="", allow_blank=True)
@@ -204,7 +204,7 @@ class ConsultaCuentaSerializer(serializers.Serializer):
 
 
 class ConsultaTarjetaSerializer(serializers.Serializer):
-    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    TARJETA = serializers.CharField(max_length=22, required=False, default="", allow_blank=True)
     CIF = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
     ID_OWNER = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
     TIPO_IDENTIFICACION = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
@@ -242,7 +242,7 @@ class ConsultaTarjetaSerializer(serializers.Serializer):
 
 
 class CambioPINSerializer(serializers.Serializer):
-    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    TARJETA = serializers.CharField(max_length=22, required=False, default="", allow_blank=True)
     PIN = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
     EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
     USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
@@ -272,7 +272,7 @@ class CambioPINSerializer(serializers.Serializer):
 
 
 class ExtrafinanciamientoSerializer(serializers.Serializer):
-    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    TARJETA = serializers.CharField(max_length=22, required=False, default="", allow_blank=True)
     MONEDA = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
     IMPORTE = serializers.CharField(max_length=19, required=False, default="", allow_blank=True, allow_null=True)
     TASA = serializers.CharField(max_length=5, required=False, default="", allow_blank=True, allow_null=True)
@@ -319,7 +319,7 @@ class ExtrafinanciamientoSerializer(serializers.Serializer):
 
 class CambioLimitesSerializer(serializers.Serializer):
     CUENTA = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
-    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    TARJETA = serializers.CharField(max_length=22, required=False, default="", allow_blank=True)
     LIMITE_CR = serializers.CharField(max_length=19, required=False, default="", allow_blank=True, allow_null=True)
     LIMITE_CON = serializers.CharField(max_length=19, required=False, default="", allow_blank=True, allow_null=True)
     LIMITE_EXTRA = serializers.CharField(max_length=19, required=False, default="", allow_blank=True, allow_null=True)
@@ -367,7 +367,7 @@ class CambioLimitesSerializer(serializers.Serializer):
 
 
 class CambioEstatusTDCSerializer(serializers.Serializer):
-    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    TARJETA = serializers.CharField(max_length=22, required=False, default="", allow_blank=True)
     CUENTA = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
     ESTATUS = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
     MOTIVO = serializers.CharField(max_length=40, required=False, default="", allow_blank=True)
@@ -397,10 +397,10 @@ class CambioEstatusTDCSerializer(serializers.Serializer):
 
 
 class ReposicionTarjetasSerializer(serializers.Serializer):
-    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    TARJETA = serializers.CharField(max_length=22, required=False, default="", allow_blank=True)
     TIPO_USO = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
     EMISION = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
-    TARJETA_ASIGNADA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    TARJETA_ASIGNADA = serializers.CharField(max_length=22, required=False, default="", allow_blank=True)
     MOTIVO_REPO = serializers.CharField(max_length=30, required=False, default="", allow_blank=True)
     OFICINA_ENTREGA = serializers.CharField(max_length=8, required=False, default="", allow_blank=True)
     NOMBRE_TARJETA = serializers.CharField(max_length=30, required=False, default="", allow_blank=True)
@@ -430,7 +430,7 @@ class ReposicionTarjetasSerializer(serializers.Serializer):
 
 
 class GestionTransaccionesSerializer(serializers.Serializer):
-    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    TARJETA = serializers.CharField(max_length=22, required=False, default="", allow_blank=True)
     TRANSACCION = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
     IMPORTE = serializers.CharField(max_length=19, required=False, default="", allow_blank=True, allow_null=True)
     MONEDA = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
@@ -483,7 +483,7 @@ class GestionTransaccionesSerializer(serializers.Serializer):
 
 
 class ConsultaMovimientosSerializer(serializers.Serializer):
-    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    TARJETA = serializers.CharField(max_length=22, required=False, default="", allow_blank=True)
     FECHA_DE_CORTE = serializers.CharField(max_length=8, required=False, default="", allow_blank=True)
     MOVIMIENTOS = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
     CONSECUTIVO_EDO_CUENTA = serializers.CharField(max_length=4, required=False, default="", allow_blank=True)
@@ -519,7 +519,7 @@ class ConsultaMovimientosSerializer(serializers.Serializer):
 
 
 class ConsultaPuntosSerializer(serializers.Serializer):
-    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    TARJETA = serializers.CharField(max_length=22, required=False, default="", allow_blank=True)
     EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
     USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
     ACCESO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
@@ -543,7 +543,7 @@ class ConsultaPuntosSerializer(serializers.Serializer):
 
 
 class IntraExtrasSerializer(serializers.Serializer):
-    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    TARJETA = serializers.CharField(max_length=22, required=False, default="", allow_blank=True)
     CODIGO_PLAN = serializers.CharField(max_length=5, required=False, default="", allow_blank=True)
     MONEDA = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
     IMPORTE = serializers.CharField(max_length=19, required=False, default="", allow_blank=True, allow_null=True)
@@ -604,7 +604,7 @@ class IntraExtrasSerializer(serializers.Serializer):
 
 
 class ConsultaIntraExtraF1Serializer(serializers.Serializer):
-    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    TARJETA = serializers.CharField(max_length=22, required=False, default="", allow_blank=True)
     CIF = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
     ID_OWNER = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
     TIPO_IDENTIFICACION = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
