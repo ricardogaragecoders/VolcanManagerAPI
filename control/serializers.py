@@ -644,3 +644,44 @@ class ConsultaIntraExtraF1Serializer(serializers.Serializer):
         if len(emisor) == 0:
             raise CustomValidationError(detail=u'Emisor es requerido', code='400')
         return data
+
+
+class ConsultaTransaccionesXFechaSerializer(serializers.Serializer):
+    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    FEC_INICIO = serializers.CharField(max_length=8, required=False, default="", allow_blank=True)
+    HOR_INICIO = serializers.CharField(max_length=6, required=False, default="", allow_blank=True)
+    FEC_FINAL = serializers.CharField(max_length=8, required=False, default="", allow_blank=True)
+    HOR_FINAL = serializers.CharField(max_length=6, required=False, default="", allow_blank=True)
+    TIPO_MOV = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
+    PAGINA = serializers.CharField(max_length=31, required=False, default="", allow_blank=True)
+    DIRECCION = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('TARJETA', 'FEC_INICIO', 'HOR_INICIO', 'FEC_FINAL', 'HOR_FINAL', 'TIPO_MOV',
+                  'PAGINA', 'DIRECCION', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+
+    def validate(self, data):
+        data = super(ConsultaTransaccionesXFechaSerializer, self).validate(data)
+        tarjeta = data.get('TARJETA', "").strip()
+        fecha_inicio = data.get('FEC_INICIO', "").strip()
+        fecha_final = data.get('FEC_FINAL', "").strip()
+        hora_inicio = data.get('HOR_INICIO', "").strip()
+        hora_final = data.get('HOR_FINAL', "").strip()
+        emisor = data.get('EMISOR', '').upper().strip()
+
+        data['TARJETA'] = tarjeta
+        data['FEC_INICIO'] = fecha_inicio
+        data['HOR_INICIO'] = hora_inicio
+        data['FEC_FINAL'] = fecha_final
+        data['HOR_FINAL'] = hora_final
+
+        if len(tarjeta) == 0 and len(fecha_inicio) == 0 and len(fecha_final) == 0 and len(hora_inicio) == 0 and len(
+                hora_final) == 0:
+            raise CustomValidationError(detail=u'No fue proporcionado ningun filtro para hacer la busqueda',
+                                        code='400')
+        if len(emisor) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
+        return data

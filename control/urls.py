@@ -18,4 +18,6 @@ urlpatterns = [
     path('ConsultaPuntos/', ControlApiView.as_view({'post': 'consulta_puntos'})),
     path('IntraExtras/', ControlApiView.as_view({'post': 'intra_extras'})),
     path('ConsultaIntraExtraF1/', ControlApiView.as_view({'post': 'consulta_intra_extra_f1'})),
+    path('ConsultaTransacionesXFecha/', ControlApiView.as_view({'post': 'consulta_transaciones_x_fecha'})),
+
 ]
