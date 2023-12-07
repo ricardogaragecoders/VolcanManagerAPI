@@ -100,7 +100,7 @@ def creation_ente(request, **kwargs):
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/Alta_Ente_1'
+    api_url = f'{url_server}{settings.URL_AZ7_ALTA_ENTE}'
     serializer = CreacionEnteSerializer(data=data)
     if serializer.is_valid():
         resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
@@ -132,7 +132,7 @@ def creation_cta_tar(request, **kwargs):
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/Volcan_Alta_Cuenta_1'
+    api_url = f'{url_server}{settings.URL_AZ7_ALTA_CUENTA}'
     serializer = AltaCuentaTarjetaSerializer(data=data)
     if serializer.is_valid():
         resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
@@ -164,7 +164,7 @@ def consulta_cuenta(request, **kwargs):
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/Volcan_Consulta_Cuenta_1'
+    api_url = f'{url_server}{settings.URL_AZ7_CONSULTA_CUENTA}'
     serializer = ConsultaCuentaSerializer(data=data)
     if serializer.is_valid():
         resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
@@ -208,7 +208,7 @@ def extrafinanciamientos(request, **kwargs):
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/Volcan_ExtraFinanciamiento_1'
+    api_url = f'{url_server}{settings.URL_AZ7_EXTRA_FINANCIAMIENTO}'
     serializer = ExtrafinanciamientoSerializer(data=data)
     if serializer.is_valid():
         resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
@@ -246,7 +246,7 @@ def intrafinanciamientos(request, **kwargs):
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/Volcan_Intrafinanciamiento_1'
+    api_url = f'{url_server}{settings.URL_AZ7_INTRA_FINANCIAMIENTO}'
     serializer = ExtrafinanciamientoSerializer(data=data)
     if serializer.is_valid():
         resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
@@ -284,7 +284,7 @@ def consulta_tarjetas(request, **kwargs):
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/Consulta_Tarjetas_1'
+    api_url = f'{url_server}{settings.URL_AZ7_CONSULTA_TARJETAS}'
     serializer = ConsultaTarjetaSerializer(data=data)
     if serializer.is_valid():
         resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
@@ -322,7 +322,7 @@ def cambio_pin(request, **kwargs):
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/Cambio_PIN_1'
+    api_url = f'{url_server}{settings.URL_AZ7_CAMBIO_PIN}'
     serializer = CambioPINSerializer(data=data)
     if serializer.is_valid():
         resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
@@ -354,7 +354,7 @@ def cambio_limites(request, **kwargs):
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/Cambio_limites_1'
+    api_url = f'{url_server}{settings.URL_AZ7_CAMBIO_LIMITES}'
     serializer = CambioLimitesSerializer(data=data)
     if serializer.is_valid():
         resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
@@ -392,7 +392,7 @@ def cambio_estatus_tdc(request, **kwargs):
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/Cambio_estatus_TDC_1'
+    api_url = f'{url_server}{settings.URL_AZ7_CAMBIO_ESTATUS_TDC}'
     serializer = CambioEstatusTDCSerializer(data=data)
     if serializer.is_valid():
         resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
@@ -424,7 +424,7 @@ def reposicion_tarjetas(request, **kwargs):
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/Reposicion_Tarjetas_1'
+    api_url = f'{url_server}{settings.URL_AZ7_REPOSICION_TARJETAS}'
     serializer = ReposicionTarjetasSerializer(data=data)
     if serializer.is_valid():
         resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
@@ -456,7 +456,7 @@ def gestion_transacciones(request, **kwargs):
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/Volcan_GestionTrx_1'
+    api_url = f'{url_server}{settings.URL_AZ7_GESTION_TRANSACCIONES}'
     serializer = GestionTransaccionesSerializer(data=data)
     if serializer.is_valid():
         resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
@@ -490,7 +490,7 @@ def consulta_movimientos(request, **kwargs):
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/Volcan_ConsultaMov_1'
+    api_url = f'{url_server}{settings.URL_AZ7_CONSULTAR_MOVIMIENTOS}'
     serializer = ConsultaMovimientosSerializer(data=data)
     if serializer.is_valid():
         resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
@@ -534,7 +534,7 @@ def consulta_puntos(request, **kwargs):
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/Volcan_ConsultaPuntos_1'
+    api_url = f'{url_server}{settings.URL_AZ7_CONSULTAR_PUNTOS}'
     serializer = ConsultaPuntosSerializer(data=data)
     if serializer.is_valid():
         resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
@@ -568,7 +568,7 @@ def intra_extras(request, **kwargs):
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/Volcan_Intra_Extras'
+    api_url = f'{url_server}{settings.URL_AZ7_INTRAS_EXTRAS}'
     serializer = IntraExtrasSerializer(data=data)
     if serializer.is_valid():
         resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
@@ -606,7 +606,7 @@ def intra_extras_mock(request, **kwargs):
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/Volcan_Intra_Extras'
+    api_url = f'{url_server}{settings.URL_AZ7_INTRAS_EXTRAS}'
     serializer = IntraExtrasSerializer(data=data)
     if serializer.is_valid():
         data = serializer.validated_data
@@ -666,7 +666,7 @@ def consulta_intra_extra_f1(request, **kwargs):
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/Volcan_ConsultaIntraExtraF1'
+    api_url = f'{url_server}{settings.URL_AZ7_CONSULTA_INTRA_EXTRA}'
     serializer = ConsultaIntraExtraF1Serializer(data=data)
     if serializer.is_valid():
         resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
@@ -710,7 +710,7 @@ def consulta_transaciones_x_fecha(request, **kwargs):
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}/web/services/Volcan_ConsultaTxnXFecha1'
+    api_url = f'{url_server}{settings.URL_AZ7_CONSULTA_TRANSACCION_X_FECHA}'
     serializer = ConsultaTransaccionesXFechaSerializer(data=data)
     if serializer.is_valid():
         resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
