@@ -117,3 +117,8 @@ class ControlApiView(CustomViewSet):
         from control.utils import consulta_intra_extra_f1
         return self.control_action(request=request, control_function=consulta_intra_extra_f1,
                                    name_control_function="consulta_intra_extra_f1")
+
+    def consulta_transaciones_x_fecha(self, request, *args, **kwargs):
+        from control.utils import consulta_transaciones_x_fecha
+        return self.control_action(request=request, control_function=consulta_transaciones_x_fecha,
+                                   name_control_function="consulta_txn_x_fecha_1")

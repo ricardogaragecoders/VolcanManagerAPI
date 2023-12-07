@@ -1080,6 +1080,96 @@ paths:
       tags:
         - VolcanManager::Acciones
     parameters: []
+  /volcan/api/ConsultaTransacionesXFecha/:
+    post:
+      operationId: api_control_consulta_transacciones_x_fecha
+      description: ConsultaTransacionesXFecha.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ConsultaTransacionesXFecha"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsultaTransacionesXFecha"
+        required: true
+      summary: ConsultaTransacionesXFecha.
+      responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
+        '200':
+          description: 'ConsultaTransacionesXFecha'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_pagina": "00000000000000000000000000000",
+                "rsp_folio": "000000000000",
+                "rsp_mocons": [
+                  {
+                    "rsp_cod_mov": "000",
+                    "rsp_tipo_mov": "0",
+                    "rsp_des_mov": "000000000000000000000000000000",
+                    "rsp_ori_mov": "000",
+                    "rsp_num_mov": "0000000000",
+                    "rsp_monto_orig": "00.00",
+                    "rsp_mnd_mov": "000",
+                    "rsp_tasa_mov": "00.00",
+                    "rsp_tasa_mora": "00.00",
+                    "rsp_plazo_mov": "00",
+                    "rsp_fec_uso": "00000000",
+                    "rsp_fec_mov": "00000000",
+                    "rsp_cod_com": "00.00",
+                    "rsp_des_com": "0000000000000000000000000000000000000000",
+                    "rsp_num_aut": "000000",
+                    "rsp_mov_anulado": "0",
+                    "rrsp_estatus_mov": "1"
+                  },
+                  {
+                    "rsp_cod_mov": "000",
+                    "rsp_tipo_mov": "0",
+                    "rsp_des_mov": "000000000000000000000000000000",
+                    "rsp_ori_mov": "000",
+                    "rsp_num_mov": "0000000000",
+                    "rsp_monto_orig": "00.00",
+                    "rsp_mnd_mov": "000",
+                    "rsp_tasa_mov": "00.00",
+                    "rsp_tasa_mora": "00.00",
+                    "rsp_plazo_mov": "00",
+                    "rsp_fec_uso": "00000000",
+                    "rsp_fec_mov": "00000000",
+                    "rsp_cod_com": "00.00",
+                    "rsp_des_com": "0000000000000000000000000000000000000000",
+                    "rsp_num_aut": "000000",
+                    "rsp_mov_anulado": "0",
+                    "rrsp_estatus_mov": "1"
+                  }
+                ]
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error en ConsultaTransacionesXFecha"
+              }
+      tags:
+        - VolcanManager::Acciones
+    parameters: []
   /volcan/api/IntraExtras/:
     post:
       operationId: api_control_intra_extras_mock
@@ -2492,6 +2582,56 @@ components:
           description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
           maxLength: 3
       required:
+        - emisor
+    ConsultaTransacionesXFecha:
+      type: object
+      properties:
+        tarjeta:
+          type: string
+          description: 'Mandatorio. Consulta por número de Tarjeta Cifrada con la llame de Emisor'
+          maxLength: 22
+        fec_inicio:
+          type: string
+          format: date
+          pattern: '^\d{4}\d{2}\d{2}$'
+          description: 'Condicional. Fecha de inicio. Formato AAAAMMDD'
+          maxLength: 8
+        hor_inicio:
+          type: string
+          format: time
+          pattern: '^\d{2}\d{2}\d{2}$'
+          description: 'Condicional. Hora inicio. Formato HHMMSS'
+          maxLength: 6
+        fec_final:
+          type: string
+          format: date
+          pattern: '^\d{4}\d{2}\d{2}$'
+          description: 'Condicional. Fecha final. Formato AAAAMMDD'
+          maxLength: 8
+        hor_final:
+          type: string
+          format: time
+          pattern: '^\d{2}\d{2}\d{2}$'
+          description: 'Condicional. Hora final. Formato HHMMSS'
+          maxLength: 6
+        tipo_mov:
+          type: string
+          description: 'Tipo de movimiento'
+          maxLength: 1
+        pagina:
+          type: string
+          description: 'Pagina'
+          maxLength: 30
+        direccion:
+          type: string
+          description: 'Direccion'
+          maxLength: 1
+        emisor:
+          type: string
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+          maxLength: 3
+      required:
+        - tarjeta
         - emisor
     Intra_Extras:
       type: object
