@@ -363,7 +363,8 @@ def get_card_credentials_credit_testing(request, *args, **kwargs):
         if public_key:
             protected_header_back = {
                 "alg": "ECDH-ES",
-                "enc": "A256GCM"
+                "enc": "A256GCM",
+                "kid": settings.THALESAPI_ENCRYPTED_K03_KID
             }
             jwe_token = jwe.JWE(payload.encode('utf-8'), recipient=public_key, protected=protected_header_back)
             enc = jwe_token.serialize(compact=True)

@@ -224,9 +224,10 @@ class ThalesApiViewPrivate(ThalesApiView):
 
         url = "https://stoplight.io/mocks/thales-dis-dbp/d1-api-public/59474133/oauth2/token"
         # url = "https://api.d1-stg.thalescloud.io/authz/v1/oauth2/token"
+        # url = "https://api.d1.thalescloud.io/authz/v1/oauth2/token"
 
         auth_data = {
-            "iat": int(datetime.utcnow().timestamp()),
+            # "iat": int(datetime.utcnow().timestamp()),
             "iss": "VOLCA_PA-1",
             "sub": "VOLCA_PA-1",
             "exp": int((datetime.utcnow() + timedelta(minutes=15)).timestamp()),
@@ -239,7 +240,12 @@ class ThalesApiViewPrivate(ThalesApiView):
         with open(settings.PUB_KEY_AUTH_ISSUER_SERVER_TO_D1_SERVER_PEM, "rb") as pemfile:
             public_key = pemfile.read()
         if private_key:
-            jwt_token = jwt.encode(payload=auth_data, key=private_key, algorithm="ES256")
+            headers = {
+                "alg": "ES256",
+                "typ": "JWT",
+                "kid": settings.THALESAPI_ENCRYPTED_K06_AUTH_KID
+            }
+            jwt_token = jwt.encode(payload=auth_data, key=private_key, algorithm="ES256", headers=headers)
 
         if public_key and jwt_token:
             decoded = jwt.decode(jwt=jwt_token, key=public_key, algorithms=["ES256"],
@@ -288,6 +294,7 @@ class ThalesApiViewPrivate(ThalesApiView):
         if access_token:
             url = f"https://stoplight.io/mocks/thales-dis-dbp/d1-api-public/59474135/issuers/{issuer_id}/consumers/{response_data['RSP_CLIENTEID']}/cards"
             # url = f"https://api.d1-stg.thalescloud.io/banking/v1/issuers/{issuer_id}/consumers/{response_data['RSP_CLIENTEID']}/cards"
+            # url = f"https://api.d1.thalescloud.io/banking/v1/issuers/{issuer_id}/consumers/{response_data['RSP_CLIENTEID']}/cards"
             public_key = None
             payload = {}
             with open(settings.PUB_KEY_ISSUER_SERVER_TO_D1_SERVER_PEM, "rb") as pemfile:
