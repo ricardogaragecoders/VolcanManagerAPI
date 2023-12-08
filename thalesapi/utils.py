@@ -110,7 +110,7 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
         return response_data, response_status
 
 
-def process_volcan_api_request(data, url, request=None, headers=None, method='POST', times=0):
+def process_volcan_api_request(data, url, request=None, headers=None, method='POST', cert=None, times=0):
     response_data = dict()
     response_status = 500
     if not headers:
@@ -124,11 +124,11 @@ def process_volcan_api_request(data, url, request=None, headers=None, method='PO
     print(f"Data json: {data_json}")
     try:
         if method == 'POST':
-            r = requests.post(url=url, data=data_json, headers=headers)
+            r = requests.post(url=url, data=data_json, headers=headers, cert=cert)
         elif method == 'PUT':
-            r = requests.put(url=url, data=data_json, headers=headers)
+            r = requests.put(url=url, data=data_json, headers=headers, cert=cert)
         else:
-            r = requests.patch(url=url, data=data_json, headers=headers)
+            r = requests.patch(url=url, data=data_json, headers=headers, cert=cert)
         response_status = r.status_code
         if 200 <= response_status <= 299:
             response_data = r.json() if response_status != 204 else {}

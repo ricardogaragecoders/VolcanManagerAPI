@@ -222,8 +222,8 @@ class ThalesApiViewPrivate(ThalesApiView):
         import jwt
         jwt_token = None
 
-        url = "https://stoplight.io/mocks/thales-dis-dbp/d1-api-public/59474133/oauth2/token"
-        # url = "https://api.d1-stg.thalescloud.io/authz/v1/oauth2/token"
+        # url = "https://stoplight.io/mocks/thales-dis-dbp/d1-api-public/59474133/oauth2/token"
+        url = "https://api.d1-stg.thalescloud.io/authz/v1/oauth2/token"
         # url = "https://api.d1.thalescloud.io/authz/v1/oauth2/token"
 
         auth_data = {
@@ -259,11 +259,12 @@ class ThalesApiViewPrivate(ThalesApiView):
             }
             headers = {
                 "x-correlation-id": response_data['RSP_FOLIO'] if response_data else '12345',
-                "Prefer": "code=200",
+                # "Prefer": "code=200",
                 "Content-Type": "application/json",
                 "Accept": "application/json"
             }
-            resp_data, resp_status = process_volcan_api_request(data=payload, url=url, headers=headers)
+            cert = (settings.SSL_CERTIFICATE_THALES_CRT, settings.SSL_CERTIFICATE_THALES_KEY)
+            resp_data, resp_status = process_volcan_api_request(data=payload, url=url, headers=headers, cert=cert)
             if resp_status == 200:
                 return resp_data['access_token'] if 'access_token' in resp_data else None
         return None
@@ -292,8 +293,8 @@ class ThalesApiViewPrivate(ThalesApiView):
         # return {'access_token': access_token}, 200
         issuer_id = 'VOLCA_PA-1'
         if access_token:
-            url = f"https://stoplight.io/mocks/thales-dis-dbp/d1-api-public/59474135/issuers/{issuer_id}/consumers/{response_data['RSP_CLIENTEID']}/cards"
-            # url = f"https://api.d1-stg.thalescloud.io/banking/v1/issuers/{issuer_id}/consumers/{response_data['RSP_CLIENTEID']}/cards"
+            # url = f"https://stoplight.io/mocks/thales-dis-dbp/d1-api-public/59474135/issuers/{issuer_id}/consumers/{response_data['RSP_CLIENTEID']}/cards"
+            url = f"https://api.d1-stg.thalescloud.io/banking/v1/issuers/{issuer_id}/consumers/{response_data['RSP_CLIENTEID']}/cards"
             # url = f"https://api.d1.thalescloud.io/banking/v1/issuers/{issuer_id}/consumers/{response_data['RSP_CLIENTEID']}/cards"
             public_key = None
             payload = {}
@@ -320,13 +321,13 @@ class ThalesApiViewPrivate(ThalesApiView):
                 }
             headers = {
                 "x-correlation-id": response_data['RSP_FOLIO'] if response_data else '12345',
-                "Prefer": "",
+                # "Prefer": "",
                 "Content-Type": "application/json",
                 "Accept": "application/json",
                 "Authorization": f"Bearer {access_token}"
             }
-
-            resp_data, resp_status = process_volcan_api_request(data=payload, url=url, headers=headers, method='PUT')
+            cert = (settings.SSL_CERTIFICATE_THALES_CRT, settings.SSL_CERTIFICATE_THALES_KEY)
+            resp_data, resp_status = process_volcan_api_request(data=payload, url=url, headers=headers, method='PUT', cert=cert)
             if resp_status == 204:
                 return resp_data, 200
             else:
