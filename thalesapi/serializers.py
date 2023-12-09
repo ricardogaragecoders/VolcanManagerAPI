@@ -3,6 +3,7 @@ from rest_framework import serializers
 
 from common.exceptions import CustomValidationError
 from common.utils import code_generator
+from thalesapi.models import CardBinConfig
 
 
 class VerifyCardCreditSerializer(serializers.Serializer):
@@ -108,13 +109,14 @@ class GetDataTokenizationSerializer(serializers.Serializer):
     TARJETA = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
     FECHA_EXP = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
     NOMBRE = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    CVV = serializers.CharField(max_length=4, required=False, default="", allow_blank=True)
     EMISOR = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
     FOLIO = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
     USUARIO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
     ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
 
     class Meta:
-        fields = ('TARJETA', 'FECHA_EXP', 'NOMBRE',
+        fields = ('TARJETA', 'FECHA_EXP', 'NOMBRE', 'CVV',
                   'FOLIO', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
 
     def validate(self, data):
@@ -122,6 +124,7 @@ class GetDataTokenizationSerializer(serializers.Serializer):
         profile = self.context['request'].user.profile
         card = data.get('TARJETA', '').strip()
         exp_date = data.get('FECHA_EXP', '').strip()
+        cvv = data.get('CVV', '').strip()
         name = data.get('NOMBRE', '').strip()
         transmitter = data.get('EMISOR', '').strip().upper()
         folio = data.get('FOLIO', '').strip()
@@ -148,11 +151,16 @@ class GetDataTokenizationSerializer(serializers.Serializer):
             folio = code_generator(characters=12, option='num')
 
         data['FECHA_EXP'] = exp_date
-        data['CVV'] = ''
+        data['CVV'] = cvv
         data['FOLIO'] = folio
         data['EMISOR'] = transmitter
         data['USUARIO_ATZ'] = settings.VOLCAN_USUARIO_ATZ
         data['ACCESO_ATZ'] = settings.VOLCAN_ACCESO_ATZ
-        # data['AUTORIZACION'] = settings.THALESAPI_AUTORIZACION_DEFAULT
 
         return data
+
+
+class CardBinConfigSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CardBinConfig
+        fields = '__all__'

@@ -3,10 +3,26 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from common.views import CustomViewSet
-from thalesapi.models import CardType, CardDetail
-from thalesapi.serializers import GetDataTokenizationSerializer
+from thalesapi.models import CardType, CardDetail, CardBinConfig
+from thalesapi.serializers import GetDataTokenizationSerializer, CardBinConfigSerializer
 from thalesapi.utils import is_card_bin_valid
-from users.permissions import IsVerified, IsOperator
+from users.permissions import IsVerified, IsOperator, IsSupervisor
+from volcanmanagerapi import settings
+
+
+class CardBinConfigApiView(CustomViewSet):
+    """
+    get:
+        Return all CardBinConfig
+    post:
+        Create a new CardBinConfig
+    update:
+        Update a CardBinConfig
+    """
+    serializer_class = CardBinConfigSerializer
+    model_class = CardBinConfig
+    permission_classes = (IsAuthenticated, IsVerified, IsSupervisor)
+    field_pk = 'card_bin_config_id'
 
 
 # Create your views here.
@@ -215,24 +231,29 @@ class ThalesApiViewPrivate(ThalesApiView):
             # response_data, response_status = {}, 400
         return self.get_response(message=resp_msg, data=response_data, status=response_status, lower_response=False)
 
-    def get_authorization_token(self, response_data=None):
+    def get_url_thales_register_customer_with_cards(self, issuer_id, consumer_id):
+        url = settings.URL_THALES_REGISTER_CONSUMER_CARDS
+        url = url.replace('{issuerId}', issuer_id)
+        url = url.replace('{consumerId}', consumer_id)
+        return url
+
+    def get_authorization_token(self, response_data=None, issuer_id=None):
         from .utils import process_volcan_api_request
         from django.conf import settings
         from datetime import datetime, timedelta
         import jwt
+        if not issuer_id:
+            issuer_id = settings.THALES_API_ISSUER_ID
         jwt_token = None
-
-        url = "https://stoplight.io/mocks/thales-dis-dbp/d1-api-public/59474133/oauth2/token"
-        # url = "https://api.d1-stg.thalescloud.io/authz/v1/oauth2/token"
-        # url = "https://api.d1.thalescloud.io/authz/v1/oauth2/token"
+        url = settings.URL_THALES_AUTHORIZATION_TOKEN
 
         auth_data = {
-            # "iat": int(datetime.utcnow().timestamp()),
-            "iss": "VOLCA_PA-1",
-            "sub": "VOLCA_PA-1",
+            "iss": issuer_id,
+            "sub": issuer_id,
             "exp": int((datetime.utcnow() + timedelta(minutes=15)).timestamp()),
-            "aud": "https://api.d1.thalescloud.io"
+            "aud": f"https://{settings.THALES_API_AUD}"
         }
+
         print(f'Data to Auth: {auth_data}')
 
         with open(settings.PRIV_KEY_AUTH_ISSUER_SERVER_TO_D1_SERVER_PEM, "rb") as pemfile:
@@ -249,8 +270,8 @@ class ThalesApiViewPrivate(ThalesApiView):
 
         if public_key and jwt_token:
             decoded = jwt.decode(jwt=jwt_token, key=public_key, algorithms=["ES256"],
-                                 audience='https://api.d1.thalescloud.io', issuer='VOLCA_PA-1')
-            print(f"Desincriptado: {decoded}")
+                                 audience=f"https://{settings.THALES_API_AUD}", issuer=issuer_id)
+            print(f"Descifrar: {decoded}")
 
         if jwt_token:
             payload = {
@@ -259,11 +280,12 @@ class ThalesApiViewPrivate(ThalesApiView):
             }
             headers = {
                 "x-correlation-id": response_data['RSP_FOLIO'] if response_data else '12345',
-                "Prefer": "code=200",
+                # "Prefer": "code=200",
                 "Content-Type": "application/json",
                 "Accept": "application/json"
             }
-            resp_data, resp_status = process_volcan_api_request(data=payload, url=url, headers=headers)
+            cert = (settings.SSL_CERTIFICATE_THALES_CRT, settings.SSL_CERTIFICATE_THALES_KEY)
+            resp_data, resp_status = process_volcan_api_request(data=payload, url=url, headers=headers, cert=cert)
             if resp_status == 200:
                 return resp_data['access_token'] if 'access_token' in resp_data else None
         return None
@@ -274,10 +296,14 @@ class ThalesApiViewPrivate(ThalesApiView):
         from thalesapi.utils import get_card_triple_des_process
         import json
         from django.conf import settings
-
         resp_status = 400
 
         card_real = get_card_triple_des_process(validated_data['TARJETA'], is_descript=True)
+        card_bin_config = CardBinConfig.objects.filter(card_bin=str(card_real[0:8])).first()
+        if card_bin_config:
+            print(f"CardBinConfig --> {card_bin_config}")
+        issuer_id = settings.THALES_API_ISSUER_ID if not card_bin_config else card_bin_config.issuer_id
+        card_product_id = 'D1_VOLCAN_VISA_SANDBOX' if not card_bin_config else card_bin_config.card_product_id
         if not card_real:
             return None
         card_exp = validated_data['FECHA_EXP'][2:4] + validated_data['FECHA_EXP'][0:2]
@@ -288,13 +314,13 @@ class ThalesApiViewPrivate(ThalesApiView):
         encrypted_data = json.dumps(encrypted_data)
         print(f'EncryptedData: {encrypted_data}')
 
-        access_token = self.get_authorization_token(response_data=response_data)
+        access_token = self.get_authorization_token(response_data=response_data, issuer_id=issuer_id)
         # return {'access_token': access_token}, 200
-        issuer_id = 'VOLCA_PA-1'
+
         if access_token:
-            url = f"https://stoplight.io/mocks/thales-dis-dbp/d1-api-public/59474135/issuers/{issuer_id}/consumers/{response_data['RSP_CLIENTEID']}/cards"
-            # url = f"https://api.d1-stg.thalescloud.io/banking/v1/issuers/{issuer_id}/consumers/{response_data['RSP_CLIENTEID']}/cards"
-            # url = f"https://api.d1.thalescloud.io/banking/v1/issuers/{issuer_id}/consumers/{response_data['RSP_CLIENTEID']}/cards"
+            url = self.get_url_thales_register_customer_with_cards(issuer_id=issuer_id,
+                                                                   consumer_id=response_data['RSP_CLIENTEID'])
+
             public_key = None
             payload = {}
             with open(settings.PUB_KEY_ISSUER_SERVER_TO_D1_SERVER_PEM, "rb") as pemfile:
@@ -305,28 +331,28 @@ class ThalesApiViewPrivate(ThalesApiView):
                     "enc": "A256GCM",
                     "kid": settings.THALESAPI_ENCRYPTED_K01_KID
                 }
-                jwe_token = jwe.JWE(encrypted_data.encode('utf-8'), recipient=public_key,
-                                    protected=protected_header_back)
+                jwe_token = jwe.JWE(encrypted_data.encode('utf-8'),
+                                    recipient=public_key, protected=protected_header_back)
                 enc = jwe_token.serialize(compact=True)
 
                 payload = {
                     "cards": [{
                         "cardId": response_data['RSP_TARJETAID'],
                         "accountId": response_data['RSP_CUENTAID'],
-                        "cardProductId": card_real[0:8],
+                        "cardProductId": card_product_id,
                         "state": "INACTIVE",
                         "encryptedData": enc
                     }]
                 }
             headers = {
                 "x-correlation-id": response_data['RSP_FOLIO'] if response_data else '12345',
-                "Prefer": "",
+                # "Prefer": "",
                 "Content-Type": "application/json",
                 "Accept": "application/json",
                 "Authorization": f"Bearer {access_token}"
             }
-
-            resp_data, resp_status = process_volcan_api_request(data=payload, url=url, headers=headers, method='PUT')
+            cert = (settings.SSL_CERTIFICATE_THALES_CRT, settings.SSL_CERTIFICATE_THALES_KEY)
+            resp_data, resp_status = process_volcan_api_request(data=payload, url=url, headers=headers, method='PUT', cert=cert)
             if resp_status == 204:
                 return resp_data, 200
             else:

@@ -83,10 +83,12 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
         if 200 <= response_status <= 299:
             response_data = r.json()
             if len(response_data) == 0:
-                print(f"Response: empty")
-                response_data = {'error': 'Error en datos de origen'}
+                print(f"Response: {str(response_status)} empty")
+                print(f"Data server: {str(r.text)}")
+                if response_status != 204:
+                    response_data = {'error': 'Error en datos de origen'}
             else:
-                print(f"Response: {response_data}")
+                print(f"Response:{str(response_status)} {response_data}")
         elif response_status == 404:
             response_data = {'error': 'Recurso no disponible'}
             print(f"Response: 404 Recurso no disponible")
@@ -110,7 +112,7 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
         return response_data, response_status
 
 
-def process_volcan_api_request(data, url, request=None, headers=None, method='POST', times=0):
+def process_volcan_api_request(data, url, request=None, headers=None, method='POST', cert=None, times=0):
     response_data = dict()
     response_status = 500
     if not headers:
@@ -124,19 +126,20 @@ def process_volcan_api_request(data, url, request=None, headers=None, method='PO
     print(f"Data json: {data_json}")
     try:
         if method == 'POST':
-            r = requests.post(url=url, data=data_json, headers=headers)
+            r = requests.post(url=url, data=data_json, headers=headers, cert=cert)
         elif method == 'PUT':
-            r = requests.put(url=url, data=data_json, headers=headers)
+            r = requests.put(url=url, data=data_json, headers=headers, cert=cert)
         else:
-            r = requests.patch(url=url, data=data_json, headers=headers)
+            r = requests.patch(url=url, data=data_json, headers=headers, cert=cert)
         response_status = r.status_code
         if 200 <= response_status <= 299:
             response_data = r.json() if response_status != 204 else {}
             if len(response_data) == 0:
-                print(f"Response: empty")
+                print(f"Response: {str(response_status)} empty")
+                print(f"Data server: {str(r.text)}")
                 response_data = {'error': 'Error en datos de origen'}
             else:
-                print(f"Response: {response_data}")
+                print(f"Response: {str(response_status)} {response_data}")
         elif response_status == 404:
             response_data = {'error': 'Recurso no disponible'}
             print(f"Response: 404 Recurso no disponible")

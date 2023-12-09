@@ -2,6 +2,12 @@ from django.urls import path
 from thalesapi.views import *
 
 urlpatterns = [
+
+    path('thales/api/bin/configurations/',
+         CardBinConfigApiView.as_view({'get': 'list', 'post': 'create'})),
+    path('thales/api/bin/configurations/<str:card_bin_config_id>/',
+         CardBinConfigApiView.as_view({'get': 'retrieve', 'patch': 'update'})),
+
     # General
     path('cms/api/v1/issuers/<str:issuer_id>/cards/credentials',
          ThalesApiView.as_view({'post': 'post_verify_card'})),
@@ -19,7 +25,7 @@ urlpatterns = [
          ThalesApiView.as_view({'post': 'get_card_credentials_testing'})),
 
     path('volcan/api/obtenerDatosTokenizacion/',
-         ThalesApiViewPrivate.as_view({'post': 'get_card_data_tokenization_v1'})),
+         ThalesApiViewPrivate.as_view({'post': 'get_card_data_tokenization_v2'})),
 
     path('volcan/api/v2/obtenerDatosTokenizacion/',
          ThalesApiViewPrivate.as_view({'post': 'get_card_data_tokenization_v2'})),
