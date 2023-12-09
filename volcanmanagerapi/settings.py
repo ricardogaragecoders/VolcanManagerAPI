@@ -106,6 +106,15 @@ MONGO_DB = {
     }
 }
 
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+        "LOCATION": "/var/tmp/volcanmanagerapi",
+        "TIMEOUT": 60,
+        "OPTIONS": {"MAX_ENTRIES": 1000},
+    }
+}
+
 # Backend login
 AUTH_AUTHENTICATION_TYPE = 'both'
 AUTHENTICATION_BACKENDS = (

@@ -3,6 +3,7 @@ from rest_framework import serializers
 
 from common.exceptions import CustomValidationError
 from common.utils import code_generator
+from thalesapi.models import CardBinConfig
 
 
 class VerifyCardCreditSerializer(serializers.Serializer):
@@ -157,3 +158,9 @@ class GetDataTokenizationSerializer(serializers.Serializer):
         data['ACCESO_ATZ'] = settings.VOLCAN_ACCESO_ATZ
 
         return data
+
+
+class CardBinConfigSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CardBinConfig
+        fields = '__all__'

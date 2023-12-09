@@ -3,11 +3,26 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from common.views import CustomViewSet
-from thalesapi.models import CardType, CardDetail
-from thalesapi.serializers import GetDataTokenizationSerializer
+from thalesapi.models import CardType, CardDetail, CardBinConfig
+from thalesapi.serializers import GetDataTokenizationSerializer, CardBinConfigSerializer
 from thalesapi.utils import is_card_bin_valid
-from users.permissions import IsVerified, IsOperator
+from users.permissions import IsVerified, IsOperator, IsSupervisor
 from volcanmanagerapi import settings
+
+
+class CardBinConfigApiView(CustomViewSet):
+    """
+    get:
+        Return all CardBinConfig
+    post:
+        Create a new CardBinConfig
+    update:
+        Update a CardBinConfig
+    """
+    serializer_class = CardBinConfigSerializer
+    model_class = CardBinConfig
+    permission_classes = (IsAuthenticated, IsVerified, IsSupervisor)
+    field_pk = 'card_bin_config_id'
 
 
 # Create your views here.
@@ -222,14 +237,15 @@ class ThalesApiViewPrivate(ThalesApiView):
         url = url.replace('{consumerId}', consumer_id)
         return url
 
-    def get_authorization_token(self, response_data=None):
+    def get_authorization_token(self, response_data=None, issuer_id=None):
         from .utils import process_volcan_api_request
         from django.conf import settings
         from datetime import datetime, timedelta
         import jwt
+        if not issuer_id:
+            issuer_id = settings.THALES_API_ISSUER_ID
         jwt_token = None
         url = settings.URL_THALES_AUTHORIZATION_TOKEN
-        issuer_id = settings.THALES_API_ISSUER_ID
 
         auth_data = {
             "iss": issuer_id,
@@ -280,10 +296,14 @@ class ThalesApiViewPrivate(ThalesApiView):
         from thalesapi.utils import get_card_triple_des_process
         import json
         from django.conf import settings
-        issuer_id = settings.THALES_API_ISSUER_ID
         resp_status = 400
 
         card_real = get_card_triple_des_process(validated_data['TARJETA'], is_descript=True)
+        card_bin_config = CardBinConfig.objects.filter(card_bin=str(card_real[0:8])).first()
+        if card_bin_config:
+            print(f"CardBinConfig --> {card_bin_config}")
+        issuer_id = settings.THALES_API_ISSUER_ID if not card_bin_config else card_bin_config.issuer_id
+        card_product_id = 'D1_VOLCAN_VISA_SANDBOX' if not card_bin_config else card_bin_config.card_product_id
         if not card_real:
             return None
         card_exp = validated_data['FECHA_EXP'][2:4] + validated_data['FECHA_EXP'][0:2]
@@ -294,7 +314,7 @@ class ThalesApiViewPrivate(ThalesApiView):
         encrypted_data = json.dumps(encrypted_data)
         print(f'EncryptedData: {encrypted_data}')
 
-        access_token = self.get_authorization_token(response_data=response_data)
+        access_token = self.get_authorization_token(response_data=response_data, issuer_id=issuer_id)
         # return {'access_token': access_token}, 200
 
         if access_token:
@@ -319,7 +339,7 @@ class ThalesApiViewPrivate(ThalesApiView):
                     "cards": [{
                         "cardId": response_data['RSP_TARJETAID'],
                         "accountId": response_data['RSP_CUENTAID'],
-                        "cardProductId": card_real[0:8],
+                        "cardProductId": card_product_id,
                         "state": "INACTIVE",
                         "encryptedData": enc
                     }]

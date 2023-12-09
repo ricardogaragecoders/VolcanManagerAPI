@@ -83,10 +83,12 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
         if 200 <= response_status <= 299:
             response_data = r.json()
             if len(response_data) == 0:
-                print(f"Response: empty")
-                response_data = {'error': 'Error en datos de origen'}
+                print(f"Response: {str(response_status)} empty")
+                print(f"Data server: {str(r.text)}")
+                if response_status != 204:
+                    response_data = {'error': 'Error en datos de origen'}
             else:
-                print(f"Response: {response_data}")
+                print(f"Response:{str(response_status)} {response_data}")
         elif response_status == 404:
             response_data = {'error': 'Recurso no disponible'}
             print(f"Response: 404 Recurso no disponible")

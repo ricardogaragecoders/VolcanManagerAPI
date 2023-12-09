@@ -55,7 +55,22 @@ class CardDetail(BaseModelWithDeleted, ModelDiffMixin):
         blank=True
     )
 
-    card_type = models.CharField(max_length=10, choices=CardType.choices, default=CardType.CT_PREPAID)
+    card_type = models.CharField(
+        max_length=10,
+        choices=CardType.choices,
+        verbose_name=_('Card Type'),
+        help_text=_("Thales Card Type"),
+        default=CardType.CT_PREPAID
+    )
+
+    emisor = models.CharField(
+        max_length=3,
+        verbose_name=_('Volcan Emisor ID'),
+        help_text=_("Volcan Emisor ID"),
+        default='CMF',
+        null=True,
+        blank=True
+    )
 
     def __str__(self):
         return f'{self.consumer_id}: {self.card_id}'
@@ -76,3 +91,50 @@ class ISOCountry(models.Model):
 
     class Meta:
         ordering = ('country_name',)
+
+
+class CardBinConfig(models.Model):
+    id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
+    card_bin = models.CharField(
+        max_length=8,
+        verbose_name=_('Card BIN'),
+        help_text=_("Thales Card BIN"),
+        unique=True,
+        null=True,
+        blank=True
+    )
+    issuer_id = models.CharField(
+        max_length=10,
+        verbose_name=_('Issuer ID'),
+        help_text=_("Thales Issuer ID"),
+        null=False,
+        blank=False
+    )
+    card_type = models.CharField(
+        max_length=10,
+        choices=CardType.choices,
+        verbose_name=_('Card Type'),
+        help_text=_("Thales Card Type"),
+        default=CardType.CT_PREPAID
+    )
+    card_product_id = models.CharField(
+        max_length=32,
+        verbose_name=_('Card Product ID'),
+        help_text=_("Thales Card Product ID"),
+        null=False,
+        blank=False
+    )
+    emisor = models.CharField(
+        max_length=3,
+        verbose_name=_('Volcan Emisor ID'),
+        help_text=_("Volcan Emisor ID"),
+        default='CMF',
+        null=False,
+        blank=False
+    )
+
+    def __str__(self):
+        return f"{self.card_type}: {self.card_bin} - {self.emisor}"
+
+    class Meta:
+        ordering = ('card_bin',)

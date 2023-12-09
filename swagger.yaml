@@ -1755,6 +1755,65 @@ paths:
       tags:
         - VolcanManager::Notificaciones
     parameters: []
+  /thales/api/bin/configurations/:
+    get:
+      operationId: api_thales_card_bin_configurations_read
+      description: Return all bin configurations.
+      summary: Return all bin configurations
+      parameters: []
+      responses:
+        '200':
+          description: 'Return all bin configurations'
+      tags:
+        - Thales::CardBin::Configurations
+    post:
+      operationId: api_thales_card_bin_configurations_create
+      description: Create a bin configurations.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardBinConfig"
+        required: true
+      summary: Create a bin configurations.
+      responses:
+        '201':
+          description: 'Create a bin configurations'
+      tags:
+        - Thales::CardBin::Configurations
+    parameters: []
+  /thales/api/bin/configurations/{card_bin_config_id}/:
+    get:
+      operationId: api_thales_card_bin_configuration_read
+      description: Return a bin configuration.
+      summary: Return a bin configuration.
+      parameters: []
+      responses:
+        '200':
+          description: 'Returns a bin configuration.'
+      tags:
+        - Thales::CardBin::Configurations
+    patch:
+      operationId: api_thales_card_bin_configuration_update
+      description: Update a bin configuration.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardBinConfig"
+        required: true
+      summary: Update a bin configuration.
+      responses:
+        '200':
+          description: 'Update a bin configuration.'
+      tags:
+        - Thales::CardBin::Configurations
+    parameters:
+      - name: card_bin_config_id
+        in: path
+        required: true
+        schema:
+          type: string
 components:
   schemas:
     LoginToken:
@@ -2749,6 +2808,35 @@ components:
         - tarjeta
         - fecha_exp
         - nombre
+        - emisor
+    CardBinConfig:
+      type: object
+      properties:
+        card_bin:
+          type: string
+          description: CardBin
+          maxLength: 8
+        issuer_id:
+          type: string
+          description: Issuer ID
+          maxLength: 10
+        card_type:
+          type: string
+          description: CardType
+          maxLength: 10
+        card_product_id:
+          type: string
+          description: CardProductId
+          maxLength: 32
+        emisor:
+          type: string
+          description: Emisor
+          maxLength: 3
+      required:
+        - card_bin
+        - issuer_id
+        - card_type
+        - card_product_id
         - emisor
     Webhook:
       type: object

@@ -2,6 +2,12 @@ from django.urls import path
 from thalesapi.views import *
 
 urlpatterns = [
+
+    path('thales/api/bin/configurations/',
+         CardBinConfigApiView.as_view({'get': 'list', 'post': 'create'})),
+    path('thales/api/bin/configurations/<str:card_bin_config_id>/',
+         CardBinConfigApiView.as_view({'get': 'retrieve', 'patch': 'update'})),
+
     # General
     path('cms/api/v1/issuers/<str:issuer_id>/cards/credentials',
          ThalesApiView.as_view({'post': 'post_verify_card'})),
