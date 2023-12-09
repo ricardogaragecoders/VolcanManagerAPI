@@ -135,10 +135,11 @@ def process_volcan_api_request(data, url, request=None, headers=None, method='PO
         if 200 <= response_status <= 299:
             response_data = r.json() if response_status != 204 else {}
             if len(response_data) == 0:
-                print(f"Response: empty")
+                print(f"Response: {str(response_status)} empty")
+                print(f"Data server: {str(r.text)}")
                 response_data = {'error': 'Error en datos de origen'}
             else:
-                print(f"Response: {response_data}")
+                print(f"Response: {str(response_status)} {response_data}")
         elif response_status == 404:
             response_data = {'error': 'Recurso no disponible'}
             print(f"Response: 404 Recurso no disponible")
