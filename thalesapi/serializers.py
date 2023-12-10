@@ -160,6 +160,64 @@ class GetDataTokenizationSerializer(serializers.Serializer):
         return data
 
 
+class GetVerifyCardSerializer(serializers.Serializer):
+    TARJETA = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    FECHA_EXP = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    TARJETAID = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    CLIENTEID = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    CUENTAID = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    ISSUER_ID = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    CARD_PRODUCT_ID = serializers.CharField(max_length=50, required=False, default="D1_VOLCAN_VISA_SANDBOX",
+                                            allow_blank=True)
+    STATE = serializers.CharField(max_length=10, required=False, default="ACTIVE", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="CMF", allow_blank=True)
+    FOLIO = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('TARJETA', 'FECHA_EXP', 'TARJETAID', 'CLIENTEID', 'CUENTAID',
+                  'ISSUER_ID', 'CARD_PRODUCT_ID', 'STATE','FOLIO', 'EMISOR')
+
+    def validate(self, data):
+        data = super(GetVerifyCardSerializer, self).validate(data)
+        profile = self.context['request'].user.profile
+        card = data.get('TARJETA', '').strip()
+        exp_date = data.get('FECHA_EXP', '').strip()
+        transmitter = data.get('EMISOR', '').strip().upper()
+        issuer_id = data.get('ISSUER_ID', '').strip()
+        card_product_id = data.get('CARD_PRODUCT_ID', '').strip()
+        folio = data.get('FOLIO', '').strip()
+        state = data.get('STATE', '').strip()
+
+        if len(card) == 0:
+            raise CustomValidationError(detail=u'TARJETA es requerido', code='400')
+
+        if len(exp_date) != 4:
+            raise CustomValidationError(detail=u'FECHA_EXP es requerido', code='400')
+
+        exp_date = exp_date[2:4] + exp_date[0:2]
+
+        if not profile.isSuperadmin():
+            if profile.first_name != transmitter:
+                raise CustomValidationError(detail=u'EMISOR desconocido', code='400')
+
+        if transmitter not in ['CMF',]:
+            raise CustomValidationError(detail=u'EMISOR no autorizado', code='400')
+
+        if len(folio) == 0:
+            folio = code_generator(characters=12, option='num')
+
+        if len(issuer_id) == 0:
+            issuer_id = settings.THALES_API_ISSUER_ID
+
+        data['FECHA_EXP'] = exp_date
+        data['FOLIO'] = folio
+        data['EMISOR'] = transmitter
+        data['ISSUER_ID'] = issuer_id
+        data['CARD_PRODUCT_ID'] = card_product_id
+        data['STATE'] = state
+        return data
+
+
 class CardBinConfigSerializer(serializers.ModelSerializer):
     class Meta:
         model = CardBinConfig

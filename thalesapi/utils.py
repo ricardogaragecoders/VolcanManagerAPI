@@ -73,7 +73,7 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
     headers = get_thales_api_headers(request)
     print(f"Request: {url}")
     print(f"Headers: {headers}")
-    print(f"Data json: {data}")
+    print(f"Request json: {data}")
     try:
         if http_verb == 'POST':
             r = requests.post(url=url, data=data, headers=headers)
@@ -123,7 +123,7 @@ def process_volcan_api_request(data, url, request=None, headers=None, method='PO
         data_json = data
     print(f"Request: {url}")
     print(f"Headers: {headers}")
-    print(f"Data json: {data_json}")
+    print(f"Request json: {data_json}")
     try:
         if method == 'POST':
             r = requests.post(url=url, data=data_json, headers=headers, cert=cert)
@@ -328,7 +328,7 @@ def get_card_credentials_credit(request, *args, **kwargs):
                         protected_header_back = {
                             "alg": "ECDH-ES",
                             "enc": "A256GCM",
-                            "kid": settings.THALESAPI_ENCRYPTED_K01_KID
+                            "kid": settings.THALES_API_ENCRYPTED_K01_KID
                         }
                         jwe_token = jwe.JWE(payload.encode('utf-8'), recipient=public_key,
                                             protected=protected_header_back)
@@ -367,7 +367,7 @@ def get_card_credentials_credit_testing(request, *args, **kwargs):
             protected_header_back = {
                 "alg": "ECDH-ES",
                 "enc": "A256GCM",
-                "kid": settings.THALESAPI_ENCRYPTED_K03_KID
+                "kid": settings.THALES_API_ENCRYPTED_K03_KID
             }
             jwe_token = jwe.JWE(payload.encode('utf-8'), recipient=public_key, protected=protected_header_back)
             enc = jwe_token.serialize(compact=True)
