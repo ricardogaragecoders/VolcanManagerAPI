@@ -28,5 +28,5 @@ urlpatterns = [
          ThalesApiViewPrivate.as_view({'post': 'get_card_data_tokenization'})),
 
     path('thales/api/registerConsumerCards/',
-         ThalesApiViewPrivate.as_view({'post': 'post_register_consumer_cards'})),
+         ThalesV2ApiViewPrivate.as_view({'post': 'post_register_consumer_cards'})),
 ]

@@ -18,7 +18,7 @@ def get_float_from_numeric_str(value: str) -> str:
         length = len(value)
         assert length >= 4, "El valor no tiene el minimo de largo"
         if '.' not in value:
-            value_s = "%s.%s" % (value[0:length-2], value[length-2:length])
+            value_s = "%s.%s" % (value[0:length - 2], value[length - 2:length])
             value_f = Decimal(value_s)
         else:
             value_f = Decimal(value)
@@ -30,6 +30,28 @@ def get_float_from_numeric_str(value: str) -> str:
         return value
     except TypeError:
         return ""
+
+
+def mask_card(card):
+    means_access = card
+    if len(means_access) > 0:
+        data_means_access = ''
+        largo = len(means_access)
+        residue = largo % 4
+        separator = residue if residue > 0 else 4
+        for index in range(0, largo):
+            if index < (largo - 4):
+                data_means_access += '*'
+            else:
+                data_means_access += means_access[index]
+            if separator == 1:
+                data_means_access += ' '
+                separator = 4
+            else:
+                separator -= 1
+
+        return data_means_access.strip()
+    return ''
 
 
 def get_volcan_api_headers():
@@ -213,7 +235,8 @@ def extrafinanciamientos(request, **kwargs):
     if serializer.is_valid():
         resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
-            if resp[1]['RSP_ERROR'].upper() == 'OK' or (resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
+            if resp[1]['RSP_ERROR'].upper() == 'OK' or (
+                    resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
                 if 'RSP_IMPORTE' in resp[1]:
                     resp[1]['RSP_IMPORTE'] = get_float_from_numeric_str(resp[1]['RSP_IMPORTE'])
@@ -251,7 +274,8 @@ def intrafinanciamientos(request, **kwargs):
     if serializer.is_valid():
         resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
-            if resp[1]['RSP_ERROR'].upper() == 'OK' or (resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
+            if resp[1]['RSP_ERROR'].upper() == 'OK' or (
+                    resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
                 if 'RSP_IMPORTE' in resp[1]:
                     resp[1]['RSP_IMPORTE'] = get_float_from_numeric_str(resp[1]['RSP_IMPORTE'])
@@ -461,7 +485,8 @@ def gestion_transacciones(request, **kwargs):
     if serializer.is_valid():
         resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
-            if resp[1]['RSP_ERROR'].upper() == 'OK' or (resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
+            if resp[1]['RSP_ERROR'].upper() == 'OK' or (
+                    resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
                 if 'RSP_IMPORTE' in resp[1]:
                     resp[1]['RSP_IMPORTE'] = get_float_from_numeric_str(resp[1]['RSP_IMPORTE'])
@@ -539,7 +564,8 @@ def consulta_puntos(request, **kwargs):
     if serializer.is_valid():
         resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
-            if resp[1]['RSP_ERROR'].upper() == 'OK' or (resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
+            if resp[1]['RSP_ERROR'].upper() == 'OK' or (
+                    resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
                 if 'RSP_SALDO_PUNTOS' in resp[1]:
                     resp[1]['RSP_SALDO_PUNTOS'] = get_float_from_numeric_str(resp[1]['RSP_SALDO_PUNTOS'])
@@ -573,7 +599,8 @@ def intra_extras(request, **kwargs):
     if serializer.is_valid():
         resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
-            if resp[1]['RSP_ERROR'].upper() == 'OK' or (resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
+            if resp[1]['RSP_ERROR'].upper() == 'OK' or (
+                    resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
                 if 'RSP_IMPORTE' in resp[1]:
                     resp[1]['RSP_IMPORTE'] = get_float_from_numeric_str(resp[1]['RSP_IMPORTE'])
@@ -633,7 +660,8 @@ def intra_extras_mock(request, **kwargs):
         }
 
         if 'RSP_ERROR' in resp[1]:
-            if resp[1]['RSP_ERROR'].upper() == 'OK' or (resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
+            if resp[1]['RSP_ERROR'].upper() == 'OK' or (
+                    resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
                 if 'RSP_IMPORTE' in resp[1]:
                     resp[1]['RSP_IMPORTE'] = get_float_from_numeric_str(resp[1]['RSP_IMPORTE'])
