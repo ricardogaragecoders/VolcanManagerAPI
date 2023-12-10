@@ -167,8 +167,7 @@ class GetVerifyCardSerializer(serializers.Serializer):
     CLIENTEID = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
     CUENTAID = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
     ISSUER_ID = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
-    CARD_PRODUCT_ID = serializers.CharField(max_length=50, required=False, default="D1_VOLCAN_VISA_SANDBOX",
-                                            allow_blank=True)
+    CARD_PRODUCT_ID = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
     STATE = serializers.CharField(max_length=10, required=False, default="ACTIVE", allow_blank=True)
     EMISOR = serializers.CharField(max_length=3, required=False, default="CMF", allow_blank=True)
     FOLIO = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
@@ -208,6 +207,9 @@ class GetVerifyCardSerializer(serializers.Serializer):
 
         if len(issuer_id) == 0:
             issuer_id = settings.THALES_API_ISSUER_ID
+
+        if len(card_product_id) == 0:
+            card_product_id = "D1_VOLCAN_VISA_SANDBOX"
 
         data['FECHA_EXP'] = exp_date
         data['FOLIO'] = folio

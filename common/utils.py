@@ -337,7 +337,7 @@ def get_access_token_from_request(request):
     return token
 
 
-def generateUID():
+def generate_uid():
     from django.utils.crypto import get_random_string
     uid = get_random_string(length=16, allowed_chars=u'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
     date = datetime.now()

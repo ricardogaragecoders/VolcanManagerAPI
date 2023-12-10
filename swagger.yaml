@@ -2819,15 +2819,15 @@ components:
           maxLength: 4
         tarjetaid:
           type: string
-          description: 'Tarjeta Id AZ7'
+          description: 'Tarjeta Id'
           maxLength: 30
         clienteid:
           type: string
-          description: 'Cliente Id AZ7'
+          description: 'Cliente Id'
           maxLength: 30
         cuentaid:
           type: string
-          description: 'Cuenta Id AZ7'
+          description: 'Cuenta Id'
           maxLength: 30
         issuer_id:
           type: string
@@ -2841,6 +2841,7 @@ components:
           type: string
           description: 'State'
           enum: ['INACTIVE', 'ACTIVE']
+          default: 'INACTIVE'
           maxLength: 10
         folio:
           type: string
@@ -2853,6 +2854,12 @@ components:
       required:
         - tarjeta
         - fecha_exp
+        - tarjetaid
+        - clienteid
+        - cuentaid
+        - issuer_id
+        - card_product_id
+        - state
         - emisor
     CardBinConfig:
       type: object

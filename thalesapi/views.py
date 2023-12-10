@@ -3,6 +3,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from common.views import CustomViewSet
+from control.utils import mask_card
 from thalesapi.models import CardType, CardDetail, CardBinConfig
 from thalesapi.serializers import GetDataTokenizationSerializer, CardBinConfigSerializer, GetVerifyCardSerializer
 from thalesapi.utils import is_card_bin_valid
@@ -208,42 +209,6 @@ class ThalesApiViewPrivate(ThalesApiView):
             # response_data, response_status = {}, 400
         return self.get_response(message=resp_msg, data=response_data, status=response_status, lower_response=False)
 
-    def post_register_consumer_cards(self, request, *args, **kwargs):
-        from common.utils import get_response_data_errors
-        request_data = request.data.copy()
-        data = {k.upper(): v for k, v in request_data.items()}
-        self.serializer_class = GetVerifyCardSerializer
-        serializer = self.get_serializer(data=data)
-        response_data = {}
-        response_status = 200
-        resp_msg = ''
-        if serializer.is_valid():
-            validated_data = serializer.validated_data
-            response_data['RSP_ERROR'] = 'OK'
-            response_data['RSP_CODIGO'] = '0000000000'
-            response_data['RSP_DESCRIPCION'] = u'Transacción aprobada'
-            obj_data = {
-                'tarjeta': validated_data['TARJETA'],
-                'fecha_exp': validated_data['FECHA_EXP'],
-                'folio': validated_data['FOLIO'],
-                "card_id": validated_data['TARJETAID'],
-                "consumer_id": validated_data['CLIENTEID'],
-                "account_id": validated_data['CUENTAID'],
-                "issuer_id": validated_data['ISSUER_ID'],
-                "card_product_id": validated_data['CARD_PRODUCT_ID'],
-                "state": validated_data['STATE']
-            }
-            resp = self.register_consumer_thalesapi(**obj_data)
-            if resp[1] == 200:
-                response_data = {
-                    'rsp_folio': validated_data['FOLIO']
-                }
-            else:
-                response_data = resp[0]
-            response_status = resp[1]
-        else:
-            resp_msg, response_data, response_status = get_response_data_errors(serializer.errors)
-        return self.get_response(message=resp_msg, data=response_data, status=response_status, lower_response=False)
 
     def get_url_thales_register_customer_with_cards(self, issuer_id, consumer_id):
         url = settings.URL_THALES_REGISTER_CONSUMER_CARDS
@@ -267,8 +232,10 @@ class ThalesApiViewPrivate(ThalesApiView):
             "exp": int((datetime.utcnow() + timedelta(minutes=15)).timestamp()),
             "aud": f"https://{settings.THALES_API_AUD}"
         }
-
-        print(f'Data to Auth: {auth_data}')
+        if settings.DEBUG:
+            print(f'Data to Auth: {auth_data}')
+        else:
+            print(f"AUD https://{settings.THALES_API_AUD}")
 
         with open(settings.PRIV_KEY_AUTH_ISSUER_SERVER_TO_D1_SERVER_PEM, "rb") as pemfile:
             private_key = pemfile.read()
@@ -285,7 +252,10 @@ class ThalesApiViewPrivate(ThalesApiView):
         if public_key and jwt_token:
             decoded = jwt.decode(jwt=jwt_token, key=public_key, algorithms=["ES256"],
                                  audience=f"https://{settings.THALES_API_AUD}", issuer=issuer_id)
-            print(f"Descifrar: {decoded}")
+            if settings.DEBUG:
+                print(f"Descifrar: {decoded}")
+            else:
+                print(f"Descifrar: Ok")
 
         if jwt_token:
             payload = {
@@ -311,7 +281,7 @@ class ThalesApiViewPrivate(ThalesApiView):
         import json
         from django.conf import settings
         resp_status = 400
-        print(f"Register Consumer Data: {kwargs}")
+        tarjeta = kwargs.get('tarjeta', '')
         fecha_exp = kwargs.get('fecha_exp', '0000')
         folio = kwargs.get('folio', '123456789')
         issuer_id = kwargs.get('issuer_id', settings.THALES_API_ISSUER_ID)
@@ -319,17 +289,26 @@ class ThalesApiViewPrivate(ThalesApiView):
         card_id = kwargs.get('card_id', '')
         account_id = kwargs.get('account_id', '')
         consumer_id = kwargs.get('consumer_id', '')
+        find_card_bin_configuration = kwargs.get('find_card_bin_configuration', True)
 
-        card_real = get_card_triple_des_process(kwargs.get('tarjeta', ''), is_descript=True)
+        if settings.DEBUG:
+            print(f"Register Consumer Data: {kwargs}")
+        else:
+            print(f'Register Consumer Data: {{"tarjeta": "{tarjeta}", "folio": "{folio}"}}')
+
+        card_real = get_card_triple_des_process(tarjeta, is_descript=True)
         if not card_real:
             print(f'Tarjeta: {kwargs.get("tarjeta", "")} no pudo ser desincriptada')
             return None
-
-        card_bin_config = CardBinConfig.objects.filter(card_bin=str(card_real[0:8])).first()
-        if card_bin_config:
-            print(f"CardBinConfig --> {card_bin_config}")
-            issuer_id = card_bin_config.issuer_id
-            card_product_id = card_bin_config.card_product_id
+        if find_card_bin_configuration:
+            card_bin_config = CardBinConfig.objects.filter(card_bin=str(card_real[0:8])).first()
+            if card_bin_config:
+                if settings.DEBUG:
+                    print(f"CardBinConfig --> {card_bin_config}")
+                else:
+                    print(f"CardBinConfig --> {str(card_bin_config.id)} {card_bin_config.card_type} {card_bin_config.emisor}")
+                issuer_id = card_bin_config.issuer_id
+                card_product_id = card_bin_config.card_product_id
         card_exp = fecha_exp[2:4] + fecha_exp[0:2]
 
         encrypted_data = {
@@ -337,7 +316,10 @@ class ThalesApiViewPrivate(ThalesApiView):
             "exp": card_exp
         }
         encrypted_data = json.dumps(encrypted_data)
-        print(f'EncryptedData: {encrypted_data}')
+        if settings.DEBUG:
+            print(f'EncryptedData: {encrypted_data}')
+        else:
+            print(f'EncryptedData: {{"pan": "{mask_card(card_real)}", "exp": "{card_exp}"}}')
 
         access_token = self.get_authorization_token(folio=folio, issuer_id=issuer_id)
         # return {'access_token': access_token}, 200
@@ -384,3 +366,45 @@ class ThalesApiViewPrivate(ThalesApiView):
             else:
                 return resp_data, resp_status
         return None, 400
+
+
+class ThalesV2ApiViewPrivate(ThalesApiViewPrivate):
+    permission_classes = (IsAuthenticated, IsVerified, IsOperator)
+    serializer_class = GetVerifyCardSerializer
+
+    def post_register_consumer_cards(self, request, *args, **kwargs):
+        from common.utils import get_response_data_errors
+        request_data = request.data.copy()
+        data = {k.upper(): v for k, v in request_data.items()}
+        serializer = self.get_serializer(data=data)
+        response_data = {}
+        response_status = 200
+        resp_msg = ''
+        if serializer.is_valid():
+            validated_data = serializer.validated_data
+            response_data['RSP_ERROR'] = 'OK'
+            response_data['RSP_CODIGO'] = '0000000000'
+            response_data['RSP_DESCRIPCION'] = u'Transacción aprobada'
+            obj_data = {
+                'tarjeta': validated_data['TARJETA'],
+                'fecha_exp': validated_data['FECHA_EXP'],
+                'folio': validated_data['FOLIO'],
+                "card_id": validated_data['TARJETAID'],
+                "consumer_id": validated_data['CLIENTEID'],
+                "account_id": validated_data['CUENTAID'],
+                "issuer_id": validated_data['ISSUER_ID'],
+                "card_product_id": validated_data['CARD_PRODUCT_ID'],
+                "state": validated_data['STATE'],
+                "find_card_bin_configuration": False
+            }
+            resp = self.register_consumer_thalesapi(**obj_data)
+            if resp[1] == 200:
+                response_data = {
+                    'rsp_folio': validated_data['FOLIO']
+                }
+            else:
+                response_data = resp[0]
+            response_status = resp[1]
+        else:
+            resp_msg, response_data, response_status = get_response_data_errors(serializer.errors)
+        return self.get_response(message=resp_msg, data=response_data, status=response_status, lower_response=False)
