@@ -42,7 +42,7 @@ def process_volcan_api_request(data, url, request, times=0):
     headers = get_volcan_api_headers()
     data_json = json.dumps(data)
     print(f"Request: {url}")
-    print(f"Data json: {data_json}")
+    print(f"Request json: {data_json}")
     try:
         r = requests.post(url=url, data=data_json, headers=headers)
         response_status = r.status_code

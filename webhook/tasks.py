@@ -39,7 +39,7 @@ def send_transaction_url_webhook(data, webhook: Webhook):
     data_json = json.dumps(data)
     print(f"Request webhook: {webhook.url_webhook}")
     print(f"Request headers: {headers}")
-    print(f"Data json webhook: {data_json}")
+    print(f"Request json webhook: {data_json}")
     response_status = 0
     try:
         res = requests.post(
