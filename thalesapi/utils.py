@@ -314,7 +314,7 @@ def get_card_credentials_credit(request, *args, **kwargs):
                 }
 
                 if len(payload["exp"]) == 4:
-                    payload["exp"] = payload[2:4] + payload[0:2]
+                    payload["exp"] = payload["exp"][2:4] + payload["exp"][0:2]
 
                 card_real = get_card_triple_des_process(payload['pan'], is_descript=True)
                 if card_real:
