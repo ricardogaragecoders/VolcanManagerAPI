@@ -118,7 +118,7 @@ class CardBinConfig(models.Model):
         default=CardType.CT_PREPAID
     )
     card_product_id = models.CharField(
-        max_length=32,
+        max_length=100,
         verbose_name=_('Card Product ID'),
         help_text=_("Thales Card Product ID"),
         null=False,

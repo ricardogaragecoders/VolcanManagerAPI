@@ -167,7 +167,7 @@ class GetVerifyCardSerializer(serializers.Serializer):
     CLIENTEID = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
     CUENTAID = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
     ISSUER_ID = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
-    CARD_PRODUCT_ID = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    CARD_PRODUCT_ID = serializers.CharField(max_length=100, required=False, default="", allow_blank=True)
     STATE = serializers.CharField(max_length=10, required=False, default="ACTIVE", allow_blank=True)
     EMISOR = serializers.CharField(max_length=3, required=False, default="CMF", allow_blank=True)
     FOLIO = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)

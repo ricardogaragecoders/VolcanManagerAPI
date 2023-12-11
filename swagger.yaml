@@ -2836,7 +2836,7 @@ components:
         card_product_id:
           type: string
           description: 'Card Product Id'
-          maxLength: 30
+          maxLength: 100
         state:
           type: string
           description: 'State'
