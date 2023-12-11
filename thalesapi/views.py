@@ -77,6 +77,7 @@ class ThalesApiView(CustomViewSet):
                                                                      request_data=request_data,
                                                                      *args, **kwargs)
             if response_status == 200:
+                card_bin = card_bin if 'cardBin' not in response_data else response_data.pop('cardBin', card_bin)
                 CardDetail.objects.get_or_create(consumer_id=response_data['consumerId'],
                                                  card_id=response_data['cardId'],
                                                  issuer_id=issuer_id,
