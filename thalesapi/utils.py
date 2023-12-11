@@ -175,6 +175,7 @@ def post_verify_card_credit(request, *args, **kwargs):
     serializer = VerifyCardCreditSerializer(data=request_data)
     if serializer.is_valid():
         validated_data = serializer.validated_data
+        card_bin = validated_data.pop('CARD_BIN')
         response_data, response_status = process_volcan_api_request(data=validated_data,
                                                                     url=api_url, request=request)
         # aqui falta hacer el proceso para cambiar la respuesta como la necesita Thales
@@ -192,6 +193,7 @@ def post_verify_card_credit(request, *args, **kwargs):
                     response_data['RSP_TAR_VALID']) > 0 else '1')
 
                 data = {
+                    "cardBin": card_bin,
                     "cardId": response_data['RSP_TARJETAID'] if 'RSP_TARJETAID' in response_data else '',
                     "consumerId": response_data['RSP_CLIENTEID'] if 'RSP_CLIENTEID' in response_data else '',
                     "accountId": response_data['RSP_CUENTAID'] if 'RSP_CUENTAID' in response_data else '',
