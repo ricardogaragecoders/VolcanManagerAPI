@@ -280,6 +280,7 @@ class ThalesApiViewPrivate(ThalesApiView):
         from thalesapi.utils import get_card_triple_des_process
         import json
         from django.conf import settings
+        card_bin_config = None
         resp_status = 400
         tarjeta = kwargs.get('tarjeta', '')
         fecha_exp = kwargs.get('fecha_exp', '0000')
@@ -362,6 +363,18 @@ class ThalesApiViewPrivate(ThalesApiView):
             resp_data, resp_status = process_volcan_api_request(data=payload, url=url, headers=headers,
                                                                 method='PUT', cert=cert)
             if resp_status == 204:
+                if card_bin_config:
+                    card_bin_config = CardBinConfig.objects.filter(card_bin=str(card_real[0:8])).first()
+                try:
+                    CardDetail.objects.get_or_create(consumer_id=consumer_id,
+                                                     card_id=card_id,
+                                                     issuer_id=issuer_id,
+                                                     account_id=account_id,
+                                                     card_bin=str(card_real[0:8]) if not card_bin_config else card_bin_config.card_bin,
+                                                     card_type='credit' if not card_bin_config else card_bin_config.card_type)
+                except Exception as e:
+                    print("Error al registrar card_detail")
+                    print(e.args.__str__())
                 return resp_data, 200
             else:
                 return resp_data, resp_status
