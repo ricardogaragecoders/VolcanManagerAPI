@@ -37,8 +37,8 @@ def get_thales_api_headers(request=None):
 
 
 def get_value_by_default(value, default=''):
-    if len(value) > 0:
-        return value
+    if len(value.strip()) > 0:
+        return value.strip()
     else:
         return default
 
