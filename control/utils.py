@@ -16,16 +16,21 @@ def get_float_from_numeric_str(value: str) -> str:
     from decimal import Decimal
     try:
         length = len(value)
+        is_positive = ''
         assert length >= 4, "El valor no tiene el minimo de largo"
+        if "}" in value:
+            value = value.replace("}", "")
+            length = len(value)
+            is_positive = "-"
         if '.' not in value:
             value_s = "%s.%s" % (value[0:length - 2], value[length - 2:length])
             value_f = Decimal(value_s)
         else:
             value_f = Decimal(value)
         if value_f > Decimal('0'):
-            return '%04.2f' % value_f
+            return f'{is_positive}{value_f:04.2f}'
         else:
-            return '%05.2f' % value_f
+            return f'{is_positive}{value_f:05.2f}'
     except AssertionError:
         return value
     except TypeError:
@@ -200,9 +205,14 @@ def consulta_cuenta(request, **kwargs):
                             data_item = {k.lower(): v for k, v in account.items()}
                             for k2, v2 in data_item.items():
                                 length = len(v2)
-                                if (length == 4 or length == 19) and v2.isnumeric():
-                                    v2 = get_float_from_numeric_str(v2)
-                                    data_item[k2] = v2
+                                is_positive = ''
+                                if length == 4 or length == 19:
+                                    if "}" in v2:
+                                        v2 = v2.replace("}", "")
+                                        is_positive = "}"
+                                    if v2.isnumeric():
+                                        v2 = get_float_from_numeric_str(f"{v2}{is_positive}")
+                                        data_item[k2] = v2
                             accounts.append(data_item)
                     resp[1]['RSP_CUENTAS'] = accounts
             elif resp[1]['RSP_ERROR'] == '':
@@ -708,9 +718,14 @@ def consulta_intra_extra_f1(request, **kwargs):
                             data_item = {k.lower(): v for k, v in card.items()}
                             for k2, v2 in data_item.items():
                                 length = len(v2)
-                                if (length == 4 or length == 19) and v2.isnumeric():
-                                    v2 = get_float_from_numeric_str(v2)
-                                    data_item[k2] = v2
+                                is_positive = ''
+                                if length == 4 or length == 19:
+                                    if "}" in v2:
+                                        v2 = v2.replace("}", "")
+                                        is_positive = "}"
+                                    if v2.isnumeric():
+                                        v2 = get_float_from_numeric_str(f"{v2}{is_positive}")
+                                        data_item[k2] = v2
                             cards.append(data_item)
                     resp[1]['RSP_MOCONF'] = cards
             elif resp[1]['RSP_ERROR'] == '':
@@ -752,9 +767,14 @@ def consulta_transaciones_x_fecha(request, **kwargs):
                             data_item = {k.lower(): v for k, v in trns.items()}
                             for k2, v2 in data_item.items():
                                 length = len(v2)
-                                if (length == 4 or length == 19) and v2.isnumeric():
-                                    v2 = get_float_from_numeric_str(v2)
-                                    data_item[k2] = v2
+                                is_positive = ''
+                                if length == 4 or length == 19:
+                                    if "}" in v2:
+                                        v2 = v2.replace("}", "")
+                                        is_positive = "}"
+                                    if v2.isnumeric():
+                                        v2 = get_float_from_numeric_str(f"{v2}{is_positive}")
+                                        data_item[k2] = v2
                             items.append(data_item)
                     resp[1]['RSP_MOCONS'] = items
             elif resp[1]['RSP_ERROR'] == '':
