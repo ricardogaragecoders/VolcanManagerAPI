@@ -420,3 +420,4 @@ URL_AZ7_INTRAS_EXTRAS = env.str('URL_AZ7_INTRAS_EXTRAS', '/web/services/Volcan_I
 URL_AZ7_CONSULTA_INTRA_EXTRA = env.str('URL_AZ7_CONSULTA_INTRA_EXTRA', '/web/services/Volcan_ConsultaIntraExtraF1')
 URL_AZ7_CONSULTA_TRANSACCION_X_FECHA = env.str('URL_AZ7_CONSULTA_TRANSACCION_X_FECHA',
                                                '/web/services/Volcan_ConsultaTxnXFecha1')
+URL_AZ7_CONSULTA_CVV2 = env.str('URL_AZ7_CONSULTA_CVV2', '/web/services/Volcan_CVV2_1')
