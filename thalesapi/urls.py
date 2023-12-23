@@ -21,6 +21,12 @@ urlpatterns = [
     path('banking/v1/issuers/<str:issuer_id>/consumers/<str:consumer_id>',
          ThalesApiView.as_view({'get': 'get_consumer_information'})),
 
+    path('banking/d1/v1/issuers/<str:issuer_id>/consumers/<str:consumer_id>/otp',
+         ThalesApiView.as_view({'post': 'post_deliver_otp'})),
+
+    path('banking/v1/issuers/<str:issuer_id>/consumers/<str:consumer_id>/otp',
+         ThalesApiView.as_view({'post': 'post_deliver_otp'})),
+
     path('notifications/d1/v1/issuers/<str:issuer_id>/cards/<str:card_id>/notifications',
          ThalesApiView.as_view({'post': 'post_notify_card_operation'})),
 

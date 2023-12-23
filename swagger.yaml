@@ -1289,7 +1289,7 @@ paths:
     parameters: []
   /cms/api/v1/issuers/{issuer_id}/cards/credentials:
     post:
-      operationId: api_thalesapi_verify_card
+      operationId: api_thales_api_verify_card
       description: Thales API Endpoint VerifyCard
       requestBody:
         content:
@@ -1334,7 +1334,7 @@ paths:
           type: string
   /banking/d1/v1/issuers/{issuer_id}/consumers/{consumer_id}:
     get:
-      operationId: api_thalesapi_get_consumer_info
+      operationId: api_thales_api_get_consumer_info
       description: Thales API Endpoint GetConsumerInfo
       summary: Thales API Endpoint GetConsumerInfo
       parameters:
@@ -1380,9 +1380,60 @@ paths:
         description: Consumer ID
         schema:
           type: string
+  /banking/d1/v1/issuers/{issuer_id}/consumers/{consumer_id}/otp:
+    post:
+      operationId: api_thales_api_post_deliver_otp
+      description: Thales API Endpoint DeliverOtp
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/DeliverOtp"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeliverOtp"
+        required: true
+      summary: Thales API Endpoint DeliverOtp
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+            maxLength: 250
+          required: false
+        - in: header
+          name: x-correlation-id
+          schema:
+            type: string
+            pattern: '[a-zA-Z0-9_\-\. ]{1,64}'
+          required: true
+      responses:
+        '204':
+          description: 'Thales response'
+        '400':
+          description: 'Thales response'
+        '404':
+          description: 'Thales response'
+        '500':
+          description: 'Thales response'
+      tags:
+        - VolcanManager::ThalesAPI
+    parameters:
+      - name: issuer_id
+        in: path
+        required: true
+        description: Issuer ID
+        schema:
+          type: string
+      - name: consumer_id
+        in: path
+        required: true
+        description: Consumer ID
+        schema:
+          type: string
   /cms/api/v1/issuers/{issuer_id}/cards/{card_id}/credentials:
     get:
-      operationId: api_thalesapi_get_card_credentials
+      operationId: api_thales_api_get_card_credentials
       description: Thales API Endpoint GetCardCredentials
       summary: Thales API Endpoint GetCardCredentials
       parameters:
@@ -1424,7 +1475,7 @@ paths:
           type: string
   /testing/cms/api/v1/issuers/{issuer_id}/cards/{card_id}/credentials:
     post:
-      operationId: api_thalesapi_get_card_credentials_testing
+      operationId: api_thales_api_get_card_credentials_testing
       description: Thales API Endpoint GetCardCredentials_testing
       summary: Thales API Endpoint GetCardCredentials Testing
       requestBody:
@@ -1459,7 +1510,7 @@ paths:
           type: string
   /volcan/api/obtenerDatosTokenizacion/:
     post:
-      operationId: api_thalesapi_get_card_data_tokenization
+      operationId: api_thales_api_get_card_data_tokenization
       description: Thales API Endpoint V2 GetCardDataTokenization
       summary: Thales API Endpoint V2 GetCardDataTokenization
       requestBody:
@@ -2822,6 +2873,48 @@ components:
           type: string
           description: 'Mandatorio. Card BIN'
           maxLength: 6
+      required:
+        - encryptedData
+        - cardId
+        - cardBin
+    DeliverOtp:
+      type: object
+      properties:
+        otp:
+          type: object
+          properties:
+            value:
+              type: string
+            expirationDate:
+              type: string
+            reason:
+              type: string
+        deliveryChannel:
+          type: string
+        digitalCardRequestor:
+          type: object
+          properties:
+            id:
+              type: string
+            walletId:
+              type: string
+            name:
+              type: string
+            tspId:
+              type: string
+            originalDigitalCardRequestorId:
+              type: string
+        deviceInformation:
+          type: object
+          properties:
+            digitalCardStorageType:
+              type: string
+            phoneNumber:
+              type: string
+            deviceName:
+              type: string
+        panSuffix:
+          type: string
       required:
         - encryptedData
         - cardId
