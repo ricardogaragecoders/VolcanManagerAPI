@@ -413,8 +413,8 @@ def get_url_deliver_otp(card_detail: CardDetail) -> str:
 
 def post_deliver_otp(request, *args, **kwargs):
     from webhook.models import Webhook
-    url_server = settings.SERVER_VOLCAN_PAYCARD_URL
-    webhook = Webhook.objects.get(account_issuer='TTT')
+    # url_server = settings.SERVER_VOLCAN_PAYCARD_URL
+    # webhook = Webhook.objects.get(account_issuer='TTT')
     consumer_id = kwargs.get('consumer_id', '')
     issuer_id = kwargs.get('issuer_id', '')
     # api_url = f'{webhook.url_webhook}'
