@@ -83,7 +83,7 @@ def send_transaction_url_webhook(data, webhook: Webhook):
         response_status = 500
         response_message = e.args.__str__()
 
-    if response_status in [200, 204]:
+    if response_status in [200, 201, 204]:
         return True, response_status, response_message
     else:
         return False, response_status, response_message

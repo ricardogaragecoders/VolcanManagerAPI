@@ -2,10 +2,10 @@ import json
 import requests
 import logging
 from django.conf import settings
-
+from django.utils import timezone
 from common.utils import get_response_data_errors
 from control.utils import get_volcan_api_headers
-from thalesapi.models import ISOCountry
+from thalesapi.models import ISOCountry, DeliverOtpCollection, CardDetail
 from thalesapi.serializers import VerifyCardCreditSerializer, GetConsumerInfoSerializer, GetDataCredentialsSerializer, \
     GetDataTokenizationSerializer
 
@@ -80,8 +80,12 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
         else:
             r = requests.get(url=url, headers=headers)
         response_status = r.status_code
+        if 'Content-Type' in r.headers:
+            if 'application/json' in r.headers['Content-Type']:
+                response_data = r.json()
+            else:
+                response_data = r.content
         if 200 <= response_status <= 299:
-            response_data = r.json()
             if len(response_data) == 0:
                 print(f"Response: {str(response_status)} empty")
                 print(f"Data server: {str(r.text)}")
@@ -90,6 +94,8 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
             else:
                 print(f"Response:{str(response_status)} {response_data}")
         elif response_status == 404:
+            if len(response_data) > 0:
+                print(f"Response:{str(response_status)} {response_data}")
             response_data = {'error': 'Recurso no disponible'}
             print(f"Response: 404 Recurso no disponible")
         else:
@@ -103,6 +109,7 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (TooManyRedirects)'}, 429
         print(response_data)
     except requests.exceptions.RequestException as e:
+        print(e.args.__str__())
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (RequestException)'}, 400
         print(response_data)
     except Exception as e:
@@ -132,15 +139,22 @@ def process_volcan_api_request(data, url, request=None, headers=None, method='PO
         else:
             r = requests.patch(url=url, data=data_json, headers=headers, cert=cert)
         response_status = r.status_code
+        if 'Content-Type' in r.headers:
+            if 'application/json' in r.headers['Content-Type']:
+                response_data = r.json()
+            else:
+                response_data = r.content
         if 200 <= response_status <= 299:
-            response_data = r.json() if response_status != 204 else {}
             if len(response_data) == 0:
                 print(f"Response: {str(response_status)} empty")
                 print(f"Data server: {str(r.text)}")
-                response_data = {'error': 'Error en datos de origen'}
+                if response_status != 204:
+                    response_data = {'error': 'Error en datos de origen'}
             else:
-                print(f"Response: {str(response_status)} {response_data}")
+                print(f"Response:{str(response_status)} {response_data}")
         elif response_status == 404:
+            if len(response_data) > 0:
+                print(f"Response:{str(response_status)} {response_data}")
             response_data = {'error': 'Recurso no disponible'}
             print(f"Response: 404 Recurso no disponible")
         else:
@@ -386,6 +400,34 @@ def get_card_credentials_prepaid(request, *args, **kwargs):
     api_url = f'{url_server}{request.path}'
     response_data, response_status = process_prepaid_api_request(data=dict(), url=api_url,
                                                                  request=request, http_verb='GET')
+    return response_data, response_status
+
+
+def get_url_deliver_otp(card_detail: CardDetail) -> str:
+    url = ''
+    if card_detail.emisor == 'CMF':
+        url = settings.URL_CMF_DELIVER_OTP
+        url = url.replace('{consumerId}', card_detail.consumer_id)
+    return url
+
+
+def post_deliver_otp(request, *args, **kwargs):
+    from webhook.models import Webhook
+    url_server = settings.SERVER_VOLCAN_PAYCARD_URL
+    webhook = Webhook.objects.get(account_issuer='TTT')
+    consumer_id = kwargs.get('consumer_id', '')
+    issuer_id = kwargs.get('issuer_id', '')
+    # api_url = f'{webhook.url_webhook}'
+    api_url = get_url_deliver_otp(kwargs.pop('card_detail'))
+    data = request.data.copy()
+    data['issuer_id'] = issuer_id
+    data['consumer_id'] = consumer_id
+    data['created_at'] = timezone.localtime(timezone.now()).isoformat()
+    response_data, response_status = process_prepaid_api_request(data=data, url=api_url,
+                                                                 request=request, http_verb='POST')
+    if response_status in [200, 201, 204]:
+        db = DeliverOtpCollection()
+        db.insert_one(data=data)
     return response_data, response_status
 
 

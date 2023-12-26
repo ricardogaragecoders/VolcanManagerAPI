@@ -685,3 +685,32 @@ class ConsultaTransaccionesXFechaSerializer(serializers.Serializer):
         if len(emisor) == 0:
             raise CustomValidationError(detail=u'Emisor es requerido', code='400')
         return data
+
+
+
+class ConsultaCVV2Serializer(serializers.Serializer):
+    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('TARJETA', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+
+    def validate(self, data):
+        data = super(ConsultaCVV2Serializer, self).validate(data)
+        tarjeta = data.get('TARJETA', "").strip()
+        emisor = data.get('EMISOR', '').upper().strip()
+
+        data['TARJETA'] = tarjeta
+
+        if len(tarjeta) == 0:
+            raise CustomValidationError(detail=u'Tarjetqa es requerida', code='400')
+
+        if len(emisor) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
+
+        data['TARJETA'] = tarjeta
+        data['EMISOR'] = emisor
+
+        return data

@@ -1,7 +1,7 @@
 from django.db import models
 import uuid
 from django.utils.translation import gettext as _
-from common.models import ModelDiffMixin, BaseModelWithDeleted
+from common.models import ModelDiffMixin, BaseModelWithDeleted, MonitorCollection
 
 
 class CardType(models.TextChoices):
@@ -138,3 +138,10 @@ class CardBinConfig(models.Model):
 
     class Meta:
         ordering = ('card_bin',)
+
+
+class DeliverOtpCollection(MonitorCollection):
+
+    def __init__(self):
+        super(DeliverOtpCollection, self).__init__()
+        self.get_collection('deliver_otp')

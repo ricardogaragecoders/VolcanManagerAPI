@@ -399,6 +399,8 @@ CORS_EXPOSE_HEADERS = list(default_headers) + ['content-disposition', ]
 
 BROKER_URL = env.str('RABBITMQ_URL')
 
+URL_CMF_DELIVER_OTP = env.str('URL_CMF_DELIVER_OTP', '')
+
 URL_THALES_API_VERIFY_CARD = env.str('URL_THALES_API_VERIFY_CARD', '/web/services/VerifyCard_1')
 URL_THALES_API_GET_CONSUMER = env.str('URL_THALES_API_GET_CONSUMER', '/web/services/Volcan_GetConsumer_1')
 URL_THALES_API_GET_CARD_CREDENTIALS = env.str('URL_THALES_API_GET_CARD_CREDENTIALS',
@@ -420,3 +422,4 @@ URL_AZ7_INTRAS_EXTRAS = env.str('URL_AZ7_INTRAS_EXTRAS', '/web/services/Volcan_I
 URL_AZ7_CONSULTA_INTRA_EXTRA = env.str('URL_AZ7_CONSULTA_INTRA_EXTRA', '/web/services/Volcan_ConsultaIntraExtraF1')
 URL_AZ7_CONSULTA_TRANSACCION_X_FECHA = env.str('URL_AZ7_CONSULTA_TRANSACCION_X_FECHA',
                                                '/web/services/Volcan_ConsultaTxnXFecha1')
+URL_AZ7_CONSULTA_CVV2 = env.str('URL_AZ7_CONSULTA_CVV2', '/web/services/Volcan_CVV2_1')

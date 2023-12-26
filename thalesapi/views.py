@@ -135,6 +135,30 @@ class ThalesApiView(CustomViewSet):
             response_data, response_status = {'error': f'Registro no encontrado'}, 404
         return Response(data=response_data, status=response_status)
 
+    def post_deliver_otp(self, request, *args, **kwargs):
+        consumer_id = kwargs.get('consumer_id', '')
+        card_id = request.query_params.get('cardId', None)
+        issuer_id = kwargs.get('issuer_id', '')
+        print("Deliver OTP")
+        print(request.get_full_path())
+        if not card_id:
+            card_detail = CardDetail.objects.filter(consumer_id=consumer_id, issuer_id=issuer_id).first()
+        else:
+            card_detail = CardDetail.objects.filter(consumer_id=consumer_id, card_id=card_id,
+                                                    issuer_id=issuer_id).first()
+        if card_detail:
+            from thalesapi.utils import post_deliver_otp
+            response_data, response_status = self.control_action(request=request,
+                                                                 control_function=post_deliver_otp,
+                                                                 card_detail=card_detail,
+                                                                 *args, **kwargs)
+        else:
+            response_data, response_status = {'error': f'Registro no encontrado'}, 404
+        if response_status in [201, 200, 204]:
+            return Response(status=204)
+        else:
+            return Response(data=response_data, status=response_status)
+
     def post_notify_card_operation(self, request, *args, **kwargs):
         # from thalesapi.utils import get_card_credentials_credit_testing
 
