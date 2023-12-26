@@ -399,6 +399,8 @@ CORS_EXPOSE_HEADERS = list(default_headers) + ['content-disposition', ]
 
 BROKER_URL = env.str('RABBITMQ_URL')
 
+URL_CMF_DELIVER_OTP = env.str('URL_CMF_DELIVER_OTP', '')
+
 URL_THALES_API_VERIFY_CARD = env.str('URL_THALES_API_VERIFY_CARD', '/web/services/VerifyCard_1')
 URL_THALES_API_GET_CONSUMER = env.str('URL_THALES_API_GET_CONSUMER', '/web/services/Volcan_GetConsumer_1')
 URL_THALES_API_GET_CARD_CREDENTIALS = env.str('URL_THALES_API_GET_CARD_CREDENTIALS',

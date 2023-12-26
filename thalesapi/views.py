@@ -150,6 +150,7 @@ class ThalesApiView(CustomViewSet):
             from thalesapi.utils import post_deliver_otp
             response_data, response_status = self.control_action(request=request,
                                                                  control_function=post_deliver_otp,
+                                                                 card_detail=card_detail,
                                                                  *args, **kwargs)
         else:
             response_data, response_status = {'error': f'Registro no encontrado'}, 404
