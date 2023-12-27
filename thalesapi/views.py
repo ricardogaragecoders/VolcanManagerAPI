@@ -29,7 +29,6 @@ class CardBinConfigApiView(CustomViewSet):
 # Create your views here.
 class ThalesApiView(CustomViewSet):
     permission_classes = (AllowAny,)
-    authentication_classes = []
     http_method_names = ['post', 'get', 'options', 'head']
 
     def control_action(self, request, control_function, *args, **kwargs):
@@ -175,7 +174,6 @@ class ThalesApiView(CustomViewSet):
 
 class ThalesApiViewPrivate(ThalesApiView):
     permission_classes = (IsAuthenticated, IsVerified, IsOperator)
-    authentication_classes = (SessionAuthentication, BasicAuthentication, JWTAuthentication)
     serializer_class = GetDataTokenizationSerializer
 
     def get_card_data_tokenization(self, request, *args, **kwargs):
