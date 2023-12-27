@@ -412,20 +412,23 @@ def get_url_deliver_otp(card_detail: CardDetail) -> str:
 
 
 def post_deliver_otp(request, *args, **kwargs):
-    from webhook.models import Webhook
+    # from webhook.models import Webhook
     # url_server = settings.SERVER_VOLCAN_PAYCARD_URL
     # webhook = Webhook.objects.get(account_issuer='TTT')
     consumer_id = kwargs.get('consumer_id', '')
     issuer_id = kwargs.get('issuer_id', '')
     # api_url = f'{webhook.url_webhook}'
-    api_url = get_url_deliver_otp(kwargs.pop('card_detail'))
+    card_detail = kwargs.pop('card_detail', None)
+    api_url = get_url_deliver_otp(card_detail)
     data = request.data.copy()
-    data['issuer_id'] = issuer_id
-    data['consumer_id'] = consumer_id
-    data['created_at'] = timezone.localtime(timezone.now()).isoformat()
-    response_data, response_status = process_prepaid_api_request(data=data, url=api_url,
-                                                                 request=request, http_verb='POST')
+    response_data, response_status = process_volcan_api_request(data=data, url=api_url, headers=request.headers,
+                                                                request=request, method='POST')
     if response_status in [200, 201, 204]:
+        if card_detail:
+            data['emisor'] = card_detail.emisor
+        data['issuer_id'] = issuer_id
+        data['consumer_id'] = consumer_id
+        data['created_at'] = timezone.localtime(timezone.now())
         db = DeliverOtpCollection()
         db.insert_one(data=data)
     return response_data, response_status
