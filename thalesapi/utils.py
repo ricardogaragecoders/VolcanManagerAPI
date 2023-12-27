@@ -148,17 +148,21 @@ def process_volcan_api_request(data, url, request=None, headers=None, method='PO
         print(f"Response:{str(response_status)} {response_data}")
         if 200 <= response_status <= 299:
             if len(response_data) == 0:
-                #print(f"Response: {str(response_status)} empty")
-                #print(f"Data server: {str(r.text)}")
+                # print(f"Response: {str(response_status)} empty")
+                # print(f"Data server: {str(r.text)}")
                 if response_status != 204:
                     response_data = {'error': 'Error en datos de origen'}
             # else:
             #     print(f"Response:{str(response_status)} {response_data}")
         elif response_status == 404:
+            # if len(response_data) > 0:
+            #     print(f"Response:{str(response_status)} {response_data}")
             response_data = {'error': 'Recurso no disponible'}
             print(f"Response: 404 Recurso no disponible")
         else:
             response_data = {'error': 'Error desconocido'}
+            # print(f"Response: {str(response_status)} Error desconocido")
+            # print(f"Data server: {str(r.text)}")
     except requests.exceptions.Timeout:
         response_data, response_status = {'error': 'Error de conexion con servidor (Timeout)'}, 408
         print(response_data)
