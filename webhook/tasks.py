@@ -41,21 +41,21 @@ def send_transaction_url_webhook(data, webhook: Webhook):
     print(f"Request headers: {headers}")
     print(f"Request json webhook: {data_json}")
     response_status = 0
+    response_data = {}
     try:
         res = requests.post(
             webhook.url_webhook,
             data=data_json, headers=headers, auth=BodyDigestSignature(webhook.key_webhook))
         # r = requests.post(url=webhook.url_webhook, data=data_json, headers=headers)
         response_status = res.status_code
-        response_data = {}
         print(res.text)
         print(res.headers)
         if 'Content-Type' in res.headers:
             if 'application/json' in res.headers['Content-Type']:
-                response_data = res.json()
+                response_data = res.json() if response_status != 204 else {}
             else:
                 response_data = res.content
-        print(f"Response webhook: {response_data}")
+        print(f"Response webhook {response_status}: {response_data}")
         if response_status == 200:
             response_message = response_data
         elif response_status == 204:

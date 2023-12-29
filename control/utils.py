@@ -66,6 +66,8 @@ def get_volcan_api_headers():
 
 
 def process_volcan_api_request(data, url, request, times=0):
+    response_data = dict()
+    response_status = 0
     headers = get_volcan_api_headers()
     data_json = json.dumps(data)
     print(f"Request: {url}")
@@ -73,20 +75,25 @@ def process_volcan_api_request(data, url, request, times=0):
     try:
         r = requests.post(url=url, data=data_json, headers=headers)
         response_status = r.status_code
+        if 'Content-Type' in r.headers:
+            if 'application/json' in r.headers['Content-Type']:
+                response_data = r.json() if response_status != 204 else {}
+            else:
+                response_data = r.content
+        print(f"Response {str(response_status)}: {response_data}")
         if 200 <= response_status <= 299:
-            response_data = r.json()
             if len(response_data) == 0:
                 print(f"Response: empty")
                 response_data = {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}
-            else:
-                print(f"Response: {response_data}")
+            # else:
+            #     print(f"Response: {response_data}")
         elif response_status == 404:
             response_data = {'RSP_CODIGO': '404', 'RSP_DESCRIPCION': 'Recurso no disponible'}
             print(f"Response: 404 Recurso no disponible")
         else:
             response_data = {'RSP_CODIGO': str(response_status), 'RSP_DESCRIPCION': 'Error desconocido'}
-            print(f"Response: {str(response_status)} Error desconocido")
-            print(f"Data server: {str(r.text)}")
+            # print(f"Response: {str(response_status)} Error desconocido")
+            # print(f"Data server: {str(r.text)}")
         response_message = ''
     except requests.exceptions.Timeout:
         response_data = {'RSP_CODIGO': "408",
