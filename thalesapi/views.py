@@ -86,6 +86,7 @@ class ThalesApiView(CustomViewSet):
                                                  card_type=card_type)
         else:
             response_data, response_status = {'error': 'Datos incompletos'}, 400
+        print(f"Response Verify Card: {response_data}")
         return Response(data=response_data, status=response_status)
 
     def get_consumer_information(self, request, *args, **kwargs):
@@ -113,6 +114,7 @@ class ThalesApiView(CustomViewSet):
                                                                      *args, **kwargs)
         else:
             response_data, response_status = {'error': f'Registro no encontrado'}, 404
+        print(f"Response Consumer info: {response_data}")
         return Response(data=response_data, status=response_status)
 
     def get_card_credentials(self, request, *args, **kwargs):
@@ -133,6 +135,7 @@ class ThalesApiView(CustomViewSet):
                                                                      *args, **kwargs)
         else:
             response_data, response_status = {'error': f'Registro no encontrado'}, 404
+        print(f"Response Card Credentials: {response_data}")
         return Response(data=response_data, status=response_status)
 
     def post_deliver_otp(self, request, *args, **kwargs):
@@ -157,6 +160,7 @@ class ThalesApiView(CustomViewSet):
         if response_status in [201, 200, 204]:
             return Response(status=204)
         else:
+            print(f"Response Deliver OTP: {response_data}")
             return Response(data=response_data, status=response_status)
 
     def post_notify_card_operation(self, request, *args, **kwargs):
@@ -223,6 +227,13 @@ class ThalesApiViewPrivate(ThalesApiView):
                     else:
                         response_data = resp[0]
                         response_status = resp[1]
+                        if 'error' in response_data:
+                            response_data = {
+                                'RSP_ERROR': 'RC',
+                                'RSP_CODIGO': f"{response_status}",
+                                'RSP_DESCRIPCION': response_data['error']
+                            }
+                            response_status = 200
                 else:
                     response_data = {
                         'RSP_ERROR': resp_data['RSP_ERROR'],
@@ -232,8 +243,8 @@ class ThalesApiViewPrivate(ThalesApiView):
         else:
             resp_msg, response_data, response_status = get_response_data_errors(serializer.errors)
             # response_data, response_status = {}, 400
+        print(f"Response Card Data Tokenizacion: {response_data}")
         return self.get_response(message=resp_msg, data=response_data, status=response_status, lower_response=False)
-
 
     def get_url_thales_register_customer_with_cards(self, issuer_id, consumer_id):
         url = settings.URL_THALES_REGISTER_CONSUMER_CARDS
@@ -293,7 +304,8 @@ class ThalesApiViewPrivate(ThalesApiView):
                 "Content-Type": "application/json",
                 "Accept": "application/json"
             }
-            cert = (settings.SSL_CERTIFICATE_THALES_CRT, settings.SSL_CERTIFICATE_THALES_KEY)
+            cert = None
+            # cert = (settings.SSL_CERTIFICATE_THALES_CRT, settings.SSL_CERTIFICATE_THALES_KEY)
             resp_data, resp_status = process_volcan_api_request(data=payload, url=url, headers=headers, cert=cert)
             if resp_status == 200:
                 return resp_data['access_token'] if 'access_token' in resp_data else None
@@ -332,7 +344,8 @@ class ThalesApiViewPrivate(ThalesApiView):
                 if settings.DEBUG:
                     print(f"CardBinConfig --> {card_bin_config}")
                 else:
-                    print(f"CardBinConfig --> {str(card_bin_config.id)} {card_bin_config.card_type} {card_bin_config.emisor}")
+                    print(
+                        f"CardBinConfig --> {str(card_bin_config.id)} {card_bin_config.card_type} {card_bin_config.emisor}")
                 issuer_id = card_bin_config.issuer_id
                 card_product_id = card_bin_config.card_product_id
         card_exp = fecha_exp[2:4] + fecha_exp[0:2]
@@ -384,7 +397,8 @@ class ThalesApiViewPrivate(ThalesApiView):
                 "Accept": "application/json",
                 "Authorization": f"Bearer {access_token}"
             }
-            cert = (settings.SSL_CERTIFICATE_THALES_CRT, settings.SSL_CERTIFICATE_THALES_KEY)
+            cert = None
+            # cert = (settings.SSL_CERTIFICATE_THALES_CRT, settings.SSL_CERTIFICATE_THALES_KEY)
             resp_data, resp_status = process_volcan_api_request(data=payload, url=url, headers=headers,
                                                                 method='PUT', cert=cert)
             if resp_status == 204:
@@ -395,7 +409,8 @@ class ThalesApiViewPrivate(ThalesApiView):
                                                      card_id=card_id,
                                                      issuer_id=issuer_id,
                                                      account_id=account_id,
-                                                     card_bin=str(card_real[0:8]) if not card_bin_config else card_bin_config.card_bin,
+                                                     card_bin=str(card_real[
+                                                                  0:8]) if not card_bin_config else card_bin_config.card_bin,
                                                      card_type='credit' if not card_bin_config else card_bin_config.card_type)
                 except Exception as e:
                     print("Error al registrar card_detail")
@@ -403,7 +418,7 @@ class ThalesApiViewPrivate(ThalesApiView):
                 return resp_data, 200
             else:
                 return resp_data, resp_status
-        return None, 400
+        return {"error": "Error in authorization"}, 400
 
 
 class ThalesV2ApiViewPrivate(ThalesApiViewPrivate):

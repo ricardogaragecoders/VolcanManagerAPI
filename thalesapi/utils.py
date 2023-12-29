@@ -4,7 +4,7 @@ import logging
 from django.conf import settings
 from django.utils import timezone
 from common.utils import get_response_data_errors
-from control.utils import get_volcan_api_headers
+from control.utils import get_volcan_api_headers, mask_card
 from thalesapi.models import ISOCountry, DeliverOtpCollection, CardDetail
 from thalesapi.serializers import VerifyCardCreditSerializer, GetConsumerInfoSerializer, GetDataCredentialsSerializer, \
     GetDataTokenizationSerializer
@@ -82,27 +82,27 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
         response_status = r.status_code
         if 'Content-Type' in r.headers:
             if 'application/json' in r.headers['Content-Type']:
-                response_data = r.json()
+                response_data = r.json() if response_status != 204 else {}
             else:
                 response_data = r.content
-        print(f"Response:{str(response_status)} {response_data}")
+        print(f"Response {str(response_status)}: {response_data}")
         if 200 <= response_status <= 299:
             if len(response_data) == 0:
-                print(f"Response: {str(response_status)} empty")
-                print(f"Data server: {str(r.text)}")
+                # print(f"Response: {str(response_status)} empty")
+                # print(f"Data server: {str(r.text)}")
                 if response_status != 204:
                     response_data = {'error': 'Error en datos de origen'}
-            else:
-                print(f"Response:{str(response_status)} {response_data}")
+            # else:
+            #     print(f"Response:{str(response_status)} {response_data}")
         elif response_status == 404:
-            if len(response_data) > 0:
-                print(f"Response:{str(response_status)} {response_data}")
+            # if len(response_data) > 0:
+            #     print(f"Response:{str(response_status)} {response_data}")
             response_data = {'error': 'Recurso no disponible'}
             print(f"Response: 404 Recurso no disponible")
         else:
             response_data = {'error': 'Error desconocido'}
-            print(f"Response: {str(response_status)} Error desconocido")
-            print(f"Data server: {str(r.text)}")
+            # print(f"Response: {str(response_status)} Error desconocido")
+            # print(f"Data server: {str(r.text)}")
     except requests.exceptions.Timeout:
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (Timeout)'}, 408
         print(response_data)
@@ -125,27 +125,23 @@ def process_volcan_api_request(data, url, request=None, headers=None, method='PO
     response_status = 500
     if not headers:
         headers = get_thales_api_headers(request)
-    if headers['Content-Type'] == 'application/json':
+    if 'application/json' in headers['Content-Type']:
         data_json = json.dumps(data)
     else:
         data_json = data
     print(f"Request: {url}")
     print(f"Headers: {headers}")
     print(f"Request json: {data_json}")
+    r = None
     try:
-        if method == 'POST':
-            r = requests.post(url=url, data=data_json, headers=headers, cert=cert)
-        elif method == 'PUT':
-            r = requests.put(url=url, data=data_json, headers=headers, cert=cert)
-        else:
-            r = requests.patch(url=url, data=data_json, headers=headers, cert=cert)
+        r = requests.request(method=method, url=url, headers=headers, data=data_json, cert=cert)
         response_status = r.status_code
         if 'Content-Type' in r.headers:
             if 'application/json' in r.headers['Content-Type']:
-                response_data = r.json()
+                response_data = r.json() if response_status != 204 else {}
             else:
-                response_data = r.text
-        print(f"Response:{str(response_status)} {response_data}")
+                response_data = r.content
+        print(f"Response {str(response_status)}: {response_data}")
         if 200 <= response_status <= 299:
             if len(response_data) == 0:
                 # print(f"Response: {str(response_status)} empty")
@@ -171,9 +167,13 @@ def process_volcan_api_request(data, url, request=None, headers=None, method='PO
         print(response_data)
     except requests.exceptions.RequestException as e:
         print(e.args.__str__())
+        if r:
+            print(r.raise_for_status())
         response_data, response_status = {'error': 'Error de conexion con servidor (RequestException)'}, 400
         print(response_data)
     except Exception as e:
+        if r:
+            print(r.raise_for_status())
         response_data, response_status = {'error': e.args.__str__()}, 500
         print(response_data)
     finally:
@@ -331,14 +331,19 @@ def get_card_credentials_credit(request, *args, **kwargs):
                     "cvv": response_data['RSP_CVV'] if 'RSP_CVV' in response_data else ''
                 }
 
-                if len(payload["exp"]) == 4:
-                    payload["exp"] = payload["exp"][2:4] + payload["exp"][0:2]
+                card_exp = payload["exp"]
+                if len(card_exp) == 4:
+                    card_exp = card_exp[2:4] + card_exp[0:2]
 
                 card_real = get_card_triple_des_process(payload['pan'], is_descript=True)
                 if card_real:
                     payload['pan'] = card_real
+                    payload['exp'] = card_exp
                     payload = json.dumps(payload)
-                    print(payload)
+                    if settings.DEBUG:
+                        print(f'Payload: {payload}')
+                    else:
+                        print(f'Payload: {{"pan": "{mask_card(card_real)}", "exp": "{card_exp}"}}')
                     public_key = None
                     with open(settings.PUB_KEY_ISSUER_SERVER_TO_D1_SERVER_PEM, "rb") as pemfile:
                         public_key = jwk.JWK.from_pem(pemfile.read())
@@ -405,9 +410,9 @@ def get_card_credentials_prepaid(request, *args, **kwargs):
     return response_data, response_status
 
 
-def get_url_deliver_otp(card_detail: CardDetail) -> str:
+def get_url_deliver_otp(card_detail: CardDetail = None) -> str:
     url = ''
-    if card_detail.emisor == 'CMF':
+    if card_detail and card_detail.emisor == 'CMF':
         url = settings.URL_CMF_DELIVER_OTP
         url = url.replace('{consumerId}', card_detail.consumer_id)
     return url
@@ -423,8 +428,8 @@ def post_deliver_otp(request, *args, **kwargs):
     card_detail = kwargs.pop('card_detail', None)
     api_url = get_url_deliver_otp(card_detail)
     data = request.data.copy()
-    response_data, response_status = process_volcan_api_request(data=data, url=api_url, headers=request.headers,
-                                                                request=request, method='POST')
+    response_data, response_status = process_volcan_api_request(data=data, url=api_url, request=request,
+                                                                method='POST')
     if response_status in [200, 201, 204]:
         if card_detail:
             data['emisor'] = card_detail.emisor
