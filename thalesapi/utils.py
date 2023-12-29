@@ -4,7 +4,7 @@ import logging
 from django.conf import settings
 from django.utils import timezone
 from common.utils import get_response_data_errors
-from control.utils import get_volcan_api_headers
+from control.utils import get_volcan_api_headers, mask_card
 from thalesapi.models import ISOCountry, DeliverOtpCollection, CardDetail
 from thalesapi.serializers import VerifyCardCreditSerializer, GetConsumerInfoSerializer, GetDataCredentialsSerializer, \
     GetDataTokenizationSerializer
@@ -331,14 +331,19 @@ def get_card_credentials_credit(request, *args, **kwargs):
                     "cvv": response_data['RSP_CVV'] if 'RSP_CVV' in response_data else ''
                 }
 
-                if len(payload["exp"]) == 4:
-                    payload["exp"] = payload["exp"][2:4] + payload["exp"][0:2]
+                card_exp = payload["exp"]
+                if len(card_exp) == 4:
+                    card_exp = card_exp[2:4] + card_exp[0:2]
 
                 card_real = get_card_triple_des_process(payload['pan'], is_descript=True)
                 if card_real:
                     payload['pan'] = card_real
+                    payload['exp'] = card_exp
                     payload = json.dumps(payload)
-                    print(payload)
+                    if settings.DEBUG:
+                        print(f'Payload: {payload}')
+                    else:
+                        print(f'Payload: {{"pan": "{mask_card(card_real)}", "exp": "{card_exp}"}}')
                     public_key = None
                     with open(settings.PUB_KEY_ISSUER_SERVER_TO_D1_SERVER_PEM, "rb") as pemfile:
                         public_key = jwk.JWK.from_pem(pemfile.read())
