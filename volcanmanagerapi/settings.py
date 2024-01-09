@@ -405,7 +405,7 @@ URL_THALES_API_VERIFY_CARD = env.str('URL_THALES_API_VERIFY_CARD', '/web/service
 URL_THALES_API_GET_CONSUMER = env.str('URL_THALES_API_GET_CONSUMER', '/web/services/Volcan_GetConsumer_1')
 URL_THALES_API_GET_CARD_CREDENTIALS = env.str('URL_THALES_API_GET_CARD_CREDENTIALS',
                                               '/web/services/GetCardCredentials_1')
-URL_AZ7_ALTA_ENTE = env.str('URL_AZ7_ALTA_ENTE', '/web/services/Alta_Ente_1')
+URL_AZ7_ALTA_ENTE = env.str('URL_AZ7_ALTA_ENTE', '/web/services/Volcan_Alta_Ente_1')
 URL_AZ7_ALTA_CUENTA = env.str('URL_AZ7_ALTA_CUENTA', '/web/services/Volcan_Alta_Cuenta_1')
 URL_AZ7_CONSULTA_CUENTA = env.str('URL_AZ7_CONSULTA_CUENTA', '/web/services/Volcan_Consulta_Cuenta_1')
 URL_AZ7_EXTRA_FINANCIAMIENTO = env.str('URL_AZ7_EXTRA_FINANCIAMIENTO', '/web/services/Volcan_ExtraFinanciamiento_1')
