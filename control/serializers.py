@@ -94,6 +94,90 @@ class CreacionEnteSerializer(serializers.Serializer):
         return data
 
 
+class CreacionEnteSectorizacionSerializer(serializers.Serializer):
+    CIF = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    PERSONERIA = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
+    TIPO_IDENTIFICACION = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
+    DOCUMENTO_IDENTIFICACION = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    PRIMER_NOMBRE = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    SEGUNDO_NOMBRE = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    PRIMER_APELLIDO = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    SEGUNDO_APELLIDO = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    APELLIDO_CASADA = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    FECHA_NACIMIENTO = serializers.CharField(max_length=8, required=False, default="", allow_blank=True)
+    SEXO = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
+    ESTADO_CIVIL = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
+    PROFESION = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
+    SEGURO_SOCIAL = serializers.CharField(max_length=25, required=False, default="", allow_blank=True)
+    PAIS_NACIMIENTO = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    PAIS_RESIDENCIA = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    NACIONALIDAD = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    CODIGO_PROVINCIA = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    CODIGO_CANTON = serializers.CharField(max_length=5, required=False, default="", allow_blank=True)
+    CODIGO_DISTRITO = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
+    DIRECCION_1 = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    DIRECCION_2 = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    DIRECCION_3 = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    DIRECCION_4 = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    DIRECCION_5 = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    CODIGO_POSTAL = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    TELEFONO_CASA = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
+    CELULAR = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
+    TELEFONO_OFICINA = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
+    EMAIL_PERSONAL = serializers.EmailField(max_length=100, required=False, default="", allow_blank=True)
+    EMAIL_OFICINA = serializers.EmailField(max_length=100, required=False, default="", allow_blank=True)
+    LUGAR_TRABAJO = serializers.CharField(max_length=40, required=False, default="", allow_blank=True)
+    CODIGO_PROVINCIA_TRABAJO = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    CODIGO_CANTON_TRABAJO = serializers.CharField(max_length=5, required=False, default="", allow_blank=True)
+    CODIGO_DISTRITO_TRABAJO = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
+    DIRECCION_1_TRABAJO = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    DIRECCION_2_TRABAJO = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    DIRECCION_3_TRABAJO = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    DIRECCION_4_TRABAJO = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    DIRECCION_5_TRABAJO = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    PUESTO = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    INGRESO_MENSUAL = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    FECHA_INGRESO_TRABAJO = serializers.CharField(max_length=8, required=False, default="", allow_blank=True)
+    OFICINA_EXT = serializers.CharField(max_length=5, required=False, default="", allow_blank=True)
+    NOMBRE_CONYUGUE = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    APELLIDO_CONYUGUE = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    CEDULA_CONYUGUE = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    NOMBRE_PADRE = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    APELLIDO_PADRE = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    NOMBRE_MADRE = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    APELLIDO_MADRE = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    TIPO_GESTION = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('CIF', 'PERSONERIA', 'TIPO_IDENTIFICACION', 'DOCUMENTO_IDENTIFICACION',
+                  'PRIMER_NOMBRE', 'SEGUNDO_NOMBRE', 'PRIMER_APELLIDO', 'SEGUNDO_APELLIDO', 'APELLIDO_CASADA',
+                  'FECHA_NACIMIENTO', 'SEXO', 'ESTADO_CIVIL', 'PROFESION', 'SEGURO_SOCIAL', 'PAIS_NACIMIENTO',
+                  'PAIS_RESIDENCIA', 'NACIONALIDAD', 'CODIGO_PROVINCIA', 'CODIGO_CANTON', 'CODIGO_DISTRITO',
+                  'DIRECCION_1', 'DIRECCION_2', 'DIRECCION_3', 'DIRECCION_4', 'DIRECCION_5', 'CODIGO_POSTAL',
+                  'TELEFONO_CASA', 'CELULAR', 'TELEFONO_OFICINA', 'EMAIL_PERSONAL', 'EMAIL_OFICINA', 'LUGAR_TRABAJO',
+                  'CODIGO_PROVINCIA_TRABAJO', 'CODIGO_CANTON_TRABAJO', 'CODIGO_DISTRITO_TRABAJO',
+                  'DIRECCION_1_TRABAJO', 'DIRECCION_2_TRABAJO','DIRECCION_3_TRABAJO','DIRECCION_4_TRABAJO',
+                  'DIRECCION_5_TRABAJO', 'PUESTO', 'INGRESO_MENSUAL', 'FECHA_INGRESO_TRABAJO', 'OFICINA_EXT',
+                  'NOMBRE_CONYUGUE', 'APELLIDO_CONYUGUE', 'CEDULA_CONYUGUE', 'NOMBRE_PADRE', 'APELLIDO_PADRE',
+                  'NOMBRE_MADRE', 'APELLIDO_MADRE', 'TIPO_GESTION', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+
+    def validate(self, data):
+        data = super(CreacionEnteSectorizacionSerializer, self).validate(data)
+        email_personal = data.get('EMAIL_PERSONAL', "").strip()
+        email_oficina = data.get('EMAIL_OFICINA', "").strip()
+        emisor = data.get('EMISOR', '').strip()
+
+        if len(email_personal) == 0 and len(email_oficina) == 0:
+            raise CustomValidationError(detail=u'Email es requerido', code='400')
+
+        if len(emisor) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
+        return data
+
+
 class AltaCuentaTarjetaSerializer(serializers.Serializer):
     ID_ENTE_OWNER = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
     NOMBRE_TARJETA = serializers.CharField(max_length=30, required=False, default="", allow_blank=True)
