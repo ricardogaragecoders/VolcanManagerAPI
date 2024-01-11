@@ -17,13 +17,13 @@ def get_float_from_numeric_str(value: str) -> str:
     try:
         length = len(value)
         is_positive = ''
-        assert length >= 4, "El valor no tiene el minimo de largo"
-        if "}" in value or "-" in value:
+        if length >= 3 and value[-1] in ["}", "-"]:
             value = value.replace("}", "")
             value = value.replace("-", "")
             length = len(value)
             is_positive = "-"
         if '.' not in value:
+            assert length >= 4, "El valor no tiene el minimo de largo"
             value_s = "%s.%s" % (value[0:length - 2], value[length - 2:length])
             value_f = Decimal(value_s)
         else:
@@ -246,12 +246,19 @@ def consulta_cuenta(request, **kwargs):
                             for k2, v2 in data_item.items():
                                 length = len(v2)
                                 is_positive = ''
-                                if length == 4 or length == 19:
-                                    if "}" in v2 or "-" in v2:
-                                        v2 = v2.replace("}", "")
+                                if k2.upper() in ["RSP_TASA_INTERES", "RSP_TASA_MORA"] and length == 2:
+                                    v2 = f"00{v2}" if v2.isnumeric() else v2
+                                    length = len(v2)
+
+                                if k2.upper() in ["RSP_LIMITE_CRED", "RSP_DEB_TRAN", "RSP_CRE_TRAN", "RSP_SALDO",
+                                                  "RSP_DISP_EFE", "RSP_DISP_COM", "RSP_DISP_EXT", "RSP_IMP_VENC",
+                                                  "RSP_PGO_MIN", "RSP_PGO_CONTADO", "RSP_SLD_PTOS",
+                                                  "RSP_TASA_INTERES", "RSP_TASA_MORA"] and length >= 3:
+                                    if v2[-1] in ["}", "-"]:
+                                        v2 = v2.replace("", "")
                                         v2 = v2.replace("-", "")
                                         is_positive = "-"
-                                    if v2.isnumeric():
+                                    if v2.isnumeric() or "." in v2:
                                         v2 = get_float_from_numeric_str(f"{v2}{is_positive}")
                                         data_item[k2] = v2
                             accounts.append(data_item)
@@ -760,12 +767,16 @@ def consulta_intra_extra_f1(request, **kwargs):
                             for k2, v2 in data_item.items():
                                 length = len(v2)
                                 is_positive = ''
-                                if length == 4 or length == 19:
-                                    if "}" in v2 or "-" in v2:
+                                if k2.upper() in ["RSP_TASA"] and length == 2:
+                                    v2 = f"00{v2}" if v2.isnumeric() else v2
+                                    length = len(v2)
+                                if k2.upper() in ["RSP_IMPORTE", "RSP_TASA", "RSP_CUOTA_ACT", "RSP_CAPITAL_PAG",
+                                                  "RSP_INTERES_PAG", "RSP_SLD_CAPITAL"] and length >= 3:
+                                    if v2[-1] in ["}", "-"]:
                                         v2 = v2.replace("}", "")
                                         v2 = v2.replace("-", "")
                                         is_positive = "-"
-                                    if v2.isnumeric():
+                                    if v2.isnumeric() or "." in v2:
                                         v2 = get_float_from_numeric_str(f"{v2}{is_positive}")
                                         data_item[k2] = v2
                             cards.append(data_item)
@@ -810,8 +821,12 @@ def consulta_transaciones_x_fecha(request, **kwargs):
                             for k2, v2 in data_item.items():
                                 length = len(v2)
                                 is_positive = ''
-                                if length == 4 or length == 19:
-                                    if "}" in v2 or "-" in v2:
+                                if k2.upper() in ["RSP_TASA_MOV", "RSP_TASA_MORA", "RSP_COD_COM"] and length == 2:
+                                    v2 = f"00{v2}" if v2.isnumeric() else v2
+                                    length = len(v2)
+                                if k2.upper() in ["RSP_MONTO_ORIG", "RSP_TASA_MOV",
+                                                  "RSP_TASA_MORA", "RSP_COD_COM"] and length >= 3:
+                                    if v2[-1] in ["}", "-"]:
                                         v2 = v2.replace("}", "")
                                         v2 = v2.replace("-", "")
                                         is_positive = "-"
