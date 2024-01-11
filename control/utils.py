@@ -18,8 +18,9 @@ def get_float_from_numeric_str(value: str) -> str:
         length = len(value)
         is_positive = ''
         assert length >= 4, "El valor no tiene el minimo de largo"
-        if "}" in value:
+        if "}" in value or "-" in value:
             value = value.replace("}", "")
+            value = value.replace("-", "")
             length = len(value)
             is_positive = "-"
         if '.' not in value:
@@ -246,9 +247,10 @@ def consulta_cuenta(request, **kwargs):
                                 length = len(v2)
                                 is_positive = ''
                                 if length == 4 or length == 19:
-                                    if "}" in v2:
+                                    if "}" in v2 or "-" in v2:
                                         v2 = v2.replace("}", "")
-                                        is_positive = "}"
+                                        v2 = v2.replace("-", "")
+                                        is_positive = "-"
                                     if v2.isnumeric():
                                         v2 = get_float_from_numeric_str(f"{v2}{is_positive}")
                                         data_item[k2] = v2
@@ -759,9 +761,10 @@ def consulta_intra_extra_f1(request, **kwargs):
                                 length = len(v2)
                                 is_positive = ''
                                 if length == 4 or length == 19:
-                                    if "}" in v2:
+                                    if "}" in v2 or "-" in v2:
                                         v2 = v2.replace("}", "")
-                                        is_positive = "}"
+                                        v2 = v2.replace("-", "")
+                                        is_positive = "-"
                                     if v2.isnumeric():
                                         v2 = get_float_from_numeric_str(f"{v2}{is_positive}")
                                         data_item[k2] = v2
@@ -808,9 +811,10 @@ def consulta_transaciones_x_fecha(request, **kwargs):
                                 length = len(v2)
                                 is_positive = ''
                                 if length == 4 or length == 19:
-                                    if "}" in v2:
+                                    if "}" in v2 or "-" in v2:
                                         v2 = v2.replace("}", "")
-                                        is_positive = "}"
+                                        v2 = v2.replace("-", "")
+                                        is_positive = "-"
                                     if v2.isnumeric():
                                         v2 = get_float_from_numeric_str(f"{v2}{is_positive}")
                                         data_item[k2] = v2
