@@ -7,7 +7,7 @@ from control.serializers import ConsultaCuentaSerializer, ConsultaTarjetaSeriali
     CambioPINSerializer, ExtrafinanciamientoSerializer, CambioLimitesSerializer, CambioEstatusTDCSerializer, \
     ReposicionTarjetasSerializer, CreacionEnteSerializer, GestionTransaccionesSerializer, ConsultaMovimientosSerializer, \
     IntraExtrasSerializer, ConsultaPuntosSerializer, AltaCuentaTarjetaSerializer, ConsultaIntraExtraF1Serializer, \
-    ConsultaTransaccionesXFechaSerializer, ConsultaCVV2Serializer
+    ConsultaTransaccionesXFechaSerializer, ConsultaCVV2Serializer, CreacionEnteSectorizacionSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -17,12 +17,13 @@ def get_float_from_numeric_str(value: str) -> str:
     try:
         length = len(value)
         is_positive = ''
-        assert length >= 4, "El valor no tiene el minimo de largo"
-        if "}" in value:
+        if length >= 3 and value[-1] in ["}", "-"]:
             value = value.replace("}", "")
+            value = value.replace("-", "")
             length = len(value)
             is_positive = "-"
         if '.' not in value:
+            assert length >= 4, "El valor no tiene el minimo de largo"
             value_s = "%s.%s" % (value[0:length - 2], value[length - 2:length])
             value_f = Decimal(value_s)
         else:
@@ -156,6 +157,38 @@ def creation_ente(request, **kwargs):
     return resp
 
 
+def creation_ente_sectorizacion(request, **kwargs):
+    times = kwargs.get('times', 0)
+    if 'request_data' not in kwargs:
+        request_data = request.data.copy()
+    else:
+        request_data = kwargs['request_data'].copy()
+    request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
+    request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
+    data = {k.upper(): v for k, v in request_data.items()}
+    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    api_url = f'{url_server}{settings.URL_AZ7_ALTA_ENTE_SECTORIZACION}'
+    serializer = CreacionEnteSectorizacionSerializer(data=data)
+    if serializer.is_valid():
+        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        if 'RSP_ERROR' in resp[1]:
+            if resp[1]['RSP_ERROR'].upper() == 'OK':
+                resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
+            elif resp[1]['RSP_ERROR'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
+            elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Transaccion erronea'}, resp[2]
+            else:
+                resp_copy = resp[1].copy()
+                for k in resp[1].keys():
+                    if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION', 'RSP_ENTEID']:
+                        del resp_copy[k]
+                return resp[0], resp_copy, resp[2]
+    else:
+        resp = get_response_data_errors(serializer.errors)
+    return resp
+
+
 def creation_cta_tar(request, **kwargs):
     times = kwargs.get('times', 0)
     if 'request_data' not in kwargs:
@@ -213,11 +246,19 @@ def consulta_cuenta(request, **kwargs):
                             for k2, v2 in data_item.items():
                                 length = len(v2)
                                 is_positive = ''
-                                if length == 4 or length == 19:
-                                    if "}" in v2:
-                                        v2 = v2.replace("}", "")
-                                        is_positive = "}"
-                                    if v2.isnumeric():
+                                if k2.upper() in ["RSP_TASA_INTERES", "RSP_TASA_MORA"] and length == 2:
+                                    v2 = f"00{v2}" if v2.isnumeric() else v2
+                                    length = len(v2)
+
+                                if k2.upper() in ["RSP_LIMITE_CRED", "RSP_DEB_TRAN", "RSP_CRE_TRAN", "RSP_SALDO",
+                                                  "RSP_DISP_EFE", "RSP_DISP_COM", "RSP_DISP_EXT", "RSP_IMP_VENC",
+                                                  "RSP_PGO_MIN", "RSP_PGO_CONTADO", "RSP_SLD_PTOS",
+                                                  "RSP_TASA_INTERES", "RSP_TASA_MORA"] and length >= 3:
+                                    if v2[-1] in ["}", "-"]:
+                                        v2 = v2.replace("", "")
+                                        v2 = v2.replace("-", "")
+                                        is_positive = "-"
+                                    if v2.isnumeric() or "." in v2:
                                         v2 = get_float_from_numeric_str(f"{v2}{is_positive}")
                                         data_item[k2] = v2
                             accounts.append(data_item)
@@ -726,11 +767,16 @@ def consulta_intra_extra_f1(request, **kwargs):
                             for k2, v2 in data_item.items():
                                 length = len(v2)
                                 is_positive = ''
-                                if length == 4 or length == 19:
-                                    if "}" in v2:
+                                if k2.upper() in ["RSP_TASA"] and length == 2:
+                                    v2 = f"00{v2}" if v2.isnumeric() else v2
+                                    length = len(v2)
+                                if k2.upper() in ["RSP_IMPORTE", "RSP_TASA", "RSP_CUOTA_ACT", "RSP_CAPITAL_PAG",
+                                                  "RSP_INTERES_PAG", "RSP_SLD_CAPITAL"] and length >= 3:
+                                    if v2[-1] in ["}", "-"]:
                                         v2 = v2.replace("}", "")
-                                        is_positive = "}"
-                                    if v2.isnumeric():
+                                        v2 = v2.replace("-", "")
+                                        is_positive = "-"
+                                    if v2.isnumeric() or "." in v2:
                                         v2 = get_float_from_numeric_str(f"{v2}{is_positive}")
                                         data_item[k2] = v2
                             cards.append(data_item)
@@ -775,10 +821,15 @@ def consulta_transaciones_x_fecha(request, **kwargs):
                             for k2, v2 in data_item.items():
                                 length = len(v2)
                                 is_positive = ''
-                                if length == 4 or length == 19:
-                                    if "}" in v2:
+                                if k2.upper() in ["RSP_TASA_MOV", "RSP_TASA_MORA", "RSP_COD_COM"] and length == 2:
+                                    v2 = f"00{v2}" if v2.isnumeric() else v2
+                                    length = len(v2)
+                                if k2.upper() in ["RSP_MONTO_ORIG", "RSP_TASA_MOV",
+                                                  "RSP_TASA_MORA", "RSP_COD_COM"] and length >= 3:
+                                    if v2[-1] in ["}", "-"]:
                                         v2 = v2.replace("}", "")
-                                        is_positive = "}"
+                                        v2 = v2.replace("-", "")
+                                        is_positive = "-"
                                     if v2.isnumeric():
                                         v2 = get_float_from_numeric_str(f"{v2}{is_positive}")
                                         data_item[k2] = v2

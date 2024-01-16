@@ -180,6 +180,31 @@ def process_volcan_api_request(data, url, request=None, headers=None, method='PO
         return response_data, response_status
 
 
+def verify_response_verify_card(response_data, is_exist_card_detail=False):
+    if 'RSP_CODIGO' in response_data and response_data['RSP_CODIGO'] != '':
+        code = int(response_data['RSP_CODIGO'])
+        if code == 0:
+            return True, code
+        elif code == 112 or code == 109:
+            # code == 112 Fecha de vencimiento no registrada
+            # code == 109 CVV inválido
+            return True if is_exist_card_detail else False, code
+    return False, 0
+
+
+def parse_response_verify_card(response_data, code):
+    if code == 112:
+        # code == 112 Fecha de vencimiento no registrada
+        invalid = 0
+        response_data['verificationResults']['card']['invalid'] = invalid != 1
+    elif code == 109:
+        # code == 109 CVV inválido
+        valid_cvv = 0
+        response_data['verificationResults']['securityCode']['valid'] = valid_cvv == 1
+        response_data['verificationResults']['securityCode']['verificationAttemptsExceeded'] = False
+    return response_data
+
+
 def post_verify_card_credit(request, *args, **kwargs):
     response_data = dict()
     if 'request_data' not in kwargs:
@@ -192,13 +217,15 @@ def post_verify_card_credit(request, *args, **kwargs):
     if serializer.is_valid():
         validated_data = serializer.validated_data
         card_bin = validated_data.pop('CARD_BIN')
+        card_detail = validated_data.pop('card_detail', None)
         response_data, response_status = process_volcan_api_request(data=validated_data,
                                                                     url=api_url, request=request)
         # aqui falta hacer el proceso para cambiar la respuesta como la necesita Thales
         if response_status == 200:
-            if 'RSP_ERROR' in response_data and response_data['RSP_ERROR'].upper() == 'OK':
+            is_verified, code = verify_response_verify_card(response_data, card_detail)
+            if is_verified:
                 valid_cvv = int(response_data['RSP_VALID_CVV'] if 'RSP_VALID_CVV' in response_data and len(
-                    response_data['RSP_VALID_CVV']) > 0 else '0')
+                    response_data['RSP_VALID_CVV']) > 0 else '1')
                 num_attempts = int(response_data['RSP_NUM_ATTEMPS'] if 'RSP_NUM_ATTEMPS' in response_data and len(
                     response_data['RSP_NUM_ATTEMPS']) > 0 else '0')
                 lost_or_stolen = int(response_data['RSP_LOST_STOLEN'] if 'RSP_LOST_STOLEN' in response_data and len(
@@ -210,9 +237,12 @@ def post_verify_card_credit(request, *args, **kwargs):
 
                 data = {
                     "cardBin": card_bin,
-                    "cardId": response_data['RSP_TARJETAID'] if 'RSP_TARJETAID' in response_data else '',
-                    "consumerId": response_data['RSP_CLIENTEID'] if 'RSP_CLIENTEID' in response_data else '',
-                    "accountId": response_data['RSP_CUENTAID'] if 'RSP_CUENTAID' in response_data else '',
+                    "cardId": response_data['RSP_TARJETAID'] if 'RSP_TARJETAID' in response_data and len(
+                        response_data['RSP_TARJETAID']) > 0 else (card_detail.card_id if card_detail else ''),
+                    "consumerId": response_data['RSP_CLIENTEID'] if 'RSP_CLIENTEID' in response_data and len(
+                        response_data['RSP_CLIENTEID']) > 0 else (card_detail.consumer_id if card_detail else ''),
+                    "accountId": response_data['RSP_CUENTAID'] if 'RSP_CUENTAID' in response_data and len(
+                        response_data['RSP_CUENTAID']) > 0 else (card_detail.account_id if card_detail else ''),
                     "verificationResults": {
                         "securityCode": {
                             "valid": valid_cvv == 1,
@@ -228,7 +258,7 @@ def post_verify_card_credit(request, *args, **kwargs):
                 }
                 if 'CVV' in validated_data and len(validated_data['CVV']) == 0:
                     data['verificationResults']['securityCode']['valid'] = True
-                response_data = data
+                response_data = parse_response_verify_card(response_data=data, code=code)
             else:
                 response_status = 400
                 response_data = {'error': response_data['RSP_DESCRIPCION']}

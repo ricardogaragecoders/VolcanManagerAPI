@@ -48,6 +48,11 @@ class ControlApiView(CustomViewSet):
         return self.control_action(request=request, control_function=creation_ente,
                                    name_control_function="creation_ente")
 
+    def creation_ente_sectorizacion(self, request, *args, **kwargs):
+        from control.utils import creation_ente_sectorizacion
+        return self.control_action(request=request, control_function=creation_ente_sectorizacion,
+                                   name_control_function="creation_ente")
+
     def creation_cta_tar(self, request, *args, **kwargs):
         from control.utils import creation_cta_tar
         return self.control_action(request=request, control_function=creation_cta_tar,
