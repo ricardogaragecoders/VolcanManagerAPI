@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 from common.exceptions import CustomValidationError
 from common.utils import code_generator
-from thalesapi.models import CardBinConfig
+from thalesapi.models import CardBinConfig, CardDetail
 
 
 class VerifyCardCreditSerializer(serializers.Serializer):
@@ -21,6 +21,7 @@ class VerifyCardCreditSerializer(serializers.Serializer):
         card_id = data.pop('cardId', None)
         card_bin = data.pop('cardBin', None)
 
+        data['card_detail'] = CardDetail.objects.filter(card_id=card_id).first()
         data['FOLIO'] = code_generator(characters=12, option='num')
         data['USUARIO_ATZ'] = settings.VOLCAN_USUARIO_ATZ
         data['ACCESO_ATZ'] = settings.VOLCAN_ACCESO_ATZ
