@@ -76,8 +76,9 @@ class ThalesApiView(CustomViewSet):
                                                                      control_function=post_verify_card_prepaid,
                                                                      request_data=request_data,
                                                                      *args, **kwargs)
-            if response_status == 200:
-                card_bin = card_bin if 'cardBin' not in response_data else response_data.pop('cardBin', card_bin)
+            code_error = response_data.pop('code_error', 0)
+            card_bin = card_bin if 'cardBin' not in response_data else response_data.pop('cardBin', card_bin)
+            if code_error == 0 and response_status == 200:
                 CardDetail.objects.get_or_create(consumer_id=response_data['consumerId'],
                                                  card_id=response_data['cardId'],
                                                  issuer_id=issuer_id,
