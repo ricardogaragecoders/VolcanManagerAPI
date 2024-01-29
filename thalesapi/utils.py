@@ -232,14 +232,18 @@ def post_verify_card_credit(request, *args, **kwargs):
                 invalid = int(response_data['RSP_TAR_VALID'] if 'RSP_TAR_VALID' in response_data and len(
                     response_data['RSP_TAR_VALID']) > 0 else '1')
 
+                card_id = response_data['RSP_TARJETAID'] if 'RSP_TARJETAID' in response_data and len(
+                        response_data['RSP_TARJETAID']) > 0 else (card_detail.card_id if card_detail else request_data['cardId'])
+                consumer_id = response_data['RSP_CLIENTEID'] if 'RSP_CLIENTEID' in response_data and len(
+                    response_data['RSP_CLIENTEID']) > 0 else (card_detail.consumer_id if card_detail else '')
+                account_id = response_data['RSP_CUENTAID'] if 'RSP_CUENTAID' in response_data and len(
+                        response_data['RSP_CUENTAID']) > 0 else (card_detail.account_id if card_detail else '')
+
                 data = {
                     "cardBin": card_bin,
-                    "cardId": response_data['RSP_TARJETAID'] if 'RSP_TARJETAID' in response_data and len(
-                        response_data['RSP_TARJETAID']) > 0 else (card_detail.card_id if card_detail else request_data['cardId']),
-                    "consumerId": response_data['RSP_CLIENTEID'] if 'RSP_CLIENTEID' in response_data and len(
-                        response_data['RSP_CLIENTEID']) > 0 else (card_detail.consumer_id if card_detail else '999999'),
-                    "accountId": response_data['RSP_CUENTAID'] if 'RSP_CUENTAID' in response_data and len(
-                        response_data['RSP_CUENTAID']) > 0 else (card_detail.account_id if card_detail else '999999999'),
+                    "cardId": card_id,
+                    "consumerId": consumer_id,
+                    "accountId": account_id,
                     "verificationResults": {
                         "securityCode": {
                             "valid": valid_cvv == 1,
@@ -255,6 +259,10 @@ def post_verify_card_credit(request, *args, **kwargs):
                 }
                 if 'CVV' in validated_data and len(validated_data['CVV']) == 0:
                     data['verificationResults']['securityCode']['valid'] = True
+                if len(consumer_id) == 0:
+                    data.pop('consumerId')
+                if len(account_id) == 0:
+                    data.pop('accountId')
                 response_data = parse_response_verify_card(response_data=data, code=code)
             else:
                 response_status = 400
