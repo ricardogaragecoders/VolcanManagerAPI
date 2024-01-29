@@ -301,7 +301,7 @@ def get_consumer_information_credit(request, *args, **kwargs):
                 state = get_value_by_default(response_data['RSP_ESTADO'],
                                              default=u'Panamá') if 'RSP_ESTADO' in response_data else u'Panamá'
                 zip_code = get_value_by_default(response_data['RSP_CPOSTAL'],
-                                                default='7215') if 'RSP_CPOSTAL' in response_data else '7215'
+                                                default='07215') if 'RSP_CPOSTAL' in response_data else '07215'
                 country = get_value_by_default(response_data['RSP_PAIS'],
                                                default=u'Panamá') if 'RSP_PAIS' in response_data else u'Panamá'
 
@@ -322,7 +322,7 @@ def get_consumer_information_credit(request, *args, **kwargs):
                         "line2": response_data['RSP_DIRECCION2'] if 'RSP_DIRECCION2' in response_data else '',
                         "city": city,
                         "state": state,
-                        "zipCode": zip_code,
+                        "zipCode": zip_code if zip_code.isnumeric() else '07157',
                         "countryCode": get_country_code_by_name(country_name=country)
                     }
                 }
