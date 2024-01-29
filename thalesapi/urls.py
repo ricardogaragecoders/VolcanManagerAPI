@@ -36,6 +36,9 @@ urlpatterns = [
     path('volcan/api/obtenerDatosTokenizacion/',
          ThalesApiViewPrivate.as_view({'post': 'get_card_data_tokenization'})),
 
+    path('volcan/api/obtenerDatosTokenizacionPrepago/',
+         ThalesApiViewPrivate.as_view({'post': 'get_card_data_tokenization_paycard'})),
+
     path('thales/api/registerConsumerCards/',
          ThalesV2ApiViewPrivate.as_view({'post': 'post_register_consumer_cards'})),
 ]

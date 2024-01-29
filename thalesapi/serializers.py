@@ -162,6 +162,33 @@ class GetDataTokenizationSerializer(serializers.Serializer):
         return data
 
 
+class GetDataTokenizationPaycardSerializer(serializers.Serializer):
+    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    MANUFACTURA = serializers.CharField(max_length=1, required=False, default="F", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('TARJETA', 'MANUFACTURA', 'EMISOR')
+
+    def validate(self, data):
+        data = super(GetDataTokenizationPaycardSerializer, self).validate(data)
+        profile = self.context['request'].user.profile
+        card = data.pop('TARJETA', '').strip()
+        manufacture = data.pop('MANUFACTURA', '').strip()
+        transmitter = data.pop('EMISOR', '').strip().upper()
+
+        if len(card) == 0:
+            raise CustomValidationError(detail=u'TARJETA es requerido', code='400')
+
+        if transmitter not in ['CMF',]:
+            raise CustomValidationError(detail=u'EMISOR no autorizado', code='400')
+        from thalesapi.utils import get_card_triple_des_process
+        data['card'] = card
+        data['Tarjeta'] = get_card_triple_des_process(card, is_descript=True)
+        data['Manufactura'] = manufacture
+        return data
+
+
 class GetVerifyCardSerializer(serializers.Serializer):
     TARJETA = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
     FECHA_EXP = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
