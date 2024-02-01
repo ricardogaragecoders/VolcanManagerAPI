@@ -178,9 +178,6 @@ class ThalesApiView(CustomViewSet):
         return Response(data=response_data, status=response_status)
 
 
-
-
-
 class ThalesApiViewPrivate(ThalesApiView):
     permission_classes = (IsAuthenticated, IsVerified, IsOperator)
     serializer_class = GetDataTokenizationSerializer
@@ -257,17 +254,19 @@ class ThalesApiViewPrivate(ThalesApiView):
         from common.utils import get_response_data_errors
         request_data = request.data.copy()
         access_token_paycard = get_access_token_paycard()
-        if access_token_paycard:
+        if not access_token_paycard:
             return self.get_response(status=400, message='No fue posible hacer login a AZ7')
         self.serializer_class = GetDataTokenizationPaycardSerializer
         data = {k.upper(): v for k, v in request_data.items()}
         serializer = self.get_serializer(data=data)
         response_data = {}
         if serializer.is_valid():
-            url_server = settings.SERVER_VOLCAN_AZ7_URL
+            url_server = settings.SERVER_VOLCAN_PAYCARD_URL
             api_url = f'{url_server}{settings.URL_AZ7_CONSULTA_TOKEN_TARJETA}'
             validated_data = serializer.validated_data
             card = validated_data.pop('card', request_data['tarjeta'])
+            fecha_exp = validated_data.pop('FECHA_EXP', request_data['fecha_exp'])
+            folio = validated_data.pop('FOLIO', '12345')
             headers = {
                 'Credenciales': get_credentials_paycad(),
                 'Authorization': f"{access_token_paycard}",
@@ -277,15 +276,15 @@ class ThalesApiViewPrivate(ThalesApiView):
             resp_msg, resp_data, response_status = process_volcan_api_request(data=validated_data, headers=headers,
                                                                               url=api_url, request=request, times=0)
             if response_status == 200:
-                if resp_data['RSP_ERROR'].upper() == 'OK' or len(resp_data['RSP_TARJETAID']) > 0:
+                if resp_data['CodRespuesta'] == '0000' or len(resp_data['CardID']) > 0:
                     resp_data['RSP_ERROR'] = 'OK'
                     resp_data['RSP_CODIGO'] = '0000000000'
                     resp_data['RSP_DESCRIPCION'] = u'Transacción aprobada'
                 if resp_data['RSP_ERROR'] == 'OK':
                     obj_data = {
                         'tarjeta': card,
-                        'fecha_exp': validated_data['FechaExpiracion'],
-                        'folio': resp_data['IDSolicitud'],
+                        'fecha_exp': fecha_exp,
+                        'folio': folio,
                         "card_id": resp_data['CardID'] if 'CardID' in resp_data else '',
                         "consumer_id": resp_data['ConsumerID'] if 'ConsumerID' in resp_data else '',
                         "account_id": resp_data['AccountID'] if 'AccountID' in resp_data else '',
@@ -299,7 +298,7 @@ class ThalesApiViewPrivate(ThalesApiView):
                             'RSP_ERROR': 'OK',
                             'RSP_CODIGO': '00000000',
                             'RSP_DESCRIPCION': 'Transaccion aprobada',
-                            'rsp_folio': resp_data['IDSolicitud'],
+                            'rsp_folio': folio,
                             "cardId": resp_data['CardID'] if 'CardID' in resp_data else '',
                             "consumerId": resp_data['ConsumerID'] if 'ConsumerID' in resp_data else '',
                             "accountId": resp_data['AccountID'] if 'AccountID' in resp_data else ''
@@ -325,7 +324,6 @@ class ThalesApiViewPrivate(ThalesApiView):
             # response_data, response_status = {}, 400
         print(f"Response Card Data Tokenizacion: {response_data}")
         return self.get_response(message=resp_msg, data=response_data, status=response_status, lower_response=False)
-
 
     def get_authorization_token(self, folio=None, issuer_id=None):
         from .utils import process_volcan_api_request

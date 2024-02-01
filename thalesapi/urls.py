@@ -5,6 +5,7 @@ urlpatterns = [
 
     path('thales/api/bin/configurations/',
          CardBinConfigApiView.as_view({'get': 'list', 'post': 'create'})),
+
     path('thales/api/bin/configurations/<str:card_bin_config_id>/',
          CardBinConfigApiView.as_view({'get': 'retrieve', 'patch': 'update'})),
 

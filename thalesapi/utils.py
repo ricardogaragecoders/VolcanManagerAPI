@@ -43,16 +43,20 @@ def get_credentials_paycad():
 
 def get_access_token_paycard():
     if 'access_token_paycard' not in cache:
-        url_server = settings.SERVER_VOLCAN_AZ7_URL
+        url_server = settings.SERVER_VOLCAN_PAYCARD_URL
         api_url = f'{url_server}{settings.URL_AZ7_LOGIN}'
         data_json = {
             'NombreUsuario': settings.PARAM_AZ7_PAYCARD_USUARIO,
             'Password': settings.PARAM_AZ7_PAYCARD_PASSWORD
         }
-        headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            "Credenciales": get_credentials_paycad()
+        }
         resp = process_volcan_api_request(data=data_json, url=api_url, headers=headers)
         if resp[1] == 200:
-            cache.set('access_token_paycard', resp[0]['Token'], 60 * 60 * 2)
+            cache.set('access_token_paycard', resp[0]['Token'], 30)
     return cache.get('access_token_paycard') if 'access_token_paycard' in cache else None
 
 

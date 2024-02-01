@@ -3305,6 +3305,10 @@ components:
           description: 'Mandatorio. Manufactura de la tarjeta a Tokenizar.'
           maxLength: 1
           enum: ['F', 'V']
+        fecha_exp:
+          type: string
+          description: 'Mandatorio. Fecha de expiracion formato MMAA'
+          maxLength: 4
         emisor:
           type: string
           description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
