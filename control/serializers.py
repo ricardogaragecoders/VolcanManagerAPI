@@ -514,8 +514,8 @@ class ReposicionTarjetasSerializer(serializers.Serializer):
 
 
 class GestionTransaccionesSerializer(serializers.Serializer):
-    TARJETA = serializers.CharField(max_length=22, required=False, default="", allow_blank=True)
-    TRANSACCION = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    TARJETA = serializers.CharField(max_length=35, required=False, default="", allow_blank=True)
+    TRANSACCION = serializers.CharField(max_length=6, required=False, default="", allow_blank=True)
     IMPORTE = serializers.CharField(max_length=19, required=False, default="", allow_blank=True, allow_null=True)
     MONEDA = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
     FECHA_TRX = serializers.CharField(max_length=8, required=False, default="", allow_blank=True)
@@ -527,6 +527,7 @@ class GestionTransaccionesSerializer(serializers.Serializer):
     PLAZA = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
     NO_FINANCIAMIENTO = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
     REFERENCIA = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
+    ORIGEN_MOV = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
     DOC_OPER = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
     AUTORIZACION = serializers.CharField(max_length=6, required=False, default="", allow_blank=True)
     COMERCIO = serializers.CharField(max_length=24, required=False, default="", allow_blank=True)
@@ -539,8 +540,8 @@ class GestionTransaccionesSerializer(serializers.Serializer):
 
     class Meta:
         fields = ('TARJETA', 'TRANSACCION', 'IMPORTE', 'MONEDA', 'FECHA_TRX', 'HORA_TRX', 'CVV2', 'FECVENTO',
-                  'FINANCIABLE', 'CHEQUE', 'PLAZA', 'NO_FINANCIAMIENTO', 'REFERENCIA', 'DOC_OPER', 'AUTORIZACION',
-                  'COMERCIO', 'CIUDAD', 'PAIS', 'SUCURSAL', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+                  'FINANCIABLE', 'CHEQUE', 'PLAZA', 'NO_FINANCIAMIENTO', 'REFERENCIA', 'ORIGEN_MOV', 'DOC_OPER',
+                  'AUTORIZACION', 'COMERCIO', 'CIUDAD', 'PAIS', 'SUCURSAL', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
 
     def validate(self, data):
         data = super(GestionTransaccionesSerializer, self).validate(data)

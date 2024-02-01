@@ -2774,11 +2774,11 @@ components:
         tarjeta:
           type: string
           description: 'Mandatorio. Tarjeta de Crédito debe de enviarse cifrada con la llave del emisor RKEY/WSV'
-          maxLength: 22
+          maxLength: 35
         transaccion:
           type: string
           description: 'Mandatorio. Enviar lo siguiente: COM = Compras normales/ADE=Adelanto de Efectivo/PAG=Pagos a la TDC'
-          enum: ['COM', 'ADE', 'PAG']
+          enum: [ 'COM', 'ADE', 'PAG' ]
           maxLength: 6
         importe:
           type: string
@@ -2809,6 +2809,10 @@ components:
           type: string
           description: 'Opcional. Vencimiento de la tarjeta'
           maxLength: 4
+        financiable:
+          type: string
+          description: 'Financiable'
+          maxLength: 1
         cheque:
           type: string
           description: 'Condicional. Campo obligatorio cuando por el código de movimiento.'
@@ -2825,6 +2829,10 @@ components:
           type: string
           description: 'Mandatorio. Folio único por cada transacción se debera de enviar por cada operación'
           maxLength: 12
+        origen_mov:
+          type: string
+          description: 'Origen de movimiento'
+          maxLength: 3
         doc_oper:
           type: string
           description: 'Opcional. Numero de documento a reversar registrado en los movimientos de la TDC, si ingresan la autorización es obligatorio'
