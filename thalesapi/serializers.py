@@ -162,6 +162,52 @@ class GetDataTokenizationSerializer(serializers.Serializer):
         return data
 
 
+class GetDataTokenizationPaycardSerializer(serializers.Serializer):
+    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    FECHA_EXP = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    MANUFACTURA = serializers.CharField(max_length=1, required=False, default="F", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    FOLIO = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('TARJETA', 'FECHA_EXP', 'MANUFACTURA', 'EMISOR', 'FOLIO')
+
+    def validate(self, data):
+        data = super(GetDataTokenizationPaycardSerializer, self).validate(data)
+        profile = self.context['request'].user.profile
+        card = data.pop('TARJETA', '').strip()
+        exp_date = data.get('FECHA_EXP', '').strip()
+        manufacture = data.pop('MANUFACTURA', '').strip()
+        transmitter = data.get('EMISOR', '').strip().upper()
+        folio = data.get('FOLIO', '').strip()
+
+        if len(card) == 0:
+            raise CustomValidationError(detail=u'TARJETA es requerido', code='400')
+
+        if len(exp_date) != 4:
+            raise CustomValidationError(detail=u'FECHA_EXP es requerido', code='400')
+
+        exp_date = exp_date[2:4] + exp_date[0:2]
+
+        if not profile.isSuperadmin():
+            if profile.first_name != transmitter:
+                raise CustomValidationError(detail=u'EMISOR desconocido', code='400')
+
+        if transmitter not in ['CMF', ]:
+            raise CustomValidationError(detail=u'EMISOR no autorizado', code='400')
+
+        if len(folio) == 0:
+            folio = code_generator(characters=12, option='num')
+
+        from thalesapi.utils import get_card_triple_des_process
+        data['FECHA_EXP'] = exp_date
+        data['FOLIO'] = folio
+        data['card'] = card
+        data['Tarjeta'] = get_card_triple_des_process(card, is_descript=True)
+        data['Manufactura'] = manufacture
+        return data
+
+
 class GetVerifyCardSerializer(serializers.Serializer):
     TARJETA = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
     FECHA_EXP = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)

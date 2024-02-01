@@ -424,3 +424,9 @@ URL_AZ7_CONSULTA_INTRA_EXTRA = env.str('URL_AZ7_CONSULTA_INTRA_EXTRA', '/web/ser
 URL_AZ7_CONSULTA_TRANSACCION_X_FECHA = env.str('URL_AZ7_CONSULTA_TRANSACCION_X_FECHA',
                                                '/web/services/Volcan_ConsultaTxnXFecha1')
 URL_AZ7_CONSULTA_CVV2 = env.str('URL_AZ7_CONSULTA_CVV2', '/web/services/Volcan_CVV2_1')
+
+# obtenerDatosTokenizacionPrepago
+URL_AZ7_LOGIN = env.str('URL_AZ7_LOGIN', '/wsParabiliumVolcan/api/Login')
+URL_AZ7_CONSULTA_TOKEN_TARJETA = env.str('URL_AZ7_CONSULTA_TOKEN_TARJETA', '/wsParabiliumVolcan/api/ConsultarTokenTarjeta')
+PARAM_AZ7_PAYCARD_USUARIO = env.str('PARAM_AZ7_PAYCARD_USUARIO', 'Prueba')
+PARAM_AZ7_PAYCARD_PASSWORD = env.str('PARAM_AZ7_PAYCARD_PASSWORD', 'Prueba')

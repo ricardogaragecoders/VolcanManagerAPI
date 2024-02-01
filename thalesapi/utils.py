@@ -1,13 +1,16 @@
+import base64
 import json
-import requests
 import logging
+
+import requests
 from django.conf import settings
+from django.core.cache import cache
 from django.utils import timezone
+
 from common.utils import get_response_data_errors
-from control.utils import get_volcan_api_headers, mask_card
+from control.utils import mask_card
 from thalesapi.models import ISOCountry, DeliverOtpCollection, CardDetail
-from thalesapi.serializers import VerifyCardCreditSerializer, GetConsumerInfoSerializer, GetDataCredentialsSerializer, \
-    GetDataTokenizationSerializer
+from thalesapi.serializers import VerifyCardCreditSerializer, GetConsumerInfoSerializer, GetDataCredentialsSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +24,40 @@ def get_str_from_date_az7(s_date):
 
 def is_card_bin_valid(card_bin):
     return card_bin in ['53876436', '538764', '53139427', '531394', '53139435', '53139497', '53582937', '535829']
+
+
+def get_url_thales_register_customer_with_cards(issuer_id, consumer_id):
+    url = settings.URL_THALES_REGISTER_CONSUMER_CARDS
+    url = url.replace('{issuerId}', issuer_id)
+    url = url.replace('{consumerId}', consumer_id)
+    return url
+
+
+def get_credentials_paycad():
+    if 'credentials_paycard' not in cache:
+        import base64
+        userpass = f'{settings.PARAM_AZ7_PAYCARD_USUARIO}:{settings.PARAM_AZ7_PAYCARD_PASSWORD}'
+        cache.set('credentials_paycard', base64.b64encode(userpass.encode()).decode(), 60 * 60 * 2)
+    return cache.get('credentials_paycard')
+
+
+def get_access_token_paycard():
+    if 'access_token_paycard' not in cache:
+        url_server = settings.SERVER_VOLCAN_PAYCARD_URL
+        api_url = f'{url_server}{settings.URL_AZ7_LOGIN}'
+        data_json = {
+            'NombreUsuario': settings.PARAM_AZ7_PAYCARD_USUARIO,
+            'Password': settings.PARAM_AZ7_PAYCARD_PASSWORD
+        }
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            "Credenciales": get_credentials_paycad()
+        }
+        resp = process_volcan_api_request(data=data_json, url=api_url, headers=headers)
+        if resp[1] == 200:
+            cache.set('access_token_paycard', resp[0]['Token'], 30)
+    return cache.get('access_token_paycard') if 'access_token_paycard' in cache else None
 
 
 def get_thales_api_headers(request=None):

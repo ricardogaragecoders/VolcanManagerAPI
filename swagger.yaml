@@ -1610,6 +1610,58 @@ paths:
       tags:
         - VolcanManager::ThalesAPI
     parameters: []
+  /volcan/api/obtenerDatosTokenizacionPrepago/:
+    post:
+      operationId: api_thales_api_get_card_data_tokenization_paycard
+      description: Thales API Endpoint V2 GetCardDataTokenization Prepago
+      summary: Thales API Endpoint V2 GetCardDataTokenization Prepago
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/GetCardDataTokenizationPaycard"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetCardDataTokenizationPaycard"
+        required: true
+      responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
+        '200':
+          description: 'Consulta datos tokenizacion prepago'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_folio": "388929552430",
+                "cardId": "000000000000000000000",
+                "consumerId": "0000000",
+                "accountId": "000000000000000"
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error"
+              }
+      tags:
+        - VolcanManager::ThalesAPI
+    parameters: []
   /thales/api/registerConsumerCards/:
     post:
       operationId: api_thales_api_register_consumer_cards
@@ -3240,6 +3292,30 @@ components:
         - tarjeta
         - fecha_exp
         - nombre
+        - emisor
+    GetCardDataTokenizationPaycard:
+      type: object
+      properties:
+        tarjeta:
+          type: string
+          description: 'Mandatorio. Número de Tarjeta'
+          maxLength: 22
+        manufactura:
+          type: string
+          description: 'Mandatorio. Manufactura de la tarjeta a Tokenizar.'
+          maxLength: 1
+          enum: ['F', 'V']
+        fecha_exp:
+          type: string
+          description: 'Mandatorio. Fecha de expiracion formato MMAA'
+          maxLength: 4
+        emisor:
+          type: string
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+          maxLength: 3
+      required:
+        - tarjeta
+        - manufactura
         - emisor
     RegisterConsumerCards:
       type: object

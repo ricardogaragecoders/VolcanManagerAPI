@@ -1,6 +1,6 @@
 amqp==5.1.1
 asgiref==3.7.2
-backports.zoneinfo==0.2.1
+backports.zoneinfo==0.2.1;python_version<"3.9"
 billiard==4.1.0
 celery==5.3.1
 certifi==2023.7.22
@@ -31,7 +31,8 @@ prompt-toolkit==3.0.39
 psycopg2-binary==2.9.6
 pyasn1==0.5.0
 pycparser==2.21
-pycrypto==2.6.1
+# pycrypto==2.6.1
+pycryptodome
 PyJWT==2.8.0
 pymongo==3.11.4
 python-dateutil==2.8.2

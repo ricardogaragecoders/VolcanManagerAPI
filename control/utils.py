@@ -66,10 +66,11 @@ def get_volcan_api_headers():
     }
 
 
-def process_volcan_api_request(data, url, request, times=0):
+def process_volcan_api_request(data, url, request, headers=None, times=0):
     response_data = dict()
     response_status = 0
-    headers = get_volcan_api_headers()
+    if not headers:
+        headers = get_volcan_api_headers()
     data_json = json.dumps(data)
     print(f"Request: {url}")
     print(f"Request json: {data_json}")
