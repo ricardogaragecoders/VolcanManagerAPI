@@ -417,6 +417,7 @@ URL_AZ7_CAMBIO_LIMITES = env.str('URL_AZ7_CAMBIO_LIMITES', '/web/services/Cambio
 URL_AZ7_CAMBIO_ESTATUS_TDC = env.str('URL_AZ7_CAMBIO_ESTATUS_TDC', '/web/services/Cambio_estatus_TDC_1')
 URL_AZ7_REPOSICION_TARJETAS = env.str('URL_AZ7_REPOSICION_TARJETAS', '/web/services/Reposicion_Tarjetas_1')
 URL_AZ7_GESTION_TRANSACCIONES = env.str('URL_AZ7_GESTION_TRANSACCIONES', '/web/services/Volcan_GestionTrx_1')
+URL_AZ7_CONSULTAR_ENTE = env.str('URL_AZ7_CONSULTAR_ENTE', '/web/services/Volcan_Consulta_Ente_1')
 URL_AZ7_CONSULTAR_MOVIMIENTOS = env.str('URL_AZ7_CONSULTAR_MOVIMIENTOS', '/web/services/Volcan_ConsultaMov_1')
 URL_AZ7_CONSULTAR_PUNTOS = env.str('URL_AZ7_CONSULTAR_PUNTOS', '/web/services/Volcan_ConsultaPuntos_1')
 URL_AZ7_INTRAS_EXTRAS = env.str('URL_AZ7_INTRAS_EXTRAS', '/web/services/Volcan_Intra_Extras')

@@ -103,6 +103,11 @@ class ControlApiView(CustomViewSet):
         return self.control_action(request=request, control_function=gestion_transacciones,
                                    name_control_function="gestion_transacciones")
 
+    def consulta_ente(self, request, *args, **kwargs):
+        from control.utils import consulta_ente
+        return self.control_action(request=request, control_function=consulta_ente,
+                                   name_control_function="consulta_ente")
+
     def consulta_movimientos(self, request, *args, **kwargs):
         from control.utils import consulta_movimientos
         return self.control_action(request=request, control_function=consulta_movimientos,

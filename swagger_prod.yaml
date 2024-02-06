@@ -852,6 +852,106 @@ paths:
       tags:
         - VolcanManager::Acciones
     parameters: []
+  /volcan/api/ConsultaEnte/:
+    post:
+      operationId: api_control_consulta_ente
+      description: Consulta Ente
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ConsultaEnte"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsultaEnte"
+        required: true
+      summary: Consulta Ente
+      responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
+        '200':
+          description: 'Consulta movimientos'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_id_ente": "00000000000000000000",
+                "rsp_cif": "000000000000000",
+                "rsp_personeria": "0",
+                "rsp_tipo_identificacion": "00",
+                "rsp_documento_identificacion": "00000000000000000000",
+                "rsp_primer_nombre": "",
+                "rsp_segundo_nombre": "",
+                "rsp_primer_apellido": "",
+                "rsp_segundo_apellido": "",
+                "rsp_apellido_casada": "",
+                "rsp_fecha_nacimiento": "",
+                "rsp_sexo": "0",
+                "rsp_estado_civil": "",
+                "rsp_profesion": "",
+                "rsp_seguro_social": "",
+                "rsp_pais_nacimiento": "",
+                "rsp_pais_residencia": "",
+                "rsp_nacionalidad": "",
+                "rsp_codigo_provincia": "",
+                "rsp_codigo_canton": "",
+                "rsp_codigo_distrito": "",
+                "rsp_direccion_1": "",
+                "rsp_direccion_2": "",
+                "rsp_direccion_3": "",
+                "rsp_direccion_4": "",
+                "rsp_direccion_5": "",
+                "rsp_codigo_postal": "",
+                "rsp_telefono_casa": "",
+                "rsp_celular": "",
+                "rsp_telefono_oficina": "",
+                "rsp_email_personal": "",
+                "rsp_email_oficina": "",
+                "rsp_lugar_trabajo": "",
+                "rsp_codigo_provincia_trabajo": "",
+                "rsp_codigo_canton_trabajo": "",
+                "rsp_codigo_distrito_trabajo": "",
+                "rsp_direccion_1_trabajo": "",
+                "rsp_direccion_2_trabajo": "",
+                "rsp_direccion_3_trabajo": "",
+                "rsp_direccion_4_trabajo": "",
+                "rsp_direccion_5_trabajo": "",
+                "rsp_puesto": "",
+                "rsp_ingreso_mensual": "",
+                "rsp_fecha_ingreso_trabajo": "",
+                "rsp_oficina_ext": "",
+                "rsp_nombre_conyuge": "",
+                "rsp_apellido_conyuge": "",
+                "rsp_cedula_conyuge": "",
+                "rsp_nombre_padre": "",
+                "rsp_apellido_padre": "",
+                "rsp_nombre_madre": "",
+                "rsp_apellido_madre": ""
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error gestion transacciones"
+              }
+      tags:
+        - VolcanManager::Acciones
+    parameters: []
   /volcan/api/ConsultaMovimientos/:
     post:
       operationId: api_control_consulta_movimientos
@@ -2873,6 +2973,37 @@ components:
         - ciudad
         - pais
         - sucursal
+        - emisor
+    ConsultaEnte:
+      type: object
+      properties:
+        tarjeta:
+          type: string
+          description: 'Condicional. Número de Tarjeta Principal de la cuenta, cifrada con la llave compartida para Volcán'
+          maxLength: 22
+        id_owner:
+          type: string
+          description: 'Condicional. ID Ente'
+          maxLength: 15
+        cif_ente:
+          type: string
+          description: 'Condicional. Consulta por CIF'
+          maxLength: 15
+        tipo_identificacion:
+          type: string
+          description: 'Condicional. Consulta de cuentas por documento de identificación del cliente, 
+                        se debe de enviar el código de catálogo del tipo de identificación'
+          maxLength: 2
+        doc_identificacion:
+          type: string
+          description: 'Condicional. Consulta de cuentas por documento de identificación del TH, 
+                        para esta consulta es necesario enviar el tipo de identificación'
+          maxLength: 20
+        emisor:
+          type: string
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+          maxLength: 3
+      required:
         - emisor
     ConsultaMovimientos:
       type: object

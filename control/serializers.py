@@ -567,6 +567,44 @@ class GestionTransaccionesSerializer(serializers.Serializer):
         return data
 
 
+class ConsultaEnteSerializer(serializers.Serializer):
+    TARJETA = serializers.CharField(max_length=22, required=False, default="", allow_blank=True)
+    ID_ENTE = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    CIF_ENTE = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    TIPO_IDENTIFICACION = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
+    DOCUMENTO_IDENTIFICACION = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('TARJETA', 'ID_ENTE', 'CIF_ENTE', 'TIPO_IDENTIFICACION', 'DOCUMENTO_IDENTIFICACION',
+                  'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+
+    def validate(self, data):
+        data = super(ConsultaEnteSerializer, self).validate(data)
+        card = data.get('TARJETA', "").strip()
+        id_ente = data.get('ID_ENTE', "").strip()
+        cif_ente = data.get('CIF_ENTE', "").strip()
+        tipo_identificacion = data.get('TIPO_IDENTIFICACION', "").strip()
+        doc_identificacion = data.get('DOC_IDENTIFICACION', "").strip()
+        emisor = data.get('EMISOR', '').strip()
+
+        data['TARJETA'] = card
+        data['ID_ENTE'] = id_ente
+        data['CIF_ENTE'] = cif_ente
+        data['TIPO_IDENTIFICACION'] = tipo_identificacion
+        data['DOC_IDENTIFICACION'] = doc_identificacion
+
+        if len(card) == 0 and len(id_ente) == 0 and len(cif_ente) == 0 and len(tipo_identificacion) == 0 and len(
+                doc_identificacion) == 0:
+            raise CustomValidationError(detail=u'No fue proporcionado ningun filtro para hacer la busqueda',
+                                        code='400')
+        if len(emisor) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
+        return data
+
+
 class ConsultaMovimientosSerializer(serializers.Serializer):
     TARJETA = serializers.CharField(max_length=22, required=False, default="", allow_blank=True)
     FECHA_DE_CORTE = serializers.CharField(max_length=8, required=False, default="", allow_blank=True)
