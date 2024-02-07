@@ -587,14 +587,14 @@ class ConsultaEnteSerializer(serializers.Serializer):
         id_ente = data.get('ID_ENTE', "").strip()
         cif_ente = data.get('CIF_ENTE', "").strip()
         tipo_identificacion = data.get('TIPO_IDENTIFICACION', "").strip()
-        doc_identificacion = data.get('DOC_IDENTIFICACION', "").strip()
+        doc_identificacion = data.get('DOCUMENTO_IDENTIFICACION', "").strip()
         emisor = data.get('EMISOR', '').strip()
 
         data['TARJETA'] = card
         data['ID_ENTE'] = id_ente
         data['CIF_ENTE'] = cif_ente
         data['TIPO_IDENTIFICACION'] = tipo_identificacion
-        data['DOC_IDENTIFICACION'] = doc_identificacion
+        data['DOCUMENTO_IDENTIFICACION'] = doc_identificacion
 
         if len(card) == 0 and len(id_ente) == 0 and len(cif_ente) == 0 and len(tipo_identificacion) == 0 and len(
                 doc_identificacion) == 0:

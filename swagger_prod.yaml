@@ -2981,7 +2981,7 @@ components:
           type: string
           description: 'Condicional. Número de Tarjeta Principal de la cuenta, cifrada con la llave compartida para Volcán'
           maxLength: 22
-        id_owner:
+        id_ente:
           type: string
           description: 'Condicional. ID Ente'
           maxLength: 15
@@ -2994,7 +2994,7 @@ components:
           description: 'Condicional. Consulta de cuentas por documento de identificación del cliente, 
                         se debe de enviar el código de catálogo del tipo de identificación'
           maxLength: 2
-        doc_identificacion:
+        documento_identificacion:
           type: string
           description: 'Condicional. Consulta de cuentas por documento de identificación del TH, 
                         para esta consulta es necesario enviar el tipo de identificación'
