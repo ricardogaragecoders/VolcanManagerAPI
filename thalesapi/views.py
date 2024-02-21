@@ -8,7 +8,7 @@ from thalesapi.models import CardType, CardDetail, CardBinConfig
 from thalesapi.serializers import GetDataTokenizationSerializer, CardBinConfigSerializer, GetVerifyCardSerializer, \
     GetDataTokenizationPaycardSerializer
 from thalesapi.utils import is_card_bin_valid, get_access_token_paycard, get_credentials_paycad, \
-    get_url_thales_register_customer_with_cards
+    get_url_thales_register_customer_with_cards, get_cards_bin_prepaid, get_card_bin_config
 from users.permissions import IsVerified, IsOperator, IsSupervisor
 from volcanmanagerapi import settings
 
@@ -26,6 +26,31 @@ class CardBinConfigApiView(CustomViewSet):
     model_class = CardBinConfig
     permission_classes = (IsAuthenticated, IsVerified, IsSupervisor)
     field_pk = 'card_bin_config_id'
+
+    def clear_cache(self):
+        from django.core.cache import cache
+        if 'cards-bin' in cache:
+            cache.delete('cards-bin')
+        if 'cards-bin-prepaid' in cache:
+            cache.delete('cards-bin-prepaid')
+        if 'cards-bin-credit' in cache:
+            cache.delete('cards-bin-credit')
+
+    def clear_cache_bin(self, card_bin):
+        from django.core.cache import cache
+        if card_bin in cache:
+            cache.delete(card_bin)
+
+    def perform_create(self, request, *args, **kwargs):
+        super(CardBinConfigApiView, self).perform_create(request=request, *args, **kwargs)
+        self.clear_cache()
+        self.clear_cache_bin(self.serializer.data['card_bin'])
+
+    def perform_update(self, request, *args, **kwargs):
+        super(CardBinConfigApiView, self).perform_update(request=request, *args, **kwargs)
+        self.clear_cache()
+        self.clear_cache_bin(self.serializer.data['card_bin'])
+
 
 
 # Create your views here.
@@ -65,9 +90,11 @@ class ThalesApiView(CustomViewSet):
         if 'cardBin' in request_data and is_card_bin_valid(request_data['cardBin']):
             # aqui revisamos si es credito o prepago
             card_bin = request_data['cardBin']
-            card_type = CardType.CT_PREPAID if card_bin in '53876436' else CardType.CT_CREDIT
-            if card_type == CardType.CT_CREDIT:
+            card_bin_config = get_card_bin_config(key_cache=card_bin)
+            # card_type = CardType.CT_PREPAID if card_bin in '53876436' else CardType.CT_CREDIT
+            if card_bin_config['card_type'] == CardType.CT_CREDIT:
                 from thalesapi.utils import post_verify_card_credit
+                request_data['emisor'] = card_bin_config['emisor']
                 response_data, response_status = self.control_action(request=request,
                                                                      control_function=post_verify_card_credit,
                                                                      request_data=request_data,
@@ -86,7 +113,8 @@ class ThalesApiView(CustomViewSet):
                                                  issuer_id=issuer_id,
                                                  account_id=response_data['accountId'],
                                                  card_bin=card_bin,
-                                                 card_type=card_type)
+                                                 card_type=card_bin_config['card_type'],
+                                                 emisor=card_bin_config['emisor'])
         else:
             response_data, response_status = {'error': 'Datos incompletos'}, 400
         print(f"Response Verify Card: {response_data}")

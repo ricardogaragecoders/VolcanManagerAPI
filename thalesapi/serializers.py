@@ -10,9 +10,10 @@ class VerifyCardCreditSerializer(serializers.Serializer):
     encryptedData = serializers.CharField(min_length=3, required=True, allow_blank=False, allow_null=False)
     cardId = serializers.CharField(max_length=48, required=False, default="", allow_blank=True, allow_null=True)
     cardBin = serializers.CharField(max_length=8, required=True, allow_blank=False, allow_null=False)
+    emisor = serializers.CharField(max_length=3, required=False, allow_blank=True, allow_null=True)
 
     class Meta:
-        fields = ('encryptedData', 'cardId', 'cardBin')
+        fields = ('encryptedData', 'cardId', 'cardBin', 'emisor')
 
     def validate(self, data):
         data = super(VerifyCardCreditSerializer, self).validate(data)
@@ -20,12 +21,13 @@ class VerifyCardCreditSerializer(serializers.Serializer):
         encrypted_data = data.pop('encryptedData', None)
         card_id = data.pop('cardId', None)
         card_bin = data.pop('cardBin', None)
+        emisor = data.pop('emisor', settings.THALES_API_EMISOR_DEFAULT)
 
-        data['card_detail'] = CardDetail.objects.filter(card_id=card_id).first()
+        data['card_detail'] = CardDetail.objects.filter(card_id=card_id, emisor=emisor).first()
         data['FOLIO'] = code_generator(characters=12, option='num')
         data['USUARIO_ATZ'] = settings.VOLCAN_USUARIO_ATZ
         data['ACCESO_ATZ'] = settings.VOLCAN_ACCESO_ATZ
-        data['EMISOR'] = settings.THALES_API_EMISOR_DEFAULT
+        data['EMISOR'] = emisor
 
         from jwcrypto import jwk, jwe
         import json
@@ -61,14 +63,16 @@ class VerifyCardCreditSerializer(serializers.Serializer):
 class GetConsumerInfoSerializer(serializers.Serializer):
     cardId = serializers.CharField(max_length=48, required=False, default="", allow_blank=True, allow_null=True)
     consumerId = serializers.CharField(max_length=64, required=False, default="", allow_blank=False, allow_null=False)
+    emisor = serializers.CharField(max_length=3, required=False, allow_blank=True, allow_null=True)
 
     class Meta:
-        fields = ('cardId', 'consumerId')
+        fields = ('cardId', 'consumerId', 'emisor')
 
     def validate(self, data):
         data = super(GetConsumerInfoSerializer, self).validate(data)
         card_id = data.pop('cardId', None)
         consumer_id = data.pop('consumerId', None)
+        emisor = data.pop('emisor', settings.THALES_API_EMISOR_DEFAULT)
 
         data['TARJETAID'] = card_id
         if len(card_id) == 0:
@@ -77,7 +81,7 @@ class GetConsumerInfoSerializer(serializers.Serializer):
         data['FOLIO'] = code_generator(characters=12, option='num')
         data['USUARIO_ATZ'] = settings.VOLCAN_USUARIO_ATZ
         data['ACCESO_ATZ'] = settings.VOLCAN_ACCESO_ATZ
-        data['EMISOR'] = settings.THALES_API_EMISOR_DEFAULT
+        data['EMISOR'] = emisor
 
         return data
 
@@ -85,14 +89,16 @@ class GetConsumerInfoSerializer(serializers.Serializer):
 class GetDataCredentialsSerializer(serializers.Serializer):
     cardId = serializers.CharField(max_length=48, required=False, default="", allow_blank=True, allow_null=True)
     consumerId = serializers.CharField(max_length=64, required=False, default="", allow_blank=False, allow_null=False)
+    emisor = serializers.CharField(max_length=3, required=False, allow_blank=True, allow_null=True)
 
     class Meta:
-        fields = ('cardId', 'consumerId')
+        fields = ('cardId', 'consumerId', 'emisor')
 
     def validate(self, data):
         data = super(GetDataCredentialsSerializer, self).validate(data)
         card_id = data.pop('cardId', None)
         consumer_id = data.pop('consumerId', None)
+        emisor = data.pop('emisor', settings.THALES_API_EMISOR_DEFAULT)
 
         data['TARJETAID'] = card_id
         if len(card_id) == 0:
@@ -101,7 +107,7 @@ class GetDataCredentialsSerializer(serializers.Serializer):
         data['FOLIO'] = code_generator(characters=12, option='num')
         data['USUARIO_ATZ'] = settings.VOLCAN_USUARIO_ATZ
         data['ACCESO_ATZ'] = settings.VOLCAN_ACCESO_ATZ
-        data['EMISOR'] = settings.THALES_API_EMISOR_DEFAULT
+        data['EMISOR'] = emisor
         # data['AUTORIZACION'] = settings.THALESAPI_AUTORIZACION_DEFAULT
 
         return data
@@ -146,7 +152,7 @@ class GetDataTokenizationSerializer(serializers.Serializer):
             if profile.first_name != transmitter:
                 raise CustomValidationError(detail=u'EMISOR desconocido', code='400')
 
-        if transmitter not in ['CMF',]:
+        if transmitter not in CardBinConfig.objects.order_by().values_list('emisor', flat=True).distinct():
             raise CustomValidationError(detail=u'EMISOR no autorizado', code='400')
 
         if len(folio) == 0:
@@ -193,7 +199,7 @@ class GetDataTokenizationPaycardSerializer(serializers.Serializer):
             if profile.first_name != transmitter:
                 raise CustomValidationError(detail=u'EMISOR desconocido', code='400')
 
-        if transmitter not in ['CMF', ]:
+        if transmitter not in CardBinConfig.objects.order_by().values_list('emisor', flat=True).distinct():
             raise CustomValidationError(detail=u'EMISOR no autorizado', code='400')
 
         if len(folio) == 0:
@@ -247,7 +253,7 @@ class GetVerifyCardSerializer(serializers.Serializer):
             if profile.first_name != transmitter:
                 raise CustomValidationError(detail=u'EMISOR desconocido', code='400')
 
-        if transmitter not in ['CMF',]:
+        if transmitter not in CardBinConfig.objects.order_by().values_list('emisor', flat=True).distinct():
             raise CustomValidationError(detail=u'EMISOR no autorizado', code='400')
 
         if len(folio) == 0:
