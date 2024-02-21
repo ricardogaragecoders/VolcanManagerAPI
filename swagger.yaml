@@ -1353,7 +1353,7 @@ paths:
         '200':
           description: "Consulta CVV2"
           examples:
-            exitosa:
+            "Exitosa: CVV2 dinamico encriptado con la llave 3DES, una vez desencriptado los primeros 2 dígitos son la longitud del cvv (03) los siguientes 3 son el CVV":
               {
                 "rsp_success": true,
                 "rsp_codigo": "00",
