@@ -1,0 +1,101 @@
+version: '3'
+
+services:
+  backend:
+    build:
+      context: .
+    image: volcan_manager_api
+    container_name: backend
+    hostname: backend
+    restart: on-failure
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/opt/apps/volcanmanagerapi
+    command: >
+      sh -c "python3 manage.py migrate &&
+             python3 manage.py wait_for_db &&
+             python3 manage.py runserver 0.0.0.0:8000"
+    stdin_open: true
+    tty: true
+    env_file:
+      - ./.env
+    depends_on:
+      - db
+      - redis
+      - mongodb
+      - rabbit
+    networks:
+      - volcan_manager_api_network
+
+  db:
+    image: postgres:14-alpine
+    ports:
+      - "5433:5432"
+    env_file:
+      - ./.env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - volcan_manager_api_network
+
+
+  # RabbitMQ - queue
+  rabbit:
+    image: rabbitmq:3-management
+    container_name: rabbit
+    hostname: rabbit
+    environment:
+      - RABBITMQ_DEFAULT_USER=volcan_manager_api
+      - RABBITMQ_DEFAULT_PASS=S0m3P4ssw0rd
+      - RABBITMQ_DEFAULT_VHOST=/volcan_manager_api_host
+    ports:
+      - "5682:5672"
+      - "15682:15672"
+    networks:
+      - volcan_manager_api_network
+
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6378:6379"
+    networks:
+      - volcan_manager_api_network
+
+
+  mongodb:
+    image: mongo:6-jammy
+    ports:
+      - '27018:27017'
+    volumes:
+      - mongodata:/data/db
+    networks:
+      - volcan_manager_api_network
+
+
+  celery:
+    restart: always
+    build:
+      context: .
+    command: celery -A volcanmanagerapi worker -l INFO
+    volumes:
+      - .:/opt/apps/volcanmanagerapi
+    env_file:
+      - ./.env
+    depends_on:
+      - db
+      - redis
+      - rabbit
+      - mongodb
+      - backend
+    networks:
+      - volcan_manager_api_network
+
+volumes:
+  pgdata:
+  mongodata:
+
+networks:
+  volcan_manager_api_network:
+    driver: bridge

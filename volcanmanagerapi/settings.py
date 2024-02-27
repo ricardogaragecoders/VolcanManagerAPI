@@ -108,10 +108,8 @@ MONGO_DB = {
 
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
-        "LOCATION": "/var/tmp/volcanmanagerapi",
-        "TIMEOUT": 60,
-        "OPTIONS": {"MAX_ENTRIES": 1000},
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://redis:6379",
     }
 }
 
