@@ -776,7 +776,7 @@ class ConsultaTransaccionesXFechaSerializer(serializers.Serializer):
     FEC_FINAL = serializers.CharField(max_length=8, required=False, default="", allow_blank=True)
     HOR_FINAL = serializers.CharField(max_length=6, required=False, default="", allow_blank=True)
     TIPO_MOV = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
-    PAGINA = serializers.CharField(max_length=31, required=False, default="", allow_blank=True)
+    PAGINA = serializers.CharField(max_length=35, required=False, default="", allow_blank=True)
     DIRECCION = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
     EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
     USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
