@@ -202,10 +202,10 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
             if self.serializer.is_valid():
                 db = TransactionCollection()
                 data = self.serializer.validated_data
-                data['entregado'] = False
-                data['fecha_entregado'] = None
-                data['codigo_error'] = ''
-                data['mensaje_error'] = ''
+                data['delivered'] = False
+                data['delivery_date'] = None
+                data['response_code'] = ''
+                data['response_body'] = ''
                 result = db.insert_one(data=data)
                 from webhook.tasks import send_transaction_emisor
                 send_transaction_emisor.delay(transaction_id=str(result.inserted_id))
@@ -266,10 +266,10 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
                     # 'numero_autorizacion': item['numero_autorizacion'],
                     # 'codigo_autorizacion': item['codigo_autorizacion'],
                     # 'comercio': item['comercio'],
-                    'entregado': item['entregado'],
-                    # 'fecha_entregado': item['fecha_entregado'],
-                    'codigo_error': item['codigo_error'],
-                    # 'mensaje_error': item['mensaje_error']
+                    'entregado': item['delivered'],
+                    # 'fecha_entregado': item['delivery_date'],
+                    'codigo_error': item['response_code'],
+                    # 'mensaje_error': item['response_body']
                 })
             pages = int(self._total / self._limit)
             current_page = self._offset / self._limit
@@ -323,10 +323,10 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
                         'pais': item['pais'] if 'pais' in item else '',
                         'email': item['email'] if 'email' in item else '',
                         'tarjetahabiente': item['tarjetahabiente'] if 'tarjetahabiente' in item else '',
-                        'entregado': item['entregado'],
-                        'fecha_entregado': item['fecha_entregado'],
-                        'codigo_error': item['codigo_error'],
-                        'mensaje_error': item['mensaje_error'],
+                        'entregado': item['delivered'],
+                        'fecha_entregado': item['delivery_date'],
+                        'codigo_error': item['response_code'],
+                        'mensaje_error': item['response_body'],
                     })
                 response_data = results[0] if len(results) > 0 else []
                 self.make_response_success(data=response_data)
@@ -370,7 +370,7 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
             from webhook.models import TransactionCollection
             db = TransactionCollection()
             filters = self.get_queryset_filters(*args, **kwargs)
-            filters['entregado'] = False
+            filters['delivered'] = False
 
             query = db.find(filters)
             if query:

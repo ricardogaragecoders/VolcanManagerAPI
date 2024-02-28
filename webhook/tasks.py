@@ -8,7 +8,7 @@ from bson.objectid import ObjectId
 from celery import shared_task
 from django.utils import timezone
 
-from webhook.models import TransactionCollection
+from webhook.models import TransactionCollection, NotificationCollection
 from webhook.models import Webhook
 
 
@@ -91,6 +91,7 @@ def send_transaction_url_webhook(data, webhook: Webhook):
 
 @shared_task
 def send_transaction_emisor(transaction_id=None, emisor=''):
+    notifications = NotificationCollection()
     db = TransactionCollection()
     webhook = None
     if len(emisor) == 0 and transaction_id:
@@ -100,9 +101,9 @@ def send_transaction_emisor(transaction_id=None, emisor=''):
             queryset = db.find({'_id': int(transaction_id)})
     else:
         webhook = Webhook.objects.filter(account_issuer=emisor, deleted_at__isnull=True).first()
-        sort = 'fecha_entregado'
+        sort = 'delivery_date'
         direction = pymongo.ASCENDING
-        filters = {'emisor': emisor, 'entregado': False}
+        filters = {'emisor': emisor, 'delivered': False}
         queryset = db.find_all(filters, sort, direction)
 
     results = []
@@ -130,14 +131,39 @@ def send_transaction_emisor(transaction_id=None, emisor=''):
         webhook = Webhook.objects.filter(account_issuer=results[0]['emisor'], deleted_at__isnull=True).first()
 
     if webhook:
-        for item in results:
-            resp = send_transaction_url_webhook(data=item, webhook=webhook)
-            filters = {'_id': ObjectId(item['id'])}
+        for result_item in results:
+            resp = send_transaction_url_webhook(data=result_item, webhook=webhook)
+            filters = {'_id': ObjectId(result_item['id'])}
             data_update = {'$set': {
-                'entregado': resp[0],
-                'fecha_entregado': timezone.localtime(timezone.now()),
-                'codigo_error': str(resp[1]),
-                'mensaje_error': resp[2]
+                'delivered': resp[0],
+                'delivery_date': timezone.localtime(timezone.now()) if resp[0] else None,
+                'response_code': str(resp[1]),
+                'response_body': resp[2]
             }}
             db.update_one(filters=filters, data=data_update)
+            notifications.insert_one({
+                'user': {'name': 'webhook'},
+                'notification': result_item,
+                'notification_type': {'type': 'transaction', 'mode': 'normal', 'version': 1},
+                'delivery': {
+                    'delivered': resp[0],
+                    'delivery_date': timezone.localtime(timezone.now()) if resp[0] else None,
+                    'attemps': 1
+                },
+                'webhook': {
+                    'id': webhook.id,
+                    'url': webhook.url_webhook,
+                    'headers': {
+                        'header': webhook.header_webhook,
+                        'value': webhook.key_webhook
+                    }
+                },
+                'response': {
+                    'code': str(resp[1]),
+                    'body': resp[2]
+                },
+                'dates': {
+                    'created_at': timezone.localtime(timezone.now())
+                }
+            })
     return len(results)

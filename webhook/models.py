@@ -28,6 +28,52 @@ class TransactionCollection(MonitorCollection):
         self.get_collection('transactions')
 
 
+class NotificationCollection(MonitorCollection):
+    """
+        Structure of a notification
+
+            {
+                "user": {
+                    "id": "xxxx-xxxx-xxxx-xxx",
+                    "name": "...."
+                },
+                "notification": {
+                    ... // message's body
+                },
+                "notification_type": {
+                    "type": "transaction" | "paycard" | "thales",
+                    "mode": "normal" | "retry" | "resend",
+                    "version": 1
+                },
+                "delivery": {
+                    "delivered": true | false,
+                    "delivery_date": ....,
+                    "priority": 1..5,
+                    "attemps": 1...3,
+                },
+                "webhook": {
+                    "id": "xxxxx-xxxxx-xxxx-xxxxx",
+                    "url": "....",
+                    "headers": "...",
+                },
+                "response": {
+                    "code": "....",
+                    "body": "...."
+                },
+                "dates": {
+                    "created_at": ....,
+                    "updated_at": ....,
+                    "deleted_at": ....
+                }
+            }
+
+    """
+
+    def __init__(self):
+        super(NotificationCollection, self).__init__()
+        self.get_collection('notifications')
+
+
 class TransactionErrorCollection(MonitorCollection):
 
     def __init__(self):
