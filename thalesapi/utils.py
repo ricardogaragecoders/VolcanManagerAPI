@@ -1,13 +1,16 @@
+import base64
 import json
-import requests
 import logging
+
+import requests
 from django.conf import settings
+from django.core.cache import cache
 from django.utils import timezone
+
 from common.utils import get_response_data_errors
-from control.utils import get_volcan_api_headers, mask_card
-from thalesapi.models import ISOCountry, DeliverOtpCollection, CardDetail
-from thalesapi.serializers import VerifyCardCreditSerializer, GetConsumerInfoSerializer, GetDataCredentialsSerializer, \
-    GetDataTokenizationSerializer
+from control.utils import mask_card
+from thalesapi.models import ISOCountry, DeliverOtpCollection, CardDetail, CardBinConfig, CardType
+from thalesapi.serializers import VerifyCardCreditSerializer, GetConsumerInfoSerializer, GetDataCredentialsSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -19,8 +22,74 @@ def get_str_from_date_az7(s_date):
         return s_date
 
 
+def get_cards_bin():
+    key_cache = 'cards-bin'
+    if key_cache not in cache:
+        cards_bin = CardBinConfig.objects.values_list('card_bin', flat=True).all()
+        cache.set(key_cache, cards_bin, 60 * 60 * 24)
+    return cache.get(key_cache)
+
+
+def get_cards_bin_prepaid():
+    key_cache = 'cards-bin-prepaid'
+    if key_cache not in cache:
+        cards_bin = CardBinConfig.objects.values_list('card_bin', flat=True).filter(card_type=CardType.CT_PREPAID)
+        cache.set(key_cache, cards_bin, 60 * 60 * 24)
+    return cache.get(key_cache)
+
+
+def get_cards_bin_credit():
+    key_cache = 'cards-bin-credit'
+    if key_cache not in cache:
+        cards_bin = CardBinConfig.objects.values_list('card_bin', flat=True).filter(card_type=CardType.CT_CREDIT)
+        cache.set(key_cache, cards_bin, 60 * 60 * 24)
+    return cache.get(key_cache)
+
+
+def get_card_bin_config(key_cache: str = ''):
+    if key_cache not in cache:
+        values = CardBinConfig.objects.values('issuer_id', 'card_type', 'card_product_id', 'card_bin',
+                                              'emisor').filter(card_bin__startswith=key_cache).first()
+        cache.set(key_cache, values, 60 * 60 * 24)
+    return cache.get(key_cache)
+
+
 def is_card_bin_valid(card_bin):
-    return card_bin in ['53876436', '538764', '53139427', '531394', '53139435', '53139497', '53582937', '535829']
+    return card_bin in get_cards_bin()
+
+
+def get_url_thales_register_customer_with_cards(issuer_id, consumer_id):
+    url = settings.URL_THALES_REGISTER_CONSUMER_CARDS
+    url = url.replace('{issuerId}', issuer_id)
+    url = url.replace('{consumerId}', consumer_id)
+    return url
+
+
+def get_credentials_paycad():
+    if 'credentials_paycard' not in cache:
+        import base64
+        userpass = f'{settings.PARAM_AZ7_PAYCARD_USUARIO}:{settings.PARAM_AZ7_PAYCARD_PASSWORD}'
+        cache.set('credentials_paycard', base64.b64encode(userpass.encode()).decode(), 60 * 60 * 2)
+    return cache.get('credentials_paycard')
+
+
+def get_access_token_paycard():
+    if 'access_token_paycard' not in cache:
+        url_server = settings.SERVER_VOLCAN_PAYCARD_URL
+        api_url = f'{url_server}{settings.URL_AZ7_LOGIN}'
+        data_json = {
+            'NombreUsuario': settings.PARAM_AZ7_PAYCARD_USUARIO,
+            'Password': settings.PARAM_AZ7_PAYCARD_PASSWORD
+        }
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            "Credenciales": get_credentials_paycad()
+        }
+        resp = process_volcan_api_request(data=data_json, url=api_url, headers=headers)
+        if resp[1] == 200:
+            cache.set('access_token_paycard', resp[0]['Token'], 30)
+    return cache.get('access_token_paycard') if 'access_token_paycard' in cache else None
 
 
 def get_thales_api_headers(request=None):
@@ -233,11 +302,12 @@ def post_verify_card_credit(request, *args, **kwargs):
                     response_data['RSP_TAR_VALID']) > 0 else '1')
 
                 card_id = response_data['RSP_TARJETAID'] if 'RSP_TARJETAID' in response_data and len(
-                        response_data['RSP_TARJETAID']) > 0 else (card_detail.card_id if card_detail else request_data['cardId'])
+                    response_data['RSP_TARJETAID']) > 0 else (
+                    card_detail.card_id if card_detail else request_data['cardId'])
                 consumer_id = response_data['RSP_CLIENTEID'] if 'RSP_CLIENTEID' in response_data and len(
                     response_data['RSP_CLIENTEID']) > 0 else (card_detail.consumer_id if card_detail else '')
                 account_id = response_data['RSP_CUENTAID'] if 'RSP_CUENTAID' in response_data and len(
-                        response_data['RSP_CUENTAID']) > 0 else (card_detail.account_id if card_detail else '')
+                    response_data['RSP_CUENTAID']) > 0 else (card_detail.account_id if card_detail else '')
 
                 data = {
                     "cardBin": card_bin,
@@ -289,7 +359,7 @@ def get_consumer_information_credit(request, *args, **kwargs):
     card_detail = kwargs.get('card_detail')
     url_server = settings.SERVER_VOLCAN_AZ7_URL
     api_url = f'{url_server}{settings.URL_THALES_API_GET_CONSUMER}'
-    data = {'cardId': card_detail.card_id, 'consumerId': card_detail.consumer_id}
+    data = {'cardId': card_detail.card_id, 'consumerId': card_detail.consumer_id, 'emisor': card_detail.emisor}
     serializer = GetConsumerInfoSerializer(data=data)
     if serializer.is_valid():
         response_data, response_status = process_volcan_api_request(data=serializer.validated_data, url=api_url,
@@ -351,7 +421,7 @@ def get_card_credentials_credit(request, *args, **kwargs):
     card_detail = kwargs.get('card_detail')
     url_server = settings.SERVER_VOLCAN_AZ7_URL
     api_url = f'{url_server}{settings.URL_THALES_API_GET_CARD_CREDENTIALS}'
-    data = {'cardId': card_detail.card_id, 'consumerId': card_detail.consumer_id}
+    data = {'cardId': card_detail.card_id, 'consumerId': card_detail.consumer_id, 'emisor': card_detail.emisor}
     serializer = GetDataCredentialsSerializer(data=data)
     if serializer.is_valid():
         response_data, response_status = process_volcan_api_request(data=serializer.validated_data, url=api_url,

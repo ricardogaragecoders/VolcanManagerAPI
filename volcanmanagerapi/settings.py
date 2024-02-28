@@ -417,6 +417,7 @@ URL_AZ7_CAMBIO_LIMITES = env.str('URL_AZ7_CAMBIO_LIMITES', '/web/services/Cambio
 URL_AZ7_CAMBIO_ESTATUS_TDC = env.str('URL_AZ7_CAMBIO_ESTATUS_TDC', '/web/services/Cambio_estatus_TDC_1')
 URL_AZ7_REPOSICION_TARJETAS = env.str('URL_AZ7_REPOSICION_TARJETAS', '/web/services/Reposicion_Tarjetas_1')
 URL_AZ7_GESTION_TRANSACCIONES = env.str('URL_AZ7_GESTION_TRANSACCIONES', '/web/services/Volcan_GestionTrx_1')
+URL_AZ7_CONSULTAR_ENTE = env.str('URL_AZ7_CONSULTAR_ENTE', '/web/services/Volcan_Consulta_Ente_1')
 URL_AZ7_CONSULTAR_MOVIMIENTOS = env.str('URL_AZ7_CONSULTAR_MOVIMIENTOS', '/web/services/Volcan_ConsultaMov_1')
 URL_AZ7_CONSULTAR_PUNTOS = env.str('URL_AZ7_CONSULTAR_PUNTOS', '/web/services/Volcan_ConsultaPuntos_1')
 URL_AZ7_INTRAS_EXTRAS = env.str('URL_AZ7_INTRAS_EXTRAS', '/web/services/Volcan_Intra_Extras')
@@ -424,3 +425,9 @@ URL_AZ7_CONSULTA_INTRA_EXTRA = env.str('URL_AZ7_CONSULTA_INTRA_EXTRA', '/web/ser
 URL_AZ7_CONSULTA_TRANSACCION_X_FECHA = env.str('URL_AZ7_CONSULTA_TRANSACCION_X_FECHA',
                                                '/web/services/Volcan_ConsultaTxnXFecha1')
 URL_AZ7_CONSULTA_CVV2 = env.str('URL_AZ7_CONSULTA_CVV2', '/web/services/Volcan_CVV2_1')
+
+# obtenerDatosTokenizacionPrepago
+URL_AZ7_LOGIN = env.str('URL_AZ7_LOGIN', '/wsParabiliumVolcan/api/Login')
+URL_AZ7_CONSULTA_TOKEN_TARJETA = env.str('URL_AZ7_CONSULTA_TOKEN_TARJETA', '/wsParabiliumVolcan/api/ConsultarTokenTarjeta')
+PARAM_AZ7_PAYCARD_USUARIO = env.str('PARAM_AZ7_PAYCARD_USUARIO', 'Prueba')
+PARAM_AZ7_PAYCARD_PASSWORD = env.str('PARAM_AZ7_PAYCARD_PASSWORD', 'Prueba')

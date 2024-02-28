@@ -5,8 +5,10 @@ from rest_framework.response import Response
 from common.views import CustomViewSet
 from control.utils import mask_card
 from thalesapi.models import CardType, CardDetail, CardBinConfig
-from thalesapi.serializers import GetDataTokenizationSerializer, CardBinConfigSerializer, GetVerifyCardSerializer
-from thalesapi.utils import is_card_bin_valid
+from thalesapi.serializers import GetDataTokenizationSerializer, CardBinConfigSerializer, GetVerifyCardSerializer, \
+    GetDataTokenizationPaycardSerializer
+from thalesapi.utils import is_card_bin_valid, get_access_token_paycard, get_credentials_paycad, \
+    get_url_thales_register_customer_with_cards, get_cards_bin_prepaid, get_card_bin_config
 from users.permissions import IsVerified, IsOperator, IsSupervisor
 from volcanmanagerapi import settings
 
@@ -24,6 +26,31 @@ class CardBinConfigApiView(CustomViewSet):
     model_class = CardBinConfig
     permission_classes = (IsAuthenticated, IsVerified, IsSupervisor)
     field_pk = 'card_bin_config_id'
+
+    def clear_cache(self):
+        from django.core.cache import cache
+        if 'cards-bin' in cache:
+            cache.delete('cards-bin')
+        if 'cards-bin-prepaid' in cache:
+            cache.delete('cards-bin-prepaid')
+        if 'cards-bin-credit' in cache:
+            cache.delete('cards-bin-credit')
+
+    def clear_cache_bin(self, card_bin):
+        from django.core.cache import cache
+        if card_bin in cache:
+            cache.delete(card_bin)
+
+    def perform_create(self, request, *args, **kwargs):
+        super(CardBinConfigApiView, self).perform_create(request=request, *args, **kwargs)
+        self.clear_cache()
+        self.clear_cache_bin(self.serializer.data['card_bin'])
+
+    def perform_update(self, request, *args, **kwargs):
+        super(CardBinConfigApiView, self).perform_update(request=request, *args, **kwargs)
+        self.clear_cache()
+        self.clear_cache_bin(self.serializer.data['card_bin'])
+
 
 
 # Create your views here.
@@ -63,9 +90,11 @@ class ThalesApiView(CustomViewSet):
         if 'cardBin' in request_data and is_card_bin_valid(request_data['cardBin']):
             # aqui revisamos si es credito o prepago
             card_bin = request_data['cardBin']
-            card_type = CardType.CT_PREPAID if card_bin in '53876436' else CardType.CT_CREDIT
-            if card_type == CardType.CT_CREDIT:
+            card_bin_config = get_card_bin_config(key_cache=card_bin)
+            # card_type = CardType.CT_PREPAID if card_bin in '53876436' else CardType.CT_CREDIT
+            if card_bin_config['card_type'] == CardType.CT_CREDIT:
                 from thalesapi.utils import post_verify_card_credit
+                request_data['emisor'] = card_bin_config['emisor']
                 response_data, response_status = self.control_action(request=request,
                                                                      control_function=post_verify_card_credit,
                                                                      request_data=request_data,
@@ -84,7 +113,8 @@ class ThalesApiView(CustomViewSet):
                                                  issuer_id=issuer_id,
                                                  account_id=response_data['accountId'],
                                                  card_bin=card_bin,
-                                                 card_type=card_type)
+                                                 card_type=card_bin_config['card_type'],
+                                                 emisor=card_bin_config['emisor'])
         else:
             response_data, response_status = {'error': 'Datos incompletos'}, 400
         print(f"Response Verify Card: {response_data}")
@@ -247,11 +277,82 @@ class ThalesApiViewPrivate(ThalesApiView):
         print(f"Response Card Data Tokenizacion: {response_data}")
         return self.get_response(message=resp_msg, data=response_data, status=response_status, lower_response=False)
 
-    def get_url_thales_register_customer_with_cards(self, issuer_id, consumer_id):
-        url = settings.URL_THALES_REGISTER_CONSUMER_CARDS
-        url = url.replace('{issuerId}', issuer_id)
-        url = url.replace('{consumerId}', consumer_id)
-        return url
+    def get_card_data_tokenization_paycard(self, request, *args, **kwargs):
+        from django.conf import settings
+        from control.utils import process_volcan_api_request
+        from common.utils import get_response_data_errors
+        request_data = request.data.copy()
+        access_token_paycard = get_access_token_paycard()
+        if not access_token_paycard:
+            return self.get_response(status=400, message='No fue posible hacer login a AZ7')
+        self.serializer_class = GetDataTokenizationPaycardSerializer
+        data = {k.upper(): v for k, v in request_data.items()}
+        serializer = self.get_serializer(data=data)
+        response_data = {}
+        if serializer.is_valid():
+            url_server = settings.SERVER_VOLCAN_PAYCARD_URL
+            api_url = f'{url_server}{settings.URL_AZ7_CONSULTA_TOKEN_TARJETA}'
+            validated_data = serializer.validated_data
+            card = validated_data.pop('card', request_data['tarjeta'])
+            fecha_exp = validated_data.pop('FECHA_EXP', request_data['fecha_exp'])
+            folio = validated_data.pop('FOLIO', '12345')
+            headers = {
+                'Credenciales': get_credentials_paycad(),
+                'Authorization': f"{access_token_paycard}",
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+            resp_msg, resp_data, response_status = process_volcan_api_request(data=validated_data, headers=headers,
+                                                                              url=api_url, request=request, times=0)
+            if response_status == 200:
+                if resp_data['CodRespuesta'] == '0000' or len(resp_data['CardID']) > 0:
+                    resp_data['RSP_ERROR'] = 'OK'
+                    resp_data['RSP_CODIGO'] = '0000000000'
+                    resp_data['RSP_DESCRIPCION'] = u'Transacción aprobada'
+                if resp_data['RSP_ERROR'] == 'OK':
+                    obj_data = {
+                        'tarjeta': card,
+                        'fecha_exp': fecha_exp,
+                        'folio': folio,
+                        "card_id": resp_data['CardID'] if 'CardID' in resp_data else '',
+                        "consumer_id": resp_data['ConsumerID'] if 'ConsumerID' in resp_data else '',
+                        "account_id": resp_data['AccountID'] if 'AccountID' in resp_data else '',
+                        "issuer_id": settings.THALES_API_ISSUER_ID,
+                        "card_product_id": 'D1_VOLCAN_VISA_SANDBOX',
+                        "state": "ACTIVE"
+                    }
+                    resp = self.register_consumer_thalesapi(**obj_data)
+                    if resp[1] == 200:
+                        response_data = {
+                            'RSP_ERROR': 'OK',
+                            'RSP_CODIGO': '00000000',
+                            'RSP_DESCRIPCION': 'Transaccion aprobada',
+                            'rsp_folio': folio,
+                            "cardId": resp_data['CardID'] if 'CardID' in resp_data else '',
+                            "consumerId": resp_data['ConsumerID'] if 'ConsumerID' in resp_data else '',
+                            "accountId": resp_data['AccountID'] if 'AccountID' in resp_data else ''
+                        }
+                    else:
+                        response_data = resp[0]
+                        response_status = resp[1]
+                        if 'error' in response_data:
+                            response_data = {
+                                'RSP_ERROR': 'RC',
+                                'RSP_CODIGO': f"{response_status}",
+                                'RSP_DESCRIPCION': response_data['error']
+                            }
+                            response_status = 200
+                else:
+                    response_data = {
+                        'RSP_ERROR': resp_data['RSP_ERROR'],
+                        'RSP_CODIGO': resp_data['RSP_CODIGO'],
+                        'RSP_DESCRIPCION': resp_data['RSP_DESCRIPCION']
+                    }
+        else:
+            resp_msg, response_data, response_status = get_response_data_errors(serializer.errors)
+            # response_data, response_status = {}, 400
+        print(f"Response Card Data Tokenizacion: {response_data}")
+        return self.get_response(message=resp_msg, data=response_data, status=response_status, lower_response=False)
 
     def get_authorization_token(self, folio=None, issuer_id=None):
         from .utils import process_volcan_api_request
@@ -365,8 +466,7 @@ class ThalesApiViewPrivate(ThalesApiView):
         # return {'access_token': access_token}, 200
 
         if access_token:
-            url = self.get_url_thales_register_customer_with_cards(issuer_id=issuer_id,
-                                                                   consumer_id=consumer_id)
+            url = get_url_thales_register_customer_with_cards(issuer_id=issuer_id, consumer_id=consumer_id)
 
             public_key = None
             payload = {}
