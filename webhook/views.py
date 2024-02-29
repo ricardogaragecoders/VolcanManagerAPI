@@ -8,10 +8,11 @@ from rest_framework.permissions import IsAuthenticated
 
 from common.utils import get_date_from_querystring, make_day_start, make_day_end, get_response_data_errors
 from common.views import CustomViewSet, CustomViewSetWithPagination
-from webhook.models import Webhook, TransactionCollection, TransactionErrorCollection
+from webhook.models import Webhook, TransactionCollection, TransactionErrorCollection, NotificationCollection
 from webhook.permissions import HasPermissionByMethod, HasUserAndPasswordInData
 from webhook.serializers import WebhookSerializer, WebhookListSerializer, TransactionSerializer
 from users.permissions import IsVerified, IsOperator
+from webhook.utils import get_notification_data
 
 
 class WebHookApiView(CustomViewSet):
@@ -111,7 +112,7 @@ class WebHookApiView(CustomViewSet):
         self.make_response_success('Webhook borrado', response_data, 204)
 
 
-class TransactionCollectionApiView(CustomViewSetWithPagination):
+class NotificationTransactionApiView(CustomViewSetWithPagination):
     """
     get:
         Return all transactions from mongodb.
@@ -125,7 +126,7 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
         Delete a transaction from mongodb.
     """
     serializer_class = None
-    model_class = TransactionCollection
+    model_class = NotificationCollection
     field_pk = 'notification_id'
     permission_classes = (HasPermissionByMethod,)
     http_method_names = ['get', 'post', 'patch', 'options', 'head']
@@ -144,11 +145,11 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
         filters = dict()
         profile = self.request.user.profile
         if profile.isAdminProgram():
-            account_issuer = self.request.query_params.get('emisor', '')
+            issuer = self.request.query_params.get('emisor', '')
         elif profile.isOperator(equal=True):
-            account_issuer = profile.user.first_name
+            issuer = profile.user.first_name
         else:
-            account_issuer = 'sin_emision'
+            issuer = 'sin_emision'
 
         s_from_date = self.request.query_params.get('from_date', None)
         s_to_date = self.request.query_params.get('to_date', None)
@@ -157,41 +158,45 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
         from_date = make_day_start(from_date)
         to_date = make_day_end(to_date)
         if s_from_date and s_to_date:
-            filters['updated_at'] = {"$gte": from_date, "$lt": to_date}
+            filters['created_at'] = {"$gte": from_date, "$lt": to_date}
         elif s_from_date:
-            filters['updated_at'] = {"$gte": from_date}
+            filters['created_at'] = {"$gte": from_date}
         elif s_to_date:
-            filters['updated_at'] = {"$lt": to_date}
+            filters['created_at'] = {"$lt": to_date}
 
-        if len(account_issuer) > 0:
-            filters['emisor'] = account_issuer.upper()
+        if len(issuer) > 0:
+            filters['issuer.issuer'] = issuer.upper()
 
         return filters
 
     def get_queryset(self, *args, **kwargs):
         filters = self.get_queryset_filters(*args, **kwargs)
+        notification_type = self.request.query_params.get('nType', 'transaction')
+        filters['notification_type.type'] = notification_type
         self._limit = int(self.request.query_params.get('limit', 20))
         self._offset = int(self.request.query_params.get('offset', 0))
         self._page = int(self._offset / self._limit) if self._offset > 0 else 0
-        self._order_by = self.request.query_params.get('orderBy', 'action')
+        self._order_by = self.request.query_params.get('orderBy', 'created_at')
         order_by_desc = self.request.query_params.get('orderByDesc', 'false')
         q = self.request.query_params.get('q', None)
         # export = self.request.query_params.get('export', None)
         sort = self._order_by
         direction = pymongo.ASCENDING if order_by_desc == 'false' else pymongo.DESCENDING
+        if notification_type == 'transaction':
+            if q:
+                filters['$or'] = [
+                    {'notification.tarjeta': {'$regex': q, '$options': 'i'}},
+                    {'notification.referencia': {'$regex': q, '$options': 'i'}},
+                    {'notification.numero_autorizacion': {'$regex': q, '$options': 'i'}},
+                    {'notification.codigo_autorizacion': {'$regex': q, '$options': 'i'}},
+                    {'notification.email': {'$regex': q, '$options': 'i'}},
+                    {'notification.tarjetahabiente': {'$regex': q, '$options': 'i'}},
+                    {'notification.comercio': {'$regex': q, '$options': 'i'}}
+                ]
+        else:
+            pass
 
-        if q:
-            filters['$or'] = {
-                {'tarjeta': {'$regex': q, '$options': 'i'}},
-                {'referencia': {'$regex': q, '$options': 'i'}},
-                {'numero_autorizacion': {'$regex': q, '$options': 'i'}},
-                {'codigo_autorizacion': {'$regex': q, '$options': 'i'}},
-                {'email': {'$regex': q, '$options': 'i'}},
-                {'tarjetahabiente': {'$regex': q, '$options': 'i'}},
-                {'comercio': {'$regex': q, '$options': 'i'}}
-            }
-
-        db = TransactionCollection()
+        db = NotificationCollection()
         self._total = db.find(filters).count()
 
         return db.find(filters, sort, direction, self._limit, self._page)
@@ -200,15 +205,11 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
         try:
             self.serializer = TransactionSerializer(data=request.data)
             if self.serializer.is_valid():
-                db = TransactionCollection()
-                data = self.serializer.validated_data
-                data['delivered'] = False
-                data['delivery_date'] = None
-                data['response_code'] = ''
-                data['response_body'] = ''
-                result = db.insert_one(data=data)
-                from webhook.tasks import send_transaction_emisor
-                send_transaction_emisor.delay(transaction_id=str(result.inserted_id))
+                db = NotificationCollection()
+                validated_data = self.serializer.validated_data
+                result = db.insert_one(data=validated_data)
+                from webhook.tasks import send_notification_webhook_issuer
+                send_notification_webhook_issuer.delay(notification_id=str(result.inserted_id))
                 self.make_response_success(data={'RSP_CODIGO': '00', 'RSP_DESCRIPCION': 'Aprobado'})
             else:
                 self.resp = get_response_data_errors(self.serializer.errors)
@@ -244,32 +245,20 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
 
     def list(self, request, *args, **kwargs):
         try:
-            from bson.json_util import dumps
-            # import pytz
             query = self.get_queryset(*args, **kwargs)
             results = []
-            # local_tz = pytz.timezone('America/Mexico_City')
             for item in query:
-                # updated_at = local_tz.localize(item['updated_at'], is_dst=None)
+                # created_at = item['created_at'].strftime("%d/%m/%Y %H:%M:%S")
                 results.append({
-                    'id': '{}'.format(item['_id']),
-                    'emisor': item['emisor'],
-                    'monto': item['monto'],
-                    'moneda': item['moneda'],
-                    'fecha_transaccion': item['fecha_transaccion'],
-                    'hora_transaccion': item['hora_transaccion'],
-                    'tarjeta': item['tarjeta'],
-                    # 'estatus': item['estatus'],
-                    # 'tipo_transaccion': item['tipo_transaccion'],
-                    # 'id_movimiento': item['id_movimiento'],
-                    # 'referencia': item['referencia'],
-                    # 'numero_autorizacion': item['numero_autorizacion'],
-                    # 'codigo_autorizacion': item['codigo_autorizacion'],
-                    # 'comercio': item['comercio'],
-                    'entregado': item['delivered'],
-                    # 'fecha_entregado': item['delivery_date'],
-                    'codigo_error': item['response_code'],
-                    # 'mensaje_error': item['response_body']
+                    'id': str(item['_id']),
+                    'user': item['user'],
+                    'notification': get_notification_data(item['notification']),
+                    'notification_type': item['notification_type'],
+                    'webhook': item['webhook'],
+                    'delivery': item['delivery'],
+                    'response': item['response'],
+                    'issuer': item['issuer'],
+                    'created_at': item['created_at']
                 })
             pages = int(self._total / self._limit)
             current_page = self._offset / self._limit
@@ -288,47 +277,31 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
 
     def retrieve(self, request, *args, **kwargs):
         try:
-            from webhook.models import TransactionCollection
-            db = TransactionCollection()
+            from bson.objectid import ObjectId
+            db = self.model_class()
             filters = self.get_queryset_filters(*args, **kwargs)
             pk = kwargs.pop(self.field_pk)
             if len(pk) > 10:
-                from bson.objectid import ObjectId
                 filters['_id'] = ObjectId(pk)
 
-            query = db.find(filters)
-            if query:
-                # import pytz
-                results = []
-                # local_tz = pytz.timezone('America/Mexico_City')
-                for item in query:
-                    # updated_at = local_tz.localize(item['updated_at'], is_dst=None)
-                    results.append({
-                        'RSP_CODIGO': '00',
-                        'RSP_DESCRIPCION': 'Aprobado',
-                        'id': '{}'.format(item['_id']),
-                        'monto': item['monto'],
-                        'moneda': item['moneda'],
-                        'emisor': item['emisor'],
-                        'estatus': item['estatus'],
-                        'tipo_transaccion': item['tipo_transaccion'],
-                        'tarjeta': item['tarjeta'],
-                        'id_movimiento': item['id_movimiento'],
-                        'fecha_transaccion': item['fecha_transaccion'],
-                        'hora_transaccion': item['hora_transaccion'],
-                        'referencia': item['referencia'],
-                        'numero_autorizacion': item['numero_autorizacion'],
-                        'codigo_autorizacion': item['codigo_autorizacion'],
-                        'comercio': item['comercio'],
-                        'pais': item['pais'] if 'pais' in item else '',
-                        'email': item['email'] if 'email' in item else '',
-                        'tarjetahabiente': item['tarjetahabiente'] if 'tarjetahabiente' in item else '',
-                        'entregado': item['delivered'],
-                        'fecha_entregado': item['delivery_date'],
-                        'codigo_error': item['response_code'],
-                        'mensaje_error': item['response_body'],
-                    })
-                response_data = results[0] if len(results) > 0 else []
+            item = db.find_one(filters)
+            if item:
+                # created_at = item['created_at'].strftime("%d/%m/%Y %H:%M:%S")
+                response_data = {
+                    'RSP_CODIGO': '00',
+                    'RSP_DESCRIPCION': 'Aprobado',
+                    'notification': {
+                        'id': str(item['_id']),
+                        'user': item['user'],
+                        'notification': get_notification_data(item['notification']),
+                        'notification_type': item['notification_type'],
+                        'webhook': item['webhook'],
+                        'delivery': item['delivery'],
+                        'response': item['response'],
+                        'issuer': item['issuer'],
+                        'created_at': item['created_at']
+                    }
+                }
                 self.make_response_success(data=response_data)
             else:
                 self.make_response_not_found()
@@ -340,8 +313,7 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
 
     def update(self, request, *args, **kwargs):
         try:
-            from webhook.models import TransactionCollection
-            db = TransactionCollection()
+            db = self.model_class()
             filters = self.get_queryset_filters(*args, **kwargs)
             pk = kwargs.pop(self.field_pk)
             if len(pk) > 10:
@@ -350,10 +322,10 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
 
             query = db.find(filters)
             if query:
-                from webhook.tasks import send_transaction_emisor
+                from webhook.tasks import send_notification_webhook_issuer
                 results = []
                 for item in query:
-                    send_transaction_emisor.delay(transaction_id=str(item['_id']))
+                    send_notification_webhook_issuer.delay(notification_id=str(item['_id']))
                     results.append(str(item['_id']))
                 response_data = results[0] if len(results) > 0 else []
                 self.make_response_success(data=response_data)
@@ -367,17 +339,16 @@ class TransactionCollectionApiView(CustomViewSetWithPagination):
 
     def resend(self, request, *args, **kwargs):
         try:
-            from webhook.models import TransactionCollection
-            db = TransactionCollection()
+            db = NotificationCollection()
             filters = self.get_queryset_filters(*args, **kwargs)
-            filters['delivered'] = False
+            filters['delivery.delivered'] = False
 
             query = db.find(filters)
             if query:
-                from webhook.tasks import send_transaction_emisor
+                from webhook.tasks import send_notification_webhook_issuer
                 results = []
                 for item in query:
-                    send_transaction_emisor.delay(transaction_id=str(item['_id']))
+                    send_notification_webhook_issuer.delay(transaction_id=str(item['_id']))
                     time.sleep(3)
                     results.append(str(item['_id']))
                 response_data = results[0] if len(results) > 0 else []

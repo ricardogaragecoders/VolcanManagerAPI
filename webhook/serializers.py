@@ -1,6 +1,6 @@
 from django.conf import settings
 from rest_framework import serializers
-
+from django.utils import timezone
 from common.exceptions import CustomValidationError
 from common.utils import model_code_generator, is_float
 from webhook.models import Webhook
@@ -120,7 +120,9 @@ class TransactionSerializer(serializers.Serializer):
                                         code='400')
         data['emisor'] = emisor
 
-        if not Webhook.objects.filter(account_issuer=emisor).exists():
+        webhook = Webhook.objects.filter(account_issuer=emisor).first()
+
+        if not webhook:
             raise CustomValidationError(detail=f'El emisor no tiene definido un webhook.',
                                         code='400')
 
@@ -136,4 +138,30 @@ class TransactionSerializer(serializers.Serializer):
         if len(id_movimiento) == 0:
             import uuid
             data['id_movimiento'] = str(uuid.uuid4())
+
+        data = {
+            'user': {'name': 'webhook'},
+            'notification': data.copy(),
+            'notification_type': {'type': 'transaction', 'mode': 'normal', 'version': 1},
+            'delivery': {
+                'delivered': False,
+                'delivery_date': None,
+                'attempts': 0
+            },
+            'webhook': {
+                'id': str(webhook.id),
+                'url': webhook.url_webhook,
+                'headers': {
+                    'header': webhook.header_webhook,
+                    'value': f"...{webhook.key_webhook[-4:]}"
+                }
+            },
+            'issuer': {'issuer': emisor},
+            'response': {
+                'code': '',
+                'body': ''
+            },
+            'created_at': timezone.localtime(timezone.now())
+        }
+
         return data

@@ -1950,6 +1950,14 @@ paths:
           required: false
           schema:
             type: string
+        - name: nType
+          description: Notification Type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [transaction, paycard, thales]
+            default: transaction
         - name: q
           description: Find by program name
           in: query
@@ -1962,8 +1970,8 @@ paths:
           required: false
           schema:
             type: string
-            enum: [ 'emisor', 'updated_at' ]
-            default: emisor
+            enum: [ 'issuer', 'created_at' ]
+            default: issuer
         - name: orderByDesc
           description: Order desc
           in: query
