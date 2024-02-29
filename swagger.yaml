@@ -2003,6 +2003,26 @@ paths:
       tags:
         - VolcanManager::Notificaciones
     parameters: []
+  /volcan/api/Prepago/Notificaciones/:
+    post:
+      operationId: api_control_paycard_notifications
+      description: Create a paycard notificacion.
+      requestBody:
+        content:
+#          application/x-www-form-urlencoded:
+#            schema:
+#              $ref: "#/components/schemas/Notification"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaycardNotification"
+        required: true
+      summary: Create a paycard notification
+      responses:
+        '200':
+          description: 'Create a paycard notification'
+      tags:
+        - VolcanManager::Notificaciones
+    parameters: []
   /volcan/api/Notificaciones/{notification_id}/:
     get:
       operationId: api_notification_read
@@ -2027,9 +2047,9 @@ paths:
       description: Resend notification.
       requestBody:
         content:
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: "#/components/schemas/Notification"
+#          application/x-www-form-urlencoded:
+#            schema:
+#              $ref: "#/components/schemas/Notification"
           application/json:
             schema:
               $ref: "#/components/schemas/Notification"
@@ -2053,9 +2073,9 @@ paths:
       description: Resend notification by emisor.
       requestBody:
         content:
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: "#/components/schemas/Notification"
+#          application/x-www-form-urlencoded:
+#            schema:
+#              $ref: "#/components/schemas/Notification"
           application/json:
             schema:
               $ref: "#/components/schemas/Notification"
@@ -3648,6 +3668,123 @@ components:
         - pais
         - email
         - tarjetahabiente
+        - user
+        - password
+    PaycardNotification:
+      type: object
+      properties:
+        prioridad:
+          type: string
+          description: Prioridad
+        mensaje:
+          type: object
+          properties:
+            IdMovimiento:
+              type: string
+              description: ID Movimiento
+            Moneda:
+              type: string
+              description: Moneda
+            Importe:
+              type: string
+              description: Importe
+            CodigoProceso:
+              type: string
+              description: Codigo proceso
+            NombreBeneficiario:
+              type: string
+              description: Nombre beneficiario
+            PrimerApellido:
+              type: string
+              description: Primer apellido
+            SegundoApellido:
+              type: string
+              description: Segundo apellido
+            RfcCurpOrdenante:
+              type: string
+              description: RFC CURP
+            Correo:
+              type: string
+              description: Correo
+            InstitucionBeneficiaria:
+              type: string
+              description: Institucion beneficaria
+            ConceptoPago:
+              type: string
+              description: Concepto pago
+            Telefono:
+              type: string
+              description: Telefono
+            ClaveRastreo:
+              type: string
+              description: Clave rastreo
+            NumeroCuenta:
+              type: string
+              description: Nombre cuenta
+            NumeroAfiliacionComercio:
+              type: string
+              description: Numero afiliacion comercio
+            POSEntryMode:
+              type: string
+              description: POS entry mode
+            TipoManufactura:
+              type: string
+              description: Tipo de manufactura
+            Tarjeta:
+              type: string
+              description: Tarjeta
+            MedioAcceso:
+              type: string
+              description: Medio acceso
+            CuentaBeneficiario:
+              type: string
+              description: Cuenta beneficiario
+            RfcCurpBeneficiario:
+              type: string
+              description: RFC Curp Beneficiario
+            NombreComercio:
+              type: string
+              description: Nombre Comercio
+            CodigoRespuesta:
+              type: string
+              description: Codigo respuesta
+            MCC:
+              type: string
+              description: MCC
+            ClaveMovimiento:
+              type: string
+              description: Clave movimento
+            FechaHora:
+              type: string
+              description: Fecha hora
+            TipoMedioAcceso:
+              type: string
+              description: Tipo medio acceso
+            NombreOrdenante:
+              type: string
+              description: Nombre ordenante
+            ReferenciaNumerica:
+              type: string
+              description: Referencia numerica
+            NumeroAutorizacion:
+              type: string
+              description: Numero Autorizacion
+            InstitucionOrdenante:
+              type: string
+              description: Institucion ordenante
+        emisor:
+          type: string
+          description: Emisor
+        user:
+          type: string
+          description: User
+        password:
+          type: string
+          description: Password
+      required:
+        - prioridad
+        - mensaje
+        - emisor
         - user
         - password
   securitySchemes:

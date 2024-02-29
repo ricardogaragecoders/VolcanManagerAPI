@@ -10,6 +10,9 @@ urlpatterns = [
     path('Notificaciones/',
          NotificationTransactionApiView.as_view({'get': 'list', 'post': 'create'})),
 
+    path('Prepago/Notificaciones/',
+         NotificationTransactionApiView.as_view({'post': 'paycard_notification'})),
+
     path('Notificaciones/<str:notification_id>/',
          NotificationTransactionApiView.as_view({'get': 'retrieve'})),
 

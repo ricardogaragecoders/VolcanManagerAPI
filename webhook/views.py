@@ -10,7 +10,8 @@ from common.utils import get_date_from_querystring, make_day_start, make_day_end
 from common.views import CustomViewSet, CustomViewSetWithPagination
 from webhook.models import Webhook, TransactionCollection, TransactionErrorCollection, NotificationCollection
 from webhook.permissions import HasPermissionByMethod, HasUserAndPasswordInData
-from webhook.serializers import WebhookSerializer, WebhookListSerializer, TransactionSerializer
+from webhook.serializers import WebhookSerializer, WebhookListSerializer, TransactionSerializer, \
+    PaycardNotificationserializer
 from users.permissions import IsVerified, IsOperator
 from webhook.utils import get_notification_data
 
@@ -125,7 +126,7 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
     delete:
         Delete a transaction from mongodb.
     """
-    serializer_class = None
+    serializer_class = TransactionSerializer
     model_class = NotificationCollection
     field_pk = 'notification_id'
     permission_classes = (HasPermissionByMethod,)
@@ -203,7 +204,7 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
 
     def create(self, request, *args, **kwargs):
         try:
-            self.serializer = TransactionSerializer(data=request.data)
+            self.serializer = self.get_serializer(data=request.data)
             if self.serializer.is_valid():
                 db = NotificationCollection()
                 validated_data = self.serializer.validated_data
@@ -242,6 +243,11 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
             self.resp = ["%s" % e, {'code': 'error'}, 500]
         finally:
             return self.get_response()
+
+    def paycard_notification(self, request, *args, **kwargs):
+        self.serializer_class = PaycardNotificationserializer
+        return self.create(request, *args, **kwargs)
+
 
     def list(self, request, *args, **kwargs):
         try:
