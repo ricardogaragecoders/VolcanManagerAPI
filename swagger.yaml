@@ -2003,7 +2003,7 @@ paths:
       tags:
         - VolcanManager::Notificaciones
     parameters: []
-  /volcan/api/Prepago/Notificaciones/:
+  /volcan/api/Notificaciones/Prepago/:
     post:
       operationId: api_control_paycard_notifications
       description: Create a paycard notificacion.
@@ -2023,7 +2023,7 @@ paths:
       tags:
         - VolcanManager::Notificaciones
     parameters: []
-  /volcan/api/Notificaciones/{notification_id}/:
+  /volcan/api/Notificaciones/{notification_id}/Detalle/:
     get:
       operationId: api_notification_read
       description: Return a notification.
@@ -2041,7 +2041,7 @@ paths:
         description: ID Notificacion
         schema:
           type: string
-  /volcan/api/Notificaciones/{notification_id}/reenviar/:
+  /volcan/api/Notificaciones/{notification_id}/Reenviar/:
     patch:
       operationId: api_notification_resend
       description: Resend notification.
@@ -2052,7 +2052,7 @@ paths:
 #              $ref: "#/components/schemas/Notification"
           application/json:
             schema:
-              $ref: "#/components/schemas/Notification"
+              $ref: "#/components/schemas/ResendNotification"
         required: true
       summary: Resend a notification.
       responses:
@@ -2067,7 +2067,7 @@ paths:
         description: ID Notificacion
         schema:
           type: string
-  /volcan/api/Notificaciones/reenviar/emisor/:
+  /volcan/api/Notificaciones/Reenviar/Emisor/:
     patch:
       operationId: api_notification_resend_by_emmisor
       description: Resend notification by emisor.
@@ -2078,7 +2078,7 @@ paths:
 #              $ref: "#/components/schemas/Notification"
           application/json:
             schema:
-              $ref: "#/components/schemas/Notification"
+              $ref: "#/components/schemas/ResendNotification"
         required: true
       summary: Resend a notification by emisor.
       responses:
@@ -3670,6 +3670,12 @@ components:
         - tarjetahabiente
         - user
         - password
+    ResendNotification:
+      type: object
+      properties:
+        emisor:
+          type: string
+          description: Emisor
     PaycardNotification:
       type: object
       properties:

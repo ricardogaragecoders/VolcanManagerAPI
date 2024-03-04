@@ -7,11 +7,15 @@ import requests
 from bson.json_util import dumps, loads
 from bson.objectid import ObjectId
 from celery import shared_task
+from celery.utils.log import get_task_logger
 from django.utils import timezone
 
+from volcanmanagerapi import settings
 from webhook.models import TransactionCollection, NotificationCollection
 from webhook.models import Webhook
 
+
+logger = get_task_logger(__name__)
 
 class BodyDigestSignature(object):
     def __init__(self, secret, header='Sign', algorithm=hashlib.sha512):
@@ -38,9 +42,9 @@ def get_volcan_headers(webhook: Webhook):
 def send_transaction_url_webhook(data, webhook: Webhook):
     headers = get_volcan_headers(webhook)
     data_json = json.dumps(data)
-    print(f"Request webhook: {webhook.url_webhook}")
-    print(f"Request headers: {headers}")
-    print(f"Request json webhook: {data_json}")
+    logger.info(f"Request webhook: {webhook.url_webhook}")
+    logger.info(f"Request headers: {headers}")
+    logger.info(f"Request json webhook: {data_json}")
     response_status = 0
     response_data = {}
     try:
@@ -49,14 +53,14 @@ def send_transaction_url_webhook(data, webhook: Webhook):
             data=data_json, headers=headers, auth=BodyDigestSignature(webhook.key_webhook))
         # r = requests.post(url=webhook.url_webhook, data=data_json, headers=headers)
         response_status = res.status_code
-        print(res.text)
-        print(res.headers)
+        logger.info(res.text)
+        logger.info(res.headers)
         if 'Content-Type' in res.headers:
             if 'application/json' in res.headers['Content-Type']:
                 response_data = res.json() if response_status != 204 else {}
             else:
                 response_data = res.content
-        print(f"Response webhook {response_status}: {response_data}")
+        logger.info(f"Response webhook {response_status}: {response_data}")
         if response_status == 200:
             response_message = response_data
         elif response_status == 204:
@@ -66,17 +70,17 @@ def send_transaction_url_webhook(data, webhook: Webhook):
         elif 400 <= response_status < 500:
             response_message = response_data
         else:
-            print(f"Response: {str(response_status)}")
-            print(f"Data server: {str(res.content)}")
+            logger.info(f"Response: {str(response_status)}")
+            logger.info(f"Data server: {str(res.content)}")
             response_message = res.content
     except requests.exceptions.Timeout:
         response_status = 408
         response_message = 'Error de conexion con servidor VOLCAN (Timeout)'
-        print(response_message)
+        logger.info(response_message)
     except requests.exceptions.TooManyRedirects:
         response_status = 429
         response_message = 'Error de conexion con servidor VOLCAN (TooManyRedirects)'
-        print(response_message)
+        logger.info(response_message)
     except requests.exceptions.RequestException as e:
         response_status = 400
         response_message = '%s' % e
@@ -90,8 +94,8 @@ def send_transaction_url_webhook(data, webhook: Webhook):
         return False, response_status, response_message
 
 
-@shared_task
-def send_notification_webhook_issuer(notification_id=None, emisor=''):
+@shared_task(bind=True)
+def send_notification_webhook_issuer(self, notification_id=None, emisor=''):
     db = NotificationCollection()
     webhook = None
     if len(emisor) == 0 and notification_id:
@@ -147,5 +151,10 @@ def send_notification_webhook_issuer(notification_id=None, emisor=''):
                 }
             }}
             db.update_one(filters=filters, data=data_update)
+
+            if not resp[0]:
+                logger.error(f'Codigo de respuesta: {resp[1]}')
+                self.retry(countdown=settings.MIN_WAIT_FOR_RETRY_CELERY_TASK,
+                           max_retries=settings.MAX_RETRIES_CELERY_TASK)
 
     return len(results)
