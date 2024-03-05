@@ -80,7 +80,7 @@ class WebhookListSerializer(serializers.ModelSerializer):
 
 class TransactionSerializer(serializers.Serializer):
     monto = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
-    moneda = serializers.CharField(max_length=100, default='', required=False,allow_blank=True)
+    moneda = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
     emisor = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
     estatus = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
     tipo_transaccion = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
@@ -90,13 +90,13 @@ class TransactionSerializer(serializers.Serializer):
     hora_transaccion = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
     referencia = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
     numero_autorizacion = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
-    codigo_autorizacion = serializers.CharField(max_length=100, default='', required=False,  allow_blank=True)
+    codigo_autorizacion = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
     comercio = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
     pais = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
     email = serializers.CharField(max_length=150, default='', required=False, allow_blank=True)
     tarjetahabiente = serializers.CharField(max_length=150, default='', required=False, allow_blank=True)
     user = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
-    password = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
+    password = serializers.CharField(max_length=100, default='', write_only=True, required=False, allow_blank=True)
 
     class Meta:
         fields = ('monto', 'moneda', 'emisor', 'estatus', 'tipo_transaccion', 'tarjeta', 'id_movimiento',
@@ -166,12 +166,13 @@ class TransactionSerializer(serializers.Serializer):
 
         return data
 
+
 class PaycardNotificationserializer(serializers.Serializer):
     prioridad = serializers.CharField(source='priority', max_length=10, default='100', required=False, allow_blank=True)
     mensaje = serializers.JSONField(source='message', required=True)
     user = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
-    password = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
-    emisor = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
+    password = serializers.CharField(max_length=100, default='', write_only=True, required=False, allow_blank=True)
+    emisor = serializers.CharField(source='issuer', max_length=100, default='', required=False, allow_blank=True)
 
     class Meta:
         fields = ('prioridad', 'mensaje', 'user', 'password', 'emisor')
@@ -182,7 +183,7 @@ class PaycardNotificationserializer(serializers.Serializer):
         message = data.pop('message', {'Tarjeta': '', 'IdMovimiento': ''})
         user = data.pop('user', settings.VOLCAN_USER_TRANSACTION)
         password = data.pop('password', settings.VOLCAN_PASSWORD_TRANSACTION)
-        issuer = data.get('emisor', '').upper()
+        issuer = data.get('issuer', '').upper()
         id_movimiento = message['IdMovimiento']
 
         if user != settings.VOLCAN_USER_TRANSACTION or password != settings.VOLCAN_PASSWORD_TRANSACTION:
@@ -228,7 +229,7 @@ class PaycardNotificationserializer(serializers.Serializer):
                     'value': f"...{webhook.key_webhook[-4:]}"
                 }
             },
-            'issuer': {'issuer': issuer },
+            'issuer': {'issuer': issuer},
             'response': {
                 'code': '',
                 'body': ''
