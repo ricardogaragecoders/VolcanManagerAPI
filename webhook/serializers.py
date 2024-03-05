@@ -1,6 +1,6 @@
 from django.conf import settings
 from rest_framework import serializers
-
+from django.utils import timezone
 from common.exceptions import CustomValidationError
 from common.utils import model_code_generator, is_float
 from webhook.models import Webhook
@@ -80,7 +80,7 @@ class WebhookListSerializer(serializers.ModelSerializer):
 
 class TransactionSerializer(serializers.Serializer):
     monto = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
-    moneda = serializers.CharField(max_length=100, default='', required=False,allow_blank=True)
+    moneda = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
     emisor = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
     estatus = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
     tipo_transaccion = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
@@ -90,13 +90,13 @@ class TransactionSerializer(serializers.Serializer):
     hora_transaccion = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
     referencia = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
     numero_autorizacion = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
-    codigo_autorizacion = serializers.CharField(max_length=100, default='', required=False,  allow_blank=True)
+    codigo_autorizacion = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
     comercio = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
     pais = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
     email = serializers.CharField(max_length=150, default='', required=False, allow_blank=True)
     tarjetahabiente = serializers.CharField(max_length=150, default='', required=False, allow_blank=True)
     user = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
-    password = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
+    password = serializers.CharField(max_length=100, default='', write_only=True, required=False, allow_blank=True)
 
     class Meta:
         fields = ('monto', 'moneda', 'emisor', 'estatus', 'tipo_transaccion', 'tarjeta', 'id_movimiento',
@@ -120,7 +120,9 @@ class TransactionSerializer(serializers.Serializer):
                                         code='400')
         data['emisor'] = emisor
 
-        if not Webhook.objects.filter(account_issuer=emisor).exists():
+        webhook = Webhook.objects.filter(account_issuer=emisor).first()
+
+        if not webhook:
             raise CustomValidationError(detail=f'El emisor no tiene definido un webhook.',
                                         code='400')
 
@@ -136,4 +138,103 @@ class TransactionSerializer(serializers.Serializer):
         if len(id_movimiento) == 0:
             import uuid
             data['id_movimiento'] = str(uuid.uuid4())
+
+        data = {
+            'user': {'name': 'webhook'},
+            'notification': data.copy(),
+            'notification_type': {'type': 'transaction', 'mode': 'normal', 'version': 1},
+            'delivery': {
+                'delivered': False,
+                'delivery_date': None,
+                'attempts': 0
+            },
+            'webhook': {
+                'id': str(webhook.id),
+                'url': webhook.url_webhook,
+                'headers': {
+                    'header': webhook.header_webhook,
+                    'value': f"...{webhook.key_webhook[-4:]}"
+                }
+            },
+            'issuer': {'issuer': emisor},
+            'response': {
+                'code': '',
+                'body': ''
+            },
+            'created_at': timezone.localtime(timezone.now())
+        }
+
+        return data
+
+
+class PaycardNotificationserializer(serializers.Serializer):
+    prioridad = serializers.CharField(source='priority', max_length=10, default='100', required=False, allow_blank=True)
+    mensaje = serializers.JSONField(source='message', required=True)
+    user = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
+    password = serializers.CharField(max_length=100, default='', write_only=True, required=False, allow_blank=True)
+    emisor = serializers.CharField(source='issuer', max_length=100, default='', required=False, allow_blank=True)
+
+    class Meta:
+        fields = ('prioridad', 'mensaje', 'user', 'password', 'emisor')
+
+    def validate(self, data):
+        data = super(PaycardNotificationserializer, self).validate(data)
+        priority = data.pop('priority', '100')
+        message = data.pop('message', {'Tarjeta': '', 'IdMovimiento': ''})
+        user = data.pop('user', settings.VOLCAN_USER_TRANSACTION)
+        password = data.pop('password', settings.VOLCAN_PASSWORD_TRANSACTION)
+        issuer = data.get('issuer', '').upper()
+        id_movimiento = message['IdMovimiento']
+
+        if user != settings.VOLCAN_USER_TRANSACTION or password != settings.VOLCAN_PASSWORD_TRANSACTION:
+            raise CustomValidationError(detail=f'Usuario y/o password incorrectos.',
+                                        code='401')
+        if len(issuer) == 0:
+            raise CustomValidationError(detail=f'Emisor es requerido.',
+                                        code='400')
+        webhook = Webhook.objects.filter(account_issuer=issuer).first()
+
+        if not webhook:
+            raise CustomValidationError(detail=f'El emisor no tiene definido un webhook.',
+                                        code='400')
+        #
+        # if len(monto) == 0 and not is_float(monto):
+        #     raise CustomValidationError(detail=f'Solo se aceptan valores numericos.',
+        #                                 code='400')
+        # data['monto'] = monto
+        # if len(tarjeta) < 16:
+        #     raise CustomValidationError(detail=f'El numero de tarjeta es requerido.',
+        #                                 code='400')
+        # data['tarjeta'] = tarjeta
+        #
+
+        if len(id_movimiento) == 0:
+            import uuid
+            message['IdMovimiento'] = str(uuid.uuid4())
+
+        data = {
+            'user': {'name': 'webhook'},
+            'notification': message.copy(),
+            'notification_type': {'type': 'paycard', 'mode': 'normal', 'version': 1, 'priority': priority},
+            'delivery': {
+                'delivered': False,
+                'delivery_date': None,
+                'attempts': 0
+            },
+            'webhook': {
+                'id': str(webhook.id),
+                'url': webhook.url_webhook,
+                'headers': {
+                    'header': webhook.header_webhook,
+                    'value': f"...{webhook.key_webhook[-4:]}"
+                }
+            },
+            'issuer': {'issuer': issuer},
+            'response': {
+                'code': '',
+                'body': ''
+            },
+            'created_at': timezone.localtime(timezone.now())
+        }
+
         return data
