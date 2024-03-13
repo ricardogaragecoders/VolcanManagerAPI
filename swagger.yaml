@@ -2055,6 +2055,14 @@ paths:
           required: false
           schema:
             type: string
+        - name: nType
+          description: Notification Type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [transaction, paycard, thales]
+            default: transaction
         - name: q
           description: Find by program name
           in: query
@@ -2067,8 +2075,8 @@ paths:
           required: false
           schema:
             type: string
-            enum: [ 'emisor', 'updated_at' ]
-            default: emisor
+            enum: [ 'issuer', 'created_at' ]
+            default: issuer
         - name: orderByDesc
           description: Order desc
           in: query
@@ -2100,7 +2108,27 @@ paths:
       tags:
         - VolcanManager::Notificaciones
     parameters: []
-  /volcan/api/Notificaciones/{notification_id}/:
+  /volcan/api/Notificaciones/Prepago/:
+    post:
+      operationId: api_control_paycard_notifications
+      description: Create a paycard notificacion.
+      requestBody:
+        content:
+#          application/x-www-form-urlencoded:
+#            schema:
+#              $ref: "#/components/schemas/Notification"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaycardNotification"
+        required: true
+      summary: Create a paycard notification
+      responses:
+        '200':
+          description: 'Create a paycard notification'
+      tags:
+        - VolcanManager::Notificaciones
+    parameters: []
+  /volcan/api/Notificaciones/{notification_id}/Detalle/:
     get:
       operationId: api_notification_read
       description: Return a notification.
@@ -2118,18 +2146,18 @@ paths:
         description: ID Notificacion
         schema:
           type: string
-  /volcan/api/Notificaciones/{notification_id}/reenviar/:
+  /volcan/api/Notificaciones/{notification_id}/Reenviar/:
     patch:
       operationId: api_notification_resend
       description: Resend notification.
       requestBody:
         content:
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: "#/components/schemas/Notification"
+#          application/x-www-form-urlencoded:
+#            schema:
+#              $ref: "#/components/schemas/Notification"
           application/json:
             schema:
-              $ref: "#/components/schemas/Notification"
+              $ref: "#/components/schemas/ResendNotification"
         required: true
       summary: Resend a notification.
       responses:
@@ -2144,18 +2172,18 @@ paths:
         description: ID Notificacion
         schema:
           type: string
-  /volcan/api/Notificaciones/reenviar/emisor/:
+  /volcan/api/Notificaciones/Reenviar/Emisor/:
     patch:
       operationId: api_notification_resend_by_emmisor
       description: Resend notification by emisor.
       requestBody:
         content:
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: "#/components/schemas/Notification"
+#          application/x-www-form-urlencoded:
+#            schema:
+#              $ref: "#/components/schemas/Notification"
           application/json:
             schema:
-              $ref: "#/components/schemas/Notification"
+              $ref: "#/components/schemas/ResendNotification"
         required: true
       summary: Resend a notification by emisor.
       responses:
@@ -3774,6 +3802,129 @@ components:
         - pais
         - email
         - tarjetahabiente
+        - user
+        - password
+    ResendNotification:
+      type: object
+      properties:
+        emisor:
+          type: string
+          description: Emisor
+    PaycardNotification:
+      type: object
+      properties:
+        prioridad:
+          type: string
+          description: Prioridad
+        mensaje:
+          type: object
+          properties:
+            IdMovimiento:
+              type: string
+              description: ID Movimiento
+            Moneda:
+              type: string
+              description: Moneda
+            Importe:
+              type: string
+              description: Importe
+            CodigoProceso:
+              type: string
+              description: Codigo proceso
+            NombreBeneficiario:
+              type: string
+              description: Nombre beneficiario
+            PrimerApellido:
+              type: string
+              description: Primer apellido
+            SegundoApellido:
+              type: string
+              description: Segundo apellido
+            RfcCurpOrdenante:
+              type: string
+              description: RFC CURP
+            Correo:
+              type: string
+              description: Correo
+            InstitucionBeneficiaria:
+              type: string
+              description: Institucion beneficaria
+            ConceptoPago:
+              type: string
+              description: Concepto pago
+            Telefono:
+              type: string
+              description: Telefono
+            ClaveRastreo:
+              type: string
+              description: Clave rastreo
+            NumeroCuenta:
+              type: string
+              description: Nombre cuenta
+            NumeroAfiliacionComercio:
+              type: string
+              description: Numero afiliacion comercio
+            POSEntryMode:
+              type: string
+              description: POS entry mode
+            TipoManufactura:
+              type: string
+              description: Tipo de manufactura
+            Tarjeta:
+              type: string
+              description: Tarjeta
+            MedioAcceso:
+              type: string
+              description: Medio acceso
+            CuentaBeneficiario:
+              type: string
+              description: Cuenta beneficiario
+            RfcCurpBeneficiario:
+              type: string
+              description: RFC Curp Beneficiario
+            NombreComercio:
+              type: string
+              description: Nombre Comercio
+            CodigoRespuesta:
+              type: string
+              description: Codigo respuesta
+            MCC:
+              type: string
+              description: MCC
+            ClaveMovimiento:
+              type: string
+              description: Clave movimento
+            FechaHora:
+              type: string
+              description: Fecha hora
+            TipoMedioAcceso:
+              type: string
+              description: Tipo medio acceso
+            NombreOrdenante:
+              type: string
+              description: Nombre ordenante
+            ReferenciaNumerica:
+              type: string
+              description: Referencia numerica
+            NumeroAutorizacion:
+              type: string
+              description: Numero Autorizacion
+            InstitucionOrdenante:
+              type: string
+              description: Institucion ordenante
+        emisor:
+          type: string
+          description: Emisor
+        user:
+          type: string
+          description: User
+        password:
+          type: string
+          description: Password
+      required:
+        - prioridad
+        - mensaje
+        - emisor
         - user
         - password
   securitySchemes:
