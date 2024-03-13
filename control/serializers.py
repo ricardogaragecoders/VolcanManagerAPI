@@ -837,3 +837,31 @@ class ConsultaCVV2Serializer(serializers.Serializer):
         data['EMISOR'] = emisor
 
         return data
+
+class ConsultaEstadoCuentaSerializer(serializers.Serializer):
+    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    FECHA_DE_CORTE = serializers.CharField(max_length=8, required=False, default="", allow_blank=True)
+    MOVIMIENTOS = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
+    CONSECUTIVO_EDO_CUENTA = serializers.CharField(max_length=4, required=False, default="", allow_blank=True)
+    LLAVE_EDO_CUENTA = serializers.CharField(max_length=17, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('TARJETA', 'FECHA_DE_CORTE', 'MOVIMIENTOS', 'CONSECUTIVO_EDO_CUENTA', 'LLAVE_EDO_CUENTA',
+                  'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+
+    def validate(self, data):
+        data = super(ConsultaEstadoCuentaSerializer, self).validate(data)
+        tarjeta = data.get('TARJETA', "").strip()
+        emisor = data.get('EMISOR', '').upper().strip()
+
+        data['TARJETA'] = tarjeta
+
+        if len(tarjeta) == 0:
+            raise CustomValidationError(detail=u'Tarjeta es requerida', code='400')
+
+        if len(emisor) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
+        return data
