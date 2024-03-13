@@ -108,10 +108,8 @@ MONGO_DB = {
 
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
-        "LOCATION": "/var/tmp/volcanmanagerapi",
-        "TIMEOUT": 60,
-        "OPTIONS": {"MAX_ENTRIES": 1000},
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": env.str('REDIS_URL'),
     }
 }
 
@@ -397,7 +395,10 @@ CORS_ALLOW_HEADERS = list(default_headers)
 CORS_ALLOW_METHODS = list(default_methods)
 CORS_EXPOSE_HEADERS = list(default_headers) + ['content-disposition', ]
 
-BROKER_URL = env.str('RABBITMQ_URL')
+CELERY_BROKER_URL = env.str('RABBITMQ_URL')
+CELERY_RESULT_BACKEND = env.str('CELERY_RESULT_BACKEND')
+MAX_RETRIES_CELERY_TASK = env.int('MAX_RETRIES_CELERY_TASK', 5)
+MIN_WAIT_FOR_RETRY_CELERY_TASK = env.int('MIN_WAIT_FOR_RETRY_CELERY_TASK', 5 * 60)
 
 URL_CMF_DELIVER_OTP = env.str('URL_CMF_DELIVER_OTP', '')
 
@@ -425,6 +426,8 @@ URL_AZ7_CONSULTA_INTRA_EXTRA = env.str('URL_AZ7_CONSULTA_INTRA_EXTRA', '/web/ser
 URL_AZ7_CONSULTA_TRANSACCION_X_FECHA = env.str('URL_AZ7_CONSULTA_TRANSACCION_X_FECHA',
                                                '/web/services/Volcan_ConsultaTxnXFecha1')
 URL_AZ7_CONSULTA_CVV2 = env.str('URL_AZ7_CONSULTA_CVV2', '/web/services/Volcan_CVV2_1')
+URL_AZ7_CONSULTA_ESTADO_CUENTA = env.str('URL_AZ7_CONSULTA_ESTADO_CUENTA',
+                                         '/web/services/Volcan_ConsultaEstadoCta_1')
 
 # obtenerDatosTokenizacionPrepago
 URL_AZ7_LOGIN = env.str('URL_AZ7_LOGIN', '/wsParabiliumVolcan/api/Login')

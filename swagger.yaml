@@ -1374,6 +1374,111 @@ paths:
       tags:
         - VolcanManager::Acciones
     parameters: []
+  /volcan/api/ConsultaEstadoCta/:
+    post:
+      operationId: api_control_consulta_estado_cuenta
+      description: Consulta Estado de Cuenta
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ConsultaEstadoCta"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsultaEstadoCta"
+        required: true
+      summary: 'Consulta Estado de Cuenta'
+      responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
+        '200':
+          description: 'Consulta Estado de cuenta'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_cuenta": "0000000000000000",
+                "rsp_estado_cuenta": "00000000",
+                "rsp_desc_estado": "0",
+                "rsp_mnd_lmt_cred": "000000",
+                "rsp_desc_mnd": "000000000000",
+                "rsp_lmt_cred": "000000",
+                "rsp_ciclo_corte": "000000",
+                "rsp_fec_ult_corte": "000000",
+                "rsp_venc_pago_min": "000000",
+                "rsp_venc_pago_cont": "000000",
+                "rsp_clasif_consumo": "000000",
+                "rsp_clasif_pago": "000000",
+                "rsp_nom_cliente": "000000",
+                "rsp_plan_cuenta": "000000",
+                "rsp_desc_plan": "000000",
+                "rsp_lmt_extra": "000000",
+                "rsp_fec_corte_loc": "000000",
+                "rsp_mnd_corte_loc": "000000",
+                "rsp_desc_mnd_loc": "000000",
+                "rsp_fec_venc_min_loc": "000000",
+                "rsp_fec_venc_cont_loc": "000000",
+                "rsp_saldo_ini_loc": "000000",
+                "rsp_deb_local": "000000",
+                "rsp_cred_local": "000000",
+                "rsp_pago_min_loc": "000000",
+                "rsp_pago_cont_loc": "000000",
+                "rsp_imp_venc_loc": "000000",
+                "rsp_monto_venc_loc": "000000",
+                "rsp_sobregiros_loc": "000000",
+                "rsp_ade_efectivo_loc": "000000",
+                "rsp_interes_periodo_local": "000000",
+                "rsp_interes_bonif_loc": "000000",
+                "rsp_interes_post_bonif_loc": "000000",
+                "rsp_interes_mora_loc": "000000",
+                "rsp_fec_corte_ant_loc": "000000",
+                "rsp_saldo_ini_extra_loc": "000000",
+                "rsp_deb_extra_loc": "000000",
+                "rsp_wsmovimientos": [
+                  {
+                    "rsp_cod_mov": "000000",
+                    "rsp_ori_mov": "000000",
+                    "rsp_num_mov": "000000",
+                    "rsp_mnd_mov": "000000",
+                    "rsp_monto_orig": "000000",
+                    "rsp_tasa_mov": "000000",
+                    "rsp_tasa_mora_mov": "000000",
+                    "rsp_plazo_mov": "000000",
+                    "rsp_fec_uso": "000000",
+                    "rsp_fec_mov": "000000",
+                    "rsp_cod_com": "000000",
+                    "rsp_desc_com": "000000",
+                    "rsp_num_tarjeta": "000000",
+                    "rsp_num_aut": "000000",
+                    "rsp_tipo_mov": "0",
+                    "rsp_mov_anulado": "0"
+                  }
+                ]
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error consulta puntos"
+              }
+      tags:
+        - VolcanManager::Acciones
+    parameters: []
   /volcan/api/IntraExtras/:
     post:
       operationId: api_control_intra_extras_mock
@@ -1950,6 +2055,14 @@ paths:
           required: false
           schema:
             type: string
+        - name: nType
+          description: Notification Type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [transaction, paycard, thales]
+            default: transaction
         - name: q
           description: Find by program name
           in: query
@@ -1962,8 +2075,8 @@ paths:
           required: false
           schema:
             type: string
-            enum: [ 'emisor', 'updated_at' ]
-            default: emisor
+            enum: [ 'issuer', 'created_at' ]
+            default: issuer
         - name: orderByDesc
           description: Order desc
           in: query
@@ -1995,7 +2108,27 @@ paths:
       tags:
         - VolcanManager::Notificaciones
     parameters: []
-  /volcan/api/Notificaciones/{notification_id}/:
+  /volcan/api/Notificaciones/Prepago/:
+    post:
+      operationId: api_control_paycard_notifications
+      description: Create a paycard notificacion.
+      requestBody:
+        content:
+#          application/x-www-form-urlencoded:
+#            schema:
+#              $ref: "#/components/schemas/Notification"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaycardNotification"
+        required: true
+      summary: Create a paycard notification
+      responses:
+        '200':
+          description: 'Create a paycard notification'
+      tags:
+        - VolcanManager::Notificaciones
+    parameters: []
+  /volcan/api/Notificaciones/{notification_id}/Detalle/:
     get:
       operationId: api_notification_read
       description: Return a notification.
@@ -2013,18 +2146,18 @@ paths:
         description: ID Notificacion
         schema:
           type: string
-  /volcan/api/Notificaciones/{notification_id}/reenviar/:
+  /volcan/api/Notificaciones/{notification_id}/Reenviar/:
     patch:
       operationId: api_notification_resend
       description: Resend notification.
       requestBody:
         content:
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: "#/components/schemas/Notification"
+#          application/x-www-form-urlencoded:
+#            schema:
+#              $ref: "#/components/schemas/Notification"
           application/json:
             schema:
-              $ref: "#/components/schemas/Notification"
+              $ref: "#/components/schemas/ResendNotification"
         required: true
       summary: Resend a notification.
       responses:
@@ -2039,18 +2172,18 @@ paths:
         description: ID Notificacion
         schema:
           type: string
-  /volcan/api/Notificaciones/reenviar/emisor/:
+  /volcan/api/Notificaciones/Reenviar/Emisor/:
     patch:
       operationId: api_notification_resend_by_emmisor
       description: Resend notification by emisor.
       requestBody:
         content:
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: "#/components/schemas/Notification"
+#          application/x-www-form-urlencoded:
+#            schema:
+#              $ref: "#/components/schemas/Notification"
           application/json:
             schema:
-              $ref: "#/components/schemas/Notification"
+              $ref: "#/components/schemas/ResendNotification"
         required: true
       summary: Resend a notification by emisor.
       responses:
@@ -3273,6 +3406,35 @@ components:
       required:
         - tarjeta
         - emisor
+    ConsultaEstadoCta:
+      type: object
+      properties:
+        tarjeta:
+          type: string
+          description: 'Mandatorio. Consulta por número de Tarjeta Cifrada con la llame de Emisor'
+          maxLength: 22
+        fecha_de_corte:
+          type: string
+          format: date
+          pattern: '^\d{4}\d{2}\d{2}$'
+          description: 'Fecha de corte. Formato AAAAMMDD'
+          maxLength: 8
+        movimientos:
+          type: string
+          maxLength: 1
+        consecutivo_edo_cuenta:
+          type: string
+          maxLength: 4
+        llave_edo_cuenta:
+          type: string
+          maxLength: 17
+        emisor:
+          type: string
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+          maxLength: 3
+      required:
+        - tarjeta
+        - emisor
     Intra_Extras:
       type: object
       properties:
@@ -3640,6 +3802,129 @@ components:
         - pais
         - email
         - tarjetahabiente
+        - user
+        - password
+    ResendNotification:
+      type: object
+      properties:
+        emisor:
+          type: string
+          description: Emisor
+    PaycardNotification:
+      type: object
+      properties:
+        prioridad:
+          type: string
+          description: Prioridad
+        mensaje:
+          type: object
+          properties:
+            IdMovimiento:
+              type: string
+              description: ID Movimiento
+            Moneda:
+              type: string
+              description: Moneda
+            Importe:
+              type: string
+              description: Importe
+            CodigoProceso:
+              type: string
+              description: Codigo proceso
+            NombreBeneficiario:
+              type: string
+              description: Nombre beneficiario
+            PrimerApellido:
+              type: string
+              description: Primer apellido
+            SegundoApellido:
+              type: string
+              description: Segundo apellido
+            RfcCurpOrdenante:
+              type: string
+              description: RFC CURP
+            Correo:
+              type: string
+              description: Correo
+            InstitucionBeneficiaria:
+              type: string
+              description: Institucion beneficaria
+            ConceptoPago:
+              type: string
+              description: Concepto pago
+            Telefono:
+              type: string
+              description: Telefono
+            ClaveRastreo:
+              type: string
+              description: Clave rastreo
+            NumeroCuenta:
+              type: string
+              description: Nombre cuenta
+            NumeroAfiliacionComercio:
+              type: string
+              description: Numero afiliacion comercio
+            POSEntryMode:
+              type: string
+              description: POS entry mode
+            TipoManufactura:
+              type: string
+              description: Tipo de manufactura
+            Tarjeta:
+              type: string
+              description: Tarjeta
+            MedioAcceso:
+              type: string
+              description: Medio acceso
+            CuentaBeneficiario:
+              type: string
+              description: Cuenta beneficiario
+            RfcCurpBeneficiario:
+              type: string
+              description: RFC Curp Beneficiario
+            NombreComercio:
+              type: string
+              description: Nombre Comercio
+            CodigoRespuesta:
+              type: string
+              description: Codigo respuesta
+            MCC:
+              type: string
+              description: MCC
+            ClaveMovimiento:
+              type: string
+              description: Clave movimento
+            FechaHora:
+              type: string
+              description: Fecha hora
+            TipoMedioAcceso:
+              type: string
+              description: Tipo medio acceso
+            NombreOrdenante:
+              type: string
+              description: Nombre ordenante
+            ReferenciaNumerica:
+              type: string
+              description: Referencia numerica
+            NumeroAutorizacion:
+              type: string
+              description: Numero Autorizacion
+            InstitucionOrdenante:
+              type: string
+              description: Institucion ordenante
+        emisor:
+          type: string
+          description: Emisor
+        user:
+          type: string
+          description: User
+        password:
+          type: string
+          description: Password
+      required:
+        - prioridad
+        - mensaje
+        - emisor
         - user
         - password
   securitySchemes:
