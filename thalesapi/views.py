@@ -52,8 +52,6 @@ class CardBinConfigApiView(CustomViewSet):
         self.clear_cache_bin(self.serializer.data['card_bin'])
 
 
-
-# Create your views here.
 class ThalesApiView(CustomViewSet):
     permission_classes = (AllowAny,)
     http_method_names = ['post', 'get', 'options', 'head']
@@ -267,9 +265,9 @@ class ThalesApiViewPrivate(ThalesApiView):
                             response_status = 200
                 else:
                     response_data = {
-                        'RSP_ERROR': resp_data['RSP_ERROR'],
-                        'RSP_CODIGO': resp_data['RSP_CODIGO'],
-                        'RSP_DESCRIPCION': resp_data['RSP_DESCRIPCION']
+                        'RSP_ERROR': resp_data['RSP_ERROR'] if resp_data['RSP_ERROR'] != '' else 'RC',
+                        'RSP_CODIGO': resp_data['RSP_CODIGO'] if resp_data['RSP_CODIGO'] != '' else '400',
+                        'RSP_DESCRIPCION': resp_data['RSP_DESCRIPCION'] if resp_data['RSP_DESCRIPCION'] != '' else 'Error en datos de origen'
                     }
         else:
             resp_msg, response_data, response_status = get_response_data_errors(serializer.errors)
@@ -344,9 +342,9 @@ class ThalesApiViewPrivate(ThalesApiView):
                             response_status = 200
                 else:
                     response_data = {
-                        'RSP_ERROR': resp_data['RSP_ERROR'],
-                        'RSP_CODIGO': resp_data['RSP_CODIGO'],
-                        'RSP_DESCRIPCION': resp_data['RSP_DESCRIPCION']
+                        'RSP_ERROR': resp_data['RSP_ERROR'] if resp_data['RSP_ERROR'] != '' else 'RC',
+                        'RSP_CODIGO': resp_data['RSP_CODIGO'] if resp_data['RSP_CODIGO'] != '' else '400',
+                        'RSP_DESCRIPCION': resp_data['RSP_DESCRIPCION'] if resp_data['RSP_DESCRIPCION'] != '' else 'Error en datos de origen'
                     }
         else:
             resp_msg, response_data, response_status = get_response_data_errors(serializer.errors)
