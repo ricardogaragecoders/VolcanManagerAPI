@@ -4,6 +4,7 @@ from rest_framework import serializers
 from common.exceptions import CustomValidationError
 from common.utils import code_generator
 from thalesapi.models import CardBinConfig, CardDetail
+from thalesapi.utils import get_or_create_card_client
 
 
 class VerifyCardCreditSerializer(serializers.Serializer):
@@ -32,8 +33,8 @@ class VerifyCardCreditSerializer(serializers.Serializer):
         from jwcrypto import jwk, jwe
         import json
         try:
-            with open(settings.PRIV_KEY_D1_SERVER_TO_ISSUER_SERVER_PEM, "rb") as pemfile:
-                private_key = jwk.JWK.from_pem(pemfile.read())
+            with open(settings.PRIV_KEY_D1_SERVER_TO_ISSUER_SERVER_PEM, "rb") as pem_file:
+                private_key = jwk.JWK.from_pem(pem_file.read())
             if private_key:
                 jwe_token = jwe.JWE()
                 jwe_token.deserialize(encrypted_data, key=private_key)
@@ -50,8 +51,8 @@ class VerifyCardCreditSerializer(serializers.Serializer):
             logger.exception(e)
 
         from thalesapi.utils import get_card_triple_des_process
-        data['CARD_BIN'] = data['TARJETA'][0:8]
-        card_az7 = get_card_triple_des_process(data['TARJETA'])
+        data['card_bin'] = data['TARJETA'][0:8]
+        card_az7 = get_card_triple_des_process(data['TARJETA'], is_descript=False)
         if not card_az7:
             raise CustomValidationError(detail=u'Error en proceso de encriptado triple des', code='400')
         else:
@@ -120,12 +121,14 @@ class GetDataTokenizationSerializer(serializers.Serializer):
     CVV = serializers.CharField(max_length=4, required=False, default="", allow_blank=True)
     EMISOR = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
     FOLIO = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    IDENTIFICACION = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
     USUARIO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
     ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
 
     class Meta:
         fields = ('TARJETA', 'FECHA_EXP', 'NOMBRE', 'CVV',
-                  'FOLIO', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+                  'FOLIO', 'EMISOR', 'IDENTIFICATION',
+                  'USUARIO_ATZ', 'ACCESO_ATZ')
 
     def validate(self, data):
         data = super(GetDataTokenizationSerializer, self).validate(data)
@@ -134,8 +137,9 @@ class GetDataTokenizationSerializer(serializers.Serializer):
         exp_date = data.get('FECHA_EXP', '').strip()
         cvv = data.get('CVV', '').strip()
         name = data.get('NOMBRE', '').strip()
-        transmitter = data.get('EMISOR', '').strip().upper()
+        issuer = data.get('EMISOR', '').strip().upper()
         folio = data.get('FOLIO', '').strip()
+        identification = data.pop('IDENTIFICACION', '').strip()
 
         if len(card) == 0:
             raise CustomValidationError(detail=u'TARJETA es requerido', code='400')
@@ -149,21 +153,27 @@ class GetDataTokenizationSerializer(serializers.Serializer):
             raise CustomValidationError(detail=u'NOMBRE es requerido', code='400')
 
         if not profile.isSuperadmin():
-            if profile.first_name != transmitter:
+            if profile.first_name != issuer:
                 raise CustomValidationError(detail=u'EMISOR desconocido', code='400')
 
-        if transmitter not in CardBinConfig.objects.order_by().values_list('emisor', flat=True).distinct():
+        if issuer not in CardBinConfig.objects.order_by().values_list('emisor', flat=True).distinct():
             raise CustomValidationError(detail=u'EMISOR no autorizado', code='400')
 
         if len(folio) == 0:
             folio = code_generator(characters=12, option='num')
 
+        if len(identification) == 0:
+            raise CustomValidationError(detail=u'IDENTIFICACION es requerida', code='400')
+
+        client = get_or_create_card_client(card_name=name, identification=identification)
+
         data['FECHA_EXP'] = exp_date
         data['CVV'] = cvv
         data['FOLIO'] = folio
-        data['EMISOR'] = transmitter
+        data['EMISOR'] = issuer
         data['USUARIO_ATZ'] = settings.VOLCAN_USUARIO_ATZ
         data['ACCESO_ATZ'] = settings.VOLCAN_ACCESO_ATZ
+        data['client'] = client
 
         return data
 
@@ -174,9 +184,10 @@ class GetDataTokenizationPaycardSerializer(serializers.Serializer):
     MANUFACTURA = serializers.CharField(max_length=1, required=False, default="F", allow_blank=True)
     EMISOR = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
     FOLIO = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    IDENTIFICACION = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
 
     class Meta:
-        fields = ('TARJETA', 'FECHA_EXP', 'MANUFACTURA', 'EMISOR', 'FOLIO')
+        fields = ('TARJETA', 'FECHA_EXP', 'MANUFACTURA', 'EMISOR', 'FOLIO', 'IDENTIFICACION')
 
     def validate(self, data):
         data = super(GetDataTokenizationPaycardSerializer, self).validate(data)
@@ -184,8 +195,9 @@ class GetDataTokenizationPaycardSerializer(serializers.Serializer):
         card = data.pop('TARJETA', '').strip()
         exp_date = data.get('FECHA_EXP', '').strip()
         manufacture = data.pop('MANUFACTURA', '').strip()
-        transmitter = data.get('EMISOR', '').strip().upper()
+        issuer = data.get('EMISOR', '').strip().upper()
         folio = data.get('FOLIO', '').strip()
+        identification = data.pop('IDENTIFICACION', '').strip()
 
         if len(card) == 0:
             raise CustomValidationError(detail=u'TARJETA es requerido', code='400')
@@ -196,10 +208,10 @@ class GetDataTokenizationPaycardSerializer(serializers.Serializer):
         exp_date = exp_date[2:4] + exp_date[0:2]
 
         if not profile.isSuperadmin():
-            if profile.first_name != transmitter:
+            if profile.first_name != issuer:
                 raise CustomValidationError(detail=u'EMISOR desconocido', code='400')
 
-        if transmitter not in CardBinConfig.objects.order_by().values_list('emisor', flat=True).distinct():
+        if issuer not in CardBinConfig.objects.order_by().values_list('emisor', flat=True).distinct():
             raise CustomValidationError(detail=u'EMISOR no autorizado', code='400')
 
         if len(folio) == 0:
@@ -211,6 +223,12 @@ class GetDataTokenizationPaycardSerializer(serializers.Serializer):
         data['card'] = card
         data['Tarjeta'] = get_card_triple_des_process(card, is_descript=True)
         data['Manufactura'] = manufacture
+
+        if len(identification) == 0:
+            raise CustomValidationError(detail=u'IDENTIFICACION es requerida', code='400')
+
+        data['client'] = get_or_create_card_client(identification=identification)
+
         return data
 
 
@@ -225,21 +243,25 @@ class GetVerifyCardSerializer(serializers.Serializer):
     STATE = serializers.CharField(max_length=10, required=False, default="ACTIVE", allow_blank=True)
     EMISOR = serializers.CharField(max_length=3, required=False, default="CMF", allow_blank=True)
     FOLIO = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    IDENTIFICACION = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
 
     class Meta:
         fields = ('TARJETA', 'FECHA_EXP', 'TARJETAID', 'CLIENTEID', 'CUENTAID',
-                  'ISSUER_ID', 'CARD_PRODUCT_ID', 'STATE','FOLIO', 'EMISOR')
+                  'ISSUER_ID', 'CARD_PRODUCT_ID', 'STATE','FOLIO', 'EMISOR',
+                  'IDENTIFICACION')
 
     def validate(self, data):
         data = super(GetVerifyCardSerializer, self).validate(data)
         profile = self.context['request'].user.profile
         card = data.get('TARJETA', '').strip()
         exp_date = data.get('FECHA_EXP', '').strip()
-        transmitter = data.get('EMISOR', '').strip().upper()
+        issuer = data.get('EMISOR', '').strip().upper()
         issuer_id = data.get('ISSUER_ID', '').strip()
         card_product_id = data.get('CARD_PRODUCT_ID', '').strip()
         folio = data.get('FOLIO', '').strip()
         state = data.get('STATE', '').strip()
+        identification = data.pop('IDENTIFICACION', '').strip()
+        consumer_id = data.get('CLIENTEID', '').strip()
 
         if len(card) == 0:
             raise CustomValidationError(detail=u'TARJETA es requerido', code='400')
@@ -250,10 +272,10 @@ class GetVerifyCardSerializer(serializers.Serializer):
         exp_date = exp_date[2:4] + exp_date[0:2]
 
         if not profile.isSuperadmin():
-            if profile.first_name != transmitter:
+            if profile.first_name != issuer:
                 raise CustomValidationError(detail=u'EMISOR desconocido', code='400')
 
-        if transmitter not in CardBinConfig.objects.order_by().values_list('emisor', flat=True).distinct():
+        if issuer not in CardBinConfig.objects.order_by().values_list('emisor', flat=True).distinct():
             raise CustomValidationError(detail=u'EMISOR no autorizado', code='400')
 
         if len(folio) == 0:
@@ -265,12 +287,18 @@ class GetVerifyCardSerializer(serializers.Serializer):
         if len(card_product_id) == 0:
             card_product_id = "D1_VOLCAN_VISA_SANDBOX"
 
+        if len(identification) == 0:
+            raise CustomValidationError(detail=u'IDENTIFICACION es requerida', code='400')
+
+        data['client'] = get_or_create_card_client(identification=identification, consumer_id=consumer_id)
+
         data['FECHA_EXP'] = exp_date
         data['FOLIO'] = folio
-        data['EMISOR'] = transmitter
+        data['EMISOR'] = issuer
         data['ISSUER_ID'] = issuer_id
         data['CARD_PRODUCT_ID'] = card_product_id
         data['STATE'] = state
+
         return data
 
 
