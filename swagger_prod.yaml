@@ -3237,7 +3237,8 @@ components:
           maxLength: 6
         tipo_mov:
           type: string
-          description: 'Tipo de movimiento'
+          description: 'Tipo de movimiento. Si es movimiento de estado de cuenta usar "E". Si son transacciones flotantes, enviar "F"'
+          enum: ['E', 'F']
           maxLength: 1
         pagina:
           type: string
