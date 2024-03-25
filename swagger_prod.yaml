@@ -3405,6 +3405,10 @@ components:
           type: string
           description: 'Opcional. Folio de la operacion'
           maxLength: 30
+        identificacion:
+          type: string
+          description: 'Obligatorio. Identificacion del cliente'
+          maxLength: 20
         emisor:
           type: string
           description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
@@ -3430,6 +3434,10 @@ components:
           type: string
           description: 'Mandatorio. Fecha de expiracion formato MMAA'
           maxLength: 4
+        identificacion:
+          type: string
+          description: 'Obligatorio. Identificacion del cliente'
+          maxLength: 20
         emisor:
           type: string
           description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
@@ -3478,6 +3486,10 @@ components:
           type: string
           description: 'Opcional. Folio de la operacion'
           maxLength: 30
+        identificacion:
+          type: string
+          description: 'Obligatorio. Identificacion del cliente'
+          maxLength: 20
         emisor:
           type: string
           description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
