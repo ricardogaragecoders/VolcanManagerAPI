@@ -3417,6 +3417,7 @@ components:
         - tarjeta
         - fecha_exp
         - nombre
+        - identificacion
         - emisor
     GetCardDataTokenizationPaycard:
       type: object
@@ -3445,6 +3446,7 @@ components:
       required:
         - tarjeta
         - manufactura
+        - identificacion
         - emisor
     RegisterConsumerCards:
       type: object
@@ -3503,6 +3505,7 @@ components:
         - issuer_id
         - card_product_id
         - state
+        - identificacion
         - emisor
 #    Webhook:
 #      type: object
