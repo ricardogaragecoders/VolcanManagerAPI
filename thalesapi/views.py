@@ -435,8 +435,8 @@ class ThalesApiViewPrivate(ThalesApiView):
                 "Content-Type": "application/json",
                 "Accept": "application/json"
             }
-            cert = None
-            # cert = (settings.SSL_CERTIFICATE_THALES_CRT, settings.SSL_CERTIFICATE_THALES_KEY)
+            # cert = None
+            cert = (settings.SSL_CERTIFICATE_THALES_CRT, settings.SSL_CERTIFICATE_THALES_KEY)
             resp_data, resp_status = process_volcan_api_request(data=payload, url=url, headers=headers, cert=cert)
             if resp_status == 200:
                 return resp_data['access_token'] if 'access_token' in resp_data else None
@@ -532,8 +532,8 @@ class ThalesApiViewPrivate(ThalesApiView):
                 "Accept": "application/json",
                 "Authorization": f"Bearer {access_token}"
             }
-            cert = None
-            # cert = (settings.SSL_CERTIFICATE_THALES_CRT, settings.SSL_CERTIFICATE_THALES_KEY)
+            # cert = None
+            cert = (settings.SSL_CERTIFICATE_THALES_CRT, settings.SSL_CERTIFICATE_THALES_KEY)
             resp_data, resp_status = process_volcan_api_request(data=payload, url=url, headers=headers,
                                                                 method='PUT', cert=cert)
             if resp_status == 204:
