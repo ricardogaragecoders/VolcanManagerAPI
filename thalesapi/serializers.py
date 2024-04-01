@@ -208,8 +208,8 @@ class GetDataTokenizationPaycardSerializer(serializers.Serializer):
         from thalesapi.utils import get_card_triple_des_process
         data['FECHA_EXP'] = exp_date
         data['FOLIO'] = folio
-        data['card'] = card
-        data['Tarjeta'] = get_card_triple_des_process(card, is_descript=True)
+        data['Tarjeta'] = card
+        data['card'] = get_card_triple_des_process(card, is_descript=False)
         data['Manufactura'] = manufacture
         return data
 
