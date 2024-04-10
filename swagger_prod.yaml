@@ -2281,7 +2281,7 @@ components:
         puesto:
           type: string
           description: 'Opcional. Posición de trabajo'
-          maxLength: 50
+          maxLength: 20
         ingreso_mensual:
           type: string
           description: 'Opcional. Ingreso mensual. Formato 2 decimales. Ejemplo: 1100.00'
