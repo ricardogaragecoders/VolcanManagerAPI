@@ -952,164 +952,165 @@ paths:
       tags:
         - VolcanManager::Acciones
     parameters: []
-  /volcan/api/ConsultaMovimientos/:
-    post:
-      operationId: api_control_consulta_movimientos
-      description: Consulta Movimientos
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: "#/components/schemas/ConsultaMovimientos"
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ConsultaMovimientos"
-        required: true
-      summary: Consulta Movimientos
-      responses:
-        '401':
-          description: 'No autentificado o Token invalido'
-          examples:
-            not_authenticated:
-              {
-                "rsp_success": false,
-                "rsp_codigo": "not_authenticated",
-                "rsp_descripcion": "Authentication credentials were not provided."
-              }
-            token_not_valid:
-              {
-                "rsp_success": false,
-                "rsp_codigo": "token_not_valid",
-                "rsp_descripcion": "Given token not valid for any token type"
-              }
-        '200':
-          description: 'Consulta movimientos'
-          examples:
-            exitosa:
-              {
-                "rsp_success": true,
-                "rsp_codigo": "00",
-                "rsp_descripcion": "Transacción aprobada",
-                "rsp_cuenta": "string",
-                "rsp_estado_cuenta": "st",
-                "rsp_desc_estado": "string",
-                "rsp_mnd_lmt_cred": "str",
-                "rsp_desc_mnd": "string",
-                "rsp_lmt_cred": "string",
-                "rsp_ciclo_corte": "st",
-                "rsp_fec_ult_corte": "string",
-                "rsp_venc_pago_min": "string",
-                "rsp_venc_pago_cont": "string",
-                "rsp_clasif_consumo": "s",
-                "rsp_clasif_pago": "s",
-                "rsp_nom_cliente": "string",
-                "rsp_plan_cuenta": "string",
-                "rsp_desc_plan": "string",
-                "rsp_lmt_extra": "string",
-                "rsp_fec_corte_loc": "string",
-                "rsp_mnd_corte_loc": "str",
-                "rsp_desc_mnd_loc": "string",
-                "rsp_fec_venc_min_loc": "string",
-                "rsp_fec_venc_cont_loc": "string",
-                "rsp_saldo_ini_loc": "string",
-                "rsp_deb_local": "string",
-                "rsp_cred_local": "string",
-                "rsp_pago_min_loc": "string",
-                "rsp_pago_cont_loc": "string",
-                "rsp_imp_venc_loc": "st",
-                "rsp_monto_venc_loc": "string",
-                "rsp_sobregiros_loc": "string",
-                "rsp_ade_efectivo_loc": "string",
-                "rsp_interes_periodo_local": "string",
-                "rsp_interes_bonif_loc": "string",
-                "rsp_interes_post_bonif_loc": "string",
-                "rsp_interes_mora_loc": "string",
-                "rsp_fec_corte_ant_loc": "string",
-                "rsp_saldo_ini_extra_loc": "string",
-                "rsp_deb_extra_loc": "string",
-                "rsp_cred_extra_loc": "string",
-                "rsp_saldo_ini_puntos_loc": "string",
-                "rsp_deb_puntos_loc": "string",
-                "rsp_cred_puntos_loc": "string",
-                "rsp_fec_corte_int": "string",
-                "rsp_mnd_corte_int": "str",
-                "rsp_desc_mnd_corte_int": "string",
-                "rsp_fec_venc_min_corte_int": "string",
-                "rsp_fec_venc_pago_cont_corte_int": "string",
-                "rsp_saldo_ini_corte_int": "string",
-                "rsp_deb_corte_int": "string",
-                "rsp_cred_corte_int": "string",
-                "rsp_pago_min_corte_int": "string",
-                "rsp_pago_cont_corte_int": "string",
-                "rsp_imp_venc_corte_int": "st",
-                "rsp_monto_venc_corte_int": "string",
-                "rsp_sobregiro_corte_int": "string",
-                "rsp_ade_efec_corte_int": "string",
-                "rsp_interes_periodo_int": "string",
-                "rsp_interes_bonif_int": "string",
-                "rsp_interes_post_boniff_int": "string",
-                "rsp_interes_mora_int": "string",
-                "rsp_fec_corte_ant_int": "string",
-                "rsp_saldo_ini_extra_int": "string",
-                "rsp_deb_extra_int": "string",
-                "rsp_cred_extra_int": "string",
-                "rsp_saldo_ini_puntos_int": "string",
-                "rsp_cred_puntos_int": "string",
-                "rsp_saldo_mnd_loc_puc": "str",
-                "rsp_deb_loc_puc": "string",
-                "rsp_cred_loc_puc": "string",
-                "rsp_saldo_ini_flot_loc_puc": "string",
-                "rsp_deb_flot_loc_puc": "string",
-                "rsp_cred_flot_loc_puc": "string",
-                "rsp_monto_pago_loc_puc": "string",
-                "rsp_ult_pago_min_loc_puc": "string",
-                "rsp_ult_pag_cont_loc_puc": "string",
-                "rsp_saldo_mnd_int_puc": "str",
-                "rsp_saldo_ini_int_puc": "string",
-                "rsp_deb_int_puc": "string",
-                "rsp_cred_int_puc": "string",
-                "rsp_saldo_ini_flot_int_puc": "string",
-                "rsp_deb_flot_int_puc": "string",
-                "rsp_cred_flot_int_puc": "string",
-                "rsp_monto_pag_int_puc": "string",
-                "rsp_ade_efectivo_int_puc": "string",
-                "rsp_imp_venc_int_puc": "st",
-                "rsp_monto_venc_int_puc": "string",
-                "rsp_ult_pago_min_int_puc": "string",
-                "rsp_ult_pago_cont_int_puc": "string",
-                "rsp_deb_puntos_int_puc": "string",
-                "rsp_consecutivo": "stri",
-                "rsp_llave": "string",
-                "rsp_wsmovimientos": [
-                  {
-                    "rsp_cod_mov": "str",
-                    "rsp_ori_mov": "str",
-                    "rsp_num_mov": "string",
-                    "rsp_mnd_mov": "str",
-                    "rsp_monto_orig": "string",
-                    "rsp_tasa_mov": "strin",
-                    "rsp_tasa_mora_mov": "strin",
-                    "rsp_plazo_mov": "st",
-                    "rsp_fec_uso": "string",
-                    "rsp_fec_mov": "string",
-                    "rsp_cod_com": "stri",
-                    "rsp_desc_com": "string",
-                    "rsp_num_tarjeta": "string",
-                    "rsp_num_aut": "string",
-                    "rsp_tipo_mov": "s",
-                    "rsp_mov_anulado": "s"
-                  }
-                ]
-              }
-            no_exitosa:
-              {
-                "rsp_success": false,
-                "rsp_codigo": "45",
-                "rsp_descripcion": "Error consulta movimientos"
-              }
-      tags:
-        - VolcanManager::Acciones
-    parameters: []
+# baja de swagger 10 de abril 2024, por solicitud de whatsapp de David.
+#  /volcan/api/ConsultaMovimientos/:
+#    post:
+#      operationId: api_control_consulta_movimientos
+#      description: Consulta Movimientos
+#      requestBody:
+#        content:
+#          application/x-www-form-urlencoded:
+#            schema:
+#              $ref: "#/components/schemas/ConsultaMovimientos"
+#          application/json:
+#            schema:
+#              $ref: "#/components/schemas/ConsultaMovimientos"
+#        required: true
+#      summary: Consulta Movimientos
+#      responses:
+#        '401':
+#          description: 'No autentificado o Token invalido'
+#          examples:
+#            not_authenticated:
+#              {
+#                "rsp_success": false,
+#                "rsp_codigo": "not_authenticated",
+#                "rsp_descripcion": "Authentication credentials were not provided."
+#              }
+#            token_not_valid:
+#              {
+#                "rsp_success": false,
+#                "rsp_codigo": "token_not_valid",
+#                "rsp_descripcion": "Given token not valid for any token type"
+#              }
+#        '200':
+#          description: 'Consulta movimientos'
+#          examples:
+#            exitosa:
+#              {
+#                "rsp_success": true,
+#                "rsp_codigo": "00",
+#                "rsp_descripcion": "Transacción aprobada",
+#                "rsp_cuenta": "string",
+#                "rsp_estado_cuenta": "st",
+#                "rsp_desc_estado": "string",
+#                "rsp_mnd_lmt_cred": "str",
+#                "rsp_desc_mnd": "string",
+#                "rsp_lmt_cred": "string",
+#                "rsp_ciclo_corte": "st",
+#                "rsp_fec_ult_corte": "string",
+#                "rsp_venc_pago_min": "string",
+#                "rsp_venc_pago_cont": "string",
+#                "rsp_clasif_consumo": "s",
+#                "rsp_clasif_pago": "s",
+#                "rsp_nom_cliente": "string",
+#                "rsp_plan_cuenta": "string",
+#                "rsp_desc_plan": "string",
+#                "rsp_lmt_extra": "string",
+#                "rsp_fec_corte_loc": "string",
+#                "rsp_mnd_corte_loc": "str",
+#                "rsp_desc_mnd_loc": "string",
+#                "rsp_fec_venc_min_loc": "string",
+#                "rsp_fec_venc_cont_loc": "string",
+#                "rsp_saldo_ini_loc": "string",
+#                "rsp_deb_local": "string",
+#                "rsp_cred_local": "string",
+#                "rsp_pago_min_loc": "string",
+#                "rsp_pago_cont_loc": "string",
+#                "rsp_imp_venc_loc": "st",
+#                "rsp_monto_venc_loc": "string",
+#                "rsp_sobregiros_loc": "string",
+#                "rsp_ade_efectivo_loc": "string",
+#                "rsp_interes_periodo_local": "string",
+#                "rsp_interes_bonif_loc": "string",
+#                "rsp_interes_post_bonif_loc": "string",
+#                "rsp_interes_mora_loc": "string",
+#                "rsp_fec_corte_ant_loc": "string",
+#                "rsp_saldo_ini_extra_loc": "string",
+#                "rsp_deb_extra_loc": "string",
+#                "rsp_cred_extra_loc": "string",
+#                "rsp_saldo_ini_puntos_loc": "string",
+#                "rsp_deb_puntos_loc": "string",
+#                "rsp_cred_puntos_loc": "string",
+#                "rsp_fec_corte_int": "string",
+#                "rsp_mnd_corte_int": "str",
+#                "rsp_desc_mnd_corte_int": "string",
+#                "rsp_fec_venc_min_corte_int": "string",
+#                "rsp_fec_venc_pago_cont_corte_int": "string",
+#                "rsp_saldo_ini_corte_int": "string",
+#                "rsp_deb_corte_int": "string",
+#                "rsp_cred_corte_int": "string",
+#                "rsp_pago_min_corte_int": "string",
+#                "rsp_pago_cont_corte_int": "string",
+#                "rsp_imp_venc_corte_int": "st",
+#                "rsp_monto_venc_corte_int": "string",
+#                "rsp_sobregiro_corte_int": "string",
+#                "rsp_ade_efec_corte_int": "string",
+#                "rsp_interes_periodo_int": "string",
+#                "rsp_interes_bonif_int": "string",
+#                "rsp_interes_post_boniff_int": "string",
+#                "rsp_interes_mora_int": "string",
+#                "rsp_fec_corte_ant_int": "string",
+#                "rsp_saldo_ini_extra_int": "string",
+#                "rsp_deb_extra_int": "string",
+#                "rsp_cred_extra_int": "string",
+#                "rsp_saldo_ini_puntos_int": "string",
+#                "rsp_cred_puntos_int": "string",
+#                "rsp_saldo_mnd_loc_puc": "str",
+#                "rsp_deb_loc_puc": "string",
+#                "rsp_cred_loc_puc": "string",
+#                "rsp_saldo_ini_flot_loc_puc": "string",
+#                "rsp_deb_flot_loc_puc": "string",
+#                "rsp_cred_flot_loc_puc": "string",
+#                "rsp_monto_pago_loc_puc": "string",
+#                "rsp_ult_pago_min_loc_puc": "string",
+#                "rsp_ult_pag_cont_loc_puc": "string",
+#                "rsp_saldo_mnd_int_puc": "str",
+#                "rsp_saldo_ini_int_puc": "string",
+#                "rsp_deb_int_puc": "string",
+#                "rsp_cred_int_puc": "string",
+#                "rsp_saldo_ini_flot_int_puc": "string",
+#                "rsp_deb_flot_int_puc": "string",
+#                "rsp_cred_flot_int_puc": "string",
+#                "rsp_monto_pag_int_puc": "string",
+#                "rsp_ade_efectivo_int_puc": "string",
+#                "rsp_imp_venc_int_puc": "st",
+#                "rsp_monto_venc_int_puc": "string",
+#                "rsp_ult_pago_min_int_puc": "string",
+#                "rsp_ult_pago_cont_int_puc": "string",
+#                "rsp_deb_puntos_int_puc": "string",
+#                "rsp_consecutivo": "stri",
+#                "rsp_llave": "string",
+#                "rsp_wsmovimientos": [
+#                  {
+#                    "rsp_cod_mov": "str",
+#                    "rsp_ori_mov": "str",
+#                    "rsp_num_mov": "string",
+#                    "rsp_mnd_mov": "str",
+#                    "rsp_monto_orig": "string",
+#                    "rsp_tasa_mov": "strin",
+#                    "rsp_tasa_mora_mov": "strin",
+#                    "rsp_plazo_mov": "st",
+#                    "rsp_fec_uso": "string",
+#                    "rsp_fec_mov": "string",
+#                    "rsp_cod_com": "stri",
+#                    "rsp_desc_com": "string",
+#                    "rsp_num_tarjeta": "string",
+#                    "rsp_num_aut": "string",
+#                    "rsp_tipo_mov": "s",
+#                    "rsp_mov_anulado": "s"
+#                  }
+#                ]
+#              }
+#            no_exitosa:
+#              {
+#                "rsp_success": false,
+#                "rsp_codigo": "45",
+#                "rsp_descripcion": "Error consulta movimientos"
+#              }
+#      tags:
+#        - VolcanManager::Acciones
+#    parameters: []
   /volcan/api/ConsultaPuntos/:
     post:
       operationId: api_control_consulta_puntos
@@ -3110,40 +3111,40 @@ components:
           maxLength: 3
       required:
         - emisor
-    ConsultaMovimientos:
-      type: object
-      properties:
-        tarjeta:
-          type: string
-          description: 'Mandatorio. Número de Tarjeta Principal de la cuenta, cifrada con la llave compartida para Volcán'
-          maxLength: 22
-        fecha_de_corte:
-          type: string
-          format: date
-          pattern: '^\d{4}\d{2}\d{2}$'
-          description: 'Mandatorio. Fecha de corte de requerimiento de la consulta formato AAAAMMDD'
-          maxLength: 8
-        movimientos:
-          type: string
-          description: 'Opcional. Indicador para incluir el detalle de los movimientos, S=Se incluye movimientos/N=no se incluye los movimientos'
-          enum: ['S', 'N']
-          maxLength: 1
-        consecutivo_edo_cuenta:
-          type: string
-          description: 'Opcional. Número de registros que retorna la consulta, de bloques de datos pendientes, esto se deberá de enviar en el siguiente bloque de datos'
-          maxLength: 4
-        llave_edo_cuenta:
-          type: string
-          description: 'Opcional. Campo reservado que se utiliza idicador de página del bloque de datos a responder, esto se replica en el requerimiento para obtener más datos del bloques pendientes.'
-          maxLength: 17
-        emisor:
-          type: string
-          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
-          maxLength: 3
-      required:
-        - tarjeta
-        - fecha_de_corte
-        - emisor
+#    ConsultaMovimientos:
+#      type: object
+#      properties:
+#        tarjeta:
+#          type: string
+#          description: 'Mandatorio. Número de Tarjeta Principal de la cuenta, cifrada con la llave compartida para Volcán'
+#          maxLength: 22
+#        fecha_de_corte:
+#          type: string
+#          format: date
+#          pattern: '^\d{4}\d{2}\d{2}$'
+#          description: 'Mandatorio. Fecha de corte de requerimiento de la consulta formato AAAAMMDD'
+#          maxLength: 8
+#        movimientos:
+#          type: string
+#          description: 'Opcional. Indicador para incluir el detalle de los movimientos, S=Se incluye movimientos/N=no se incluye los movimientos'
+#          enum: ['S', 'N']
+#          maxLength: 1
+#        consecutivo_edo_cuenta:
+#          type: string
+#          description: 'Opcional. Número de registros que retorna la consulta, de bloques de datos pendientes, esto se deberá de enviar en el siguiente bloque de datos'
+#          maxLength: 4
+#        llave_edo_cuenta:
+#          type: string
+#          description: 'Opcional. Campo reservado que se utiliza idicador de página del bloque de datos a responder, esto se replica en el requerimiento para obtener más datos del bloques pendientes.'
+#          maxLength: 17
+#        emisor:
+#          type: string
+#          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+#          maxLength: 3
+#      required:
+#        - tarjeta
+#        - fecha_de_corte
+#        - emisor
     ConsultaPuntos:
       type: object
       properties:
@@ -3237,7 +3238,8 @@ components:
           maxLength: 6
         tipo_mov:
           type: string
-          description: 'Tipo de movimiento'
+          description: 'Tipo de movimiento. Si es movimiento de estado de cuenta usar "E". Si son transacciones flotantes, enviar "F"'
+          enum: ['E', 'F']
           maxLength: 1
         pagina:
           type: string
