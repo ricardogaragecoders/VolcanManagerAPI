@@ -1,6 +1,7 @@
 amqp==5.1.1
 asgiref==3.7.2
 async-timeout==4.0.3
+backports.zoneinfo;python_version<"3.9"
 billiard==4.2.0
 celery==5.3.6
 certifi==2023.7.22
@@ -25,14 +26,15 @@ ecdsa==0.18.0
 idna==3.4
 jwcrypto==1.5.0
 kombu==5.3.5
-numpy==1.26.1
-pandas==2.1.1
+numpy==1.24.4
+pandas==2.0.3
 pem==23.1.0
 Pillow==10.0.0
 prompt-toolkit==3.0.39
 psycopg2-binary==2.9.6
 pyasn1==0.5.0
 pycparser==2.21
+# pycrypto==2.6.1
 pycryptodome==3.19.0
 PyJWT==2.8.0
 pymongo==3.11.4

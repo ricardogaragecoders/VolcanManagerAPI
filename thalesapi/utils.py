@@ -7,10 +7,9 @@ from django.conf import settings
 from django.core.cache import cache
 from django.utils import timezone
 
-from common.utils import get_response_data_errors
+from common.utils import get_response_data_errors, model_code_generator
 from control.utils import mask_card
-from thalesapi.models import ISOCountry, DeliverOtpCollection, CardDetail, CardBinConfig, CardType
-from thalesapi.serializers import VerifyCardCreditSerializer, GetConsumerInfoSerializer, GetDataCredentialsSerializer
+from thalesapi.models import ISOCountry, DeliverOtpCollection, CardDetail, CardBinConfig, CardType, Client
 
 logger = logging.getLogger(__name__)
 
@@ -272,6 +271,7 @@ def parse_response_verify_card(response_data, code):
 
 
 def post_verify_card_credit(request, *args, **kwargs):
+    from thalesapi.serializers import VerifyCardCreditSerializer
     response_data = dict()
     if 'request_data' not in kwargs:
         request_data = request.data.copy()
@@ -282,8 +282,9 @@ def post_verify_card_credit(request, *args, **kwargs):
     serializer = VerifyCardCreditSerializer(data=request_data)
     if serializer.is_valid():
         validated_data = serializer.validated_data
-        card_bin = validated_data.pop('CARD_BIN')
+        card_bin = validated_data.pop('card_bin')
         card_detail = validated_data.pop('card_detail', None)
+        card_name = validated_data.get('NOMBRE', '')
         response_data, response_status = process_volcan_api_request(data=validated_data,
                                                                     url=api_url, request=request)
         # aqui falta hacer el proceso para cambiar la respuesta como la necesita Thales
@@ -311,6 +312,8 @@ def post_verify_card_credit(request, *args, **kwargs):
 
                 data = {
                     "cardBin": card_bin,
+                    "cardDetail": card_detail,
+                    "cardName": card_name,
                     "cardId": card_id,
                     "consumerId": consumer_id,
                     "accountId": account_id,
@@ -344,18 +347,33 @@ def post_verify_card_credit(request, *args, **kwargs):
 
 
 def post_verify_card_prepaid(request, *args, **kwargs):
+    from thalesapi.serializers import VerifyCardCreditSerializer
+    card_bin = None
+    card_detail = None
+    card_name = ''
     if 'request_data' not in kwargs:
         request_data = request.data.copy()
     else:
         request_data = kwargs['request_data'].copy()
     url_server = settings.SERVER_VOLCAN_PAYCARD_URL
     api_url = f'{url_server}{request.path}'
-    data_json = json.dumps(request_data)
+    data_json = json.dumps(request_data.copy())
+    serializer = VerifyCardCreditSerializer(data=request_data.copy())
+    if serializer.is_valid():
+        validated_data = serializer.validated_data
+        card_bin = validated_data.pop('card_bin')
+        card_detail = validated_data.pop('card_detail', None)
+        card_name = validated_data.get('NOMBRE', '')
     response_data, response_status = process_prepaid_api_request(data=data_json, url=api_url, request=request)
+    if isinstance(response_data, dict):
+        response_data['cardBin'] = card_bin
+        response_data['cardDetail'] = card_detail
+        response_data['cardName'] = card_name
     return response_data, response_status
 
 
 def get_consumer_information_credit(request, *args, **kwargs):
+    from thalesapi.serializers import GetConsumerInfoSerializer
     card_detail = kwargs.get('card_detail')
     url_server = settings.SERVER_VOLCAN_AZ7_URL
     api_url = f'{url_server}{settings.URL_THALES_API_GET_CONSUMER}'
@@ -410,14 +428,21 @@ def get_consumer_information_credit(request, *args, **kwargs):
 
 
 def get_consumer_information_prepaid(request, *args, **kwargs):
+    client = kwargs.get('client', None)
+    card_detail = kwargs.get('card_detail', None)
     url_server = settings.SERVER_VOLCAN_PAYCARD_URL
     api_url = f'{url_server}{request.get_full_path()}'
+
+    if client and card_detail:
+        api_url = api_url.replace(f'/{client.consumer_id}/', f'/{card_detail.consumer_id}/')
+
     response_data, response_status = process_prepaid_api_request(data=dict(), url=api_url,
                                                                  request=request, http_verb='GET')
     return response_data, response_status
 
 
 def get_card_credentials_credit(request, *args, **kwargs):
+    from thalesapi.serializers import GetDataCredentialsSerializer
     card_detail = kwargs.get('card_detail')
     url_server = settings.SERVER_VOLCAN_AZ7_URL
     api_url = f'{url_server}{settings.URL_THALES_API_GET_CARD_CREDENTIALS}'
@@ -523,6 +548,46 @@ def get_url_deliver_otp(card_detail: CardDetail = None) -> str:
     return url
 
 
+def get_card_client(consumer_id=None, identification:str = ''):
+    client = None
+    if consumer_id:
+        card_detail = CardDetail.objects.filter(consumer_id=consumer_id, client__isnull=False).first()
+        client = card_detail.client
+    elif len(identification) > 0:
+        client = Client.objects.filter(document_identification=identification).first()
+    return client
+
+
+def create_card_client(card_name: str = '', identification: str = '', consumer_id=None):
+    if not consumer_id:
+        consumer_id = model_code_generator(Client, 8, code='consumer_id')
+    client = Client.objects.filter(consumer_id=consumer_id).first()
+    if not client:
+        client = Client.objects.create(card_name=card_name,
+                                       document_identification=identification,
+                                       consumer_id=consumer_id)
+    else:
+        client.card_name = card_name
+        client.document_identification = identification
+        client.save()
+    return client
+
+
+def get_or_create_card_client(consumer_id=None, card_name: str = '',
+                              identification: str = '', card_detail: CardDetail = None):
+    if not consumer_id and card_detail:
+        consumer_id = card_detail.consumer_id
+    client = get_card_client(consumer_id=consumer_id, identification=identification)
+    if card_detail and not client:
+        client = card_detail.client
+    if not client:
+        client = create_card_client(card_name=card_name, identification=identification)
+        if card_detail:
+            card_detail.client = client
+            card_detail.save()
+    return client
+
+
 def post_deliver_otp(request, *args, **kwargs):
     # from webhook.models import Webhook
     # url_server = settings.SERVER_VOLCAN_PAYCARD_URL
@@ -538,8 +603,10 @@ def post_deliver_otp(request, *args, **kwargs):
     if response_status in [200, 201, 204]:
         if card_detail:
             data['emisor'] = card_detail.emisor
+            data['consumer_id'] = card_detail.consumer_id
+        else:
+            data['consumer_id'] = consumer_id
         data['issuer_id'] = issuer_id
-        data['consumer_id'] = consumer_id
         data['created_at'] = timezone.localtime(timezone.now())
         db = DeliverOtpCollection()
         db.insert_one(data=data)

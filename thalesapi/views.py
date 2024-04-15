@@ -2,13 +2,15 @@ from rest_framework.exceptions import ParseError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from common.utils import model_code_generator
 from common.views import CustomViewSet
 from control.utils import mask_card
-from thalesapi.models import CardType, CardDetail, CardBinConfig
+from thalesapi.models import CardType, CardDetail, CardBinConfig, Client
 from thalesapi.serializers import GetDataTokenizationSerializer, CardBinConfigSerializer, GetVerifyCardSerializer, \
     GetDataTokenizationPaycardSerializer
 from thalesapi.utils import is_card_bin_valid, get_access_token_paycard, get_credentials_paycad, \
-    get_url_thales_register_customer_with_cards, get_cards_bin_prepaid, get_card_bin_config
+    get_url_thales_register_customer_with_cards, get_cards_bin_prepaid, get_card_bin_config, get_or_create_card_client, \
+    get_card_client
 from users.permissions import IsVerified, IsOperator, IsSupervisor
 from volcanmanagerapi import settings
 
@@ -104,15 +106,24 @@ class ThalesApiView(CustomViewSet):
                                                                      request_data=request_data,
                                                                      *args, **kwargs)
             code_error = response_data.pop('code_error', 0)
-            card_bin = card_bin if 'cardBin' not in response_data else response_data.pop('cardBin', card_bin)
+            card_bin = response_data.pop('cardBin', card_bin)
+            card_name = response_data.pop('cardName', '')
+            card_detail = response_data.pop('cardDetail', None)
             if code_error == 0 and response_status == 200:
-                CardDetail.objects.get_or_create(consumer_id=response_data['consumerId'],
-                                                 card_id=response_data['cardId'],
-                                                 issuer_id=issuer_id,
-                                                 account_id=response_data['accountId'],
-                                                 card_bin=card_bin,
-                                                 card_type=card_bin_config['card_type'],
-                                                 emisor=card_bin_config['emisor'])
+                card_detail = card_detail if card_detail else CardDetail.objects.select_related('client').filter(
+                                                                card_id=response_data['cardId']).first()
+                if not card_detail:
+                    card_detail = CardDetail.objects.create(card_id=response_data['cardId'],
+                                                            consumer_id=response_data['consumerId'],
+                                                            account_id=response_data['accountId'],
+                                                            issuer_id=issuer_id,
+                                                            card_bin=card_bin,
+                                                            card_type=card_bin_config['card_type'],
+                                                            emisor=card_bin_config['emisor'])
+                client = card_detail.client
+                if not client:
+                    client = get_or_create_card_client(card_name=card_name, card_detail=card_detail)
+                response_data['consumerId'] = client.consumer_id
         else:
             response_data, response_status = {'error': 'Datos incompletos'}, 400
         print(f"Response Verify Card: {response_data}")
@@ -122,14 +133,21 @@ class ThalesApiView(CustomViewSet):
         consumer_id = kwargs.get('consumer_id', '')
         card_id = request.query_params.get('cardId', None)
         issuer_id = kwargs.get('issuer_id', '')
+        card_detail = None
         print("Get Consumer Info")
         print(request.get_full_path())
-        if not card_id:
-            card_detail = CardDetail.objects.filter(consumer_id=consumer_id, issuer_id=issuer_id).first()
+        # buscar el cliente primero
+
+        if card_id:
+            card_detail = CardDetail.objects.select_related('client').filter(
+                card_id=card_id, issuer_id=issuer_id).first()
+            client = card_detail.client if card_detail.client else get_or_create_card_client(card_detail=card_detail)
         else:
-            card_detail = CardDetail.objects.filter(consumer_id=consumer_id, card_id=card_id,
-                                                    issuer_id=issuer_id).first()
-        if card_detail:
+            client = get_card_client(consumer_id=consumer_id)
+            if client:
+                card_detail = CardDetail.objects.filter(client=client).first()
+
+        if card_detail and client:
             if card_detail.card_type == CardType.CT_CREDIT:
                 from thalesapi.utils import get_consumer_information_credit
                 response_data, response_status = self.control_action(request=request,
@@ -140,10 +158,12 @@ class ThalesApiView(CustomViewSet):
                 from thalesapi.utils import get_consumer_information_prepaid
                 response_data, response_status = self.control_action(request=request,
                                                                      control_function=get_consumer_information_prepaid,
+                                                                     card_detail=card_detail,
+                                                                     client=client,
                                                                      *args, **kwargs)
         else:
             response_data, response_status = {'error': f'Registro no encontrado'}, 404
-        print(f"Response Consumer info: {response_data}")
+            print(f"Response Consumer info: {response_data}")
         return Response(data=response_data, status=response_status)
 
     def get_card_credentials(self, request, *args, **kwargs):
@@ -173,11 +193,14 @@ class ThalesApiView(CustomViewSet):
         issuer_id = kwargs.get('issuer_id', '')
         print("Deliver OTP")
         print(request.get_full_path())
-        if not card_id:
-            card_detail = CardDetail.objects.filter(consumer_id=consumer_id, issuer_id=issuer_id).first()
+
+        if card_id:
+            card_detail = CardDetail.objects.filter(card_id=card_id, issuer_id=issuer_id).first()
+            # client = Client.objects.filter(cards__id=card_detail.id).first()
         else:
-            card_detail = CardDetail.objects.filter(consumer_id=consumer_id, card_id=card_id,
-                                                    issuer_id=issuer_id).first()
+            client = Client.objects.filter(consumer_id=consumer_id).first()
+            card_detail = client.cards.filter(issuer_id=issuer_id).first()
+
         if card_detail:
             from thalesapi.utils import post_deliver_otp
             response_data, response_status = self.control_action(request=request,
@@ -222,7 +245,8 @@ class ThalesApiViewPrivate(ThalesApiView):
         if serializer.is_valid():
             url_server = settings.SERVER_VOLCAN_AZ7_URL
             api_url = f'{url_server}{settings.URL_THALES_API_VERIFY_CARD}'
-            validated_data = serializer.validated_data
+            validated_data = serializer.validated_data.copy()
+            client = validated_data.pop('client', None)
             resp_msg, resp_data, response_status = process_volcan_api_request(data=validated_data,
                                                                               url=api_url, request=request, times=0)
             if response_status == 200:
@@ -240,6 +264,7 @@ class ThalesApiViewPrivate(ThalesApiView):
                         "account_id": resp_data['RSP_CUENTAID'] if 'RSP_CUENTAID' in resp_data else '',
                         "issuer_id": settings.THALES_API_ISSUER_ID,
                         "card_product_id": 'D1_VOLCAN_VISA_SANDBOX',
+                        "client": client,
                         "state": "ACTIVE"
                     }
                     resp = self.register_consumer_thalesapi(**obj_data)
@@ -250,7 +275,8 @@ class ThalesApiViewPrivate(ThalesApiView):
                             'RSP_DESCRIPCION': resp_data['RSP_DESCRIPCION'],
                             'rsp_folio': resp_data['RSP_FOLIO'],
                             "cardId": resp_data['RSP_TARJETAID'] if 'RSP_TARJETAID' in resp_data else '',
-                            "consumerId": resp_data['RSP_CLIENTEID'] if 'RSP_CLIENTEID' in resp_data else '',
+                            # "consumerId": resp_data['RSP_CLIENTEID'] if 'RSP_CLIENTEID' in resp_data else '',
+                            "consumerId": client.consumer_id,
                             "accountId": resp_data['RSP_CUENTAID'] if 'RSP_CUENTAID' in resp_data else ''
                         }
                     else:
@@ -267,7 +293,8 @@ class ThalesApiViewPrivate(ThalesApiView):
                     response_data = {
                         'RSP_ERROR': resp_data['RSP_ERROR'] if resp_data['RSP_ERROR'] != '' else 'RC',
                         'RSP_CODIGO': resp_data['RSP_CODIGO'] if resp_data['RSP_CODIGO'] != '' else '400',
-                        'RSP_DESCRIPCION': resp_data['RSP_DESCRIPCION'] if resp_data['RSP_DESCRIPCION'] != '' else 'Error en datos de origen'
+                        'RSP_DESCRIPCION': resp_data['RSP_DESCRIPCION'] if resp_data[
+                                                                               'RSP_DESCRIPCION'] != '' else 'Error en datos de origen'
                     }
         else:
             resp_msg, response_data, response_status = get_response_data_errors(serializer.errors)
@@ -290,7 +317,8 @@ class ThalesApiViewPrivate(ThalesApiView):
         if serializer.is_valid():
             url_server = settings.SERVER_VOLCAN_PAYCARD_URL
             api_url = f'{url_server}{settings.URL_AZ7_CONSULTA_TOKEN_TARJETA}'
-            validated_data = serializer.validated_data
+            validated_data = serializer.validated_data.copy()
+            client = validated_data.pop('client', None)
             card = validated_data.pop('card', request_data['tarjeta'])
             fecha_exp = validated_data.pop('FECHA_EXP', request_data['fecha_exp'])
             folio = validated_data.pop('FOLIO', '12345')
@@ -317,6 +345,7 @@ class ThalesApiViewPrivate(ThalesApiView):
                         "account_id": resp_data['AccountID'] if 'AccountID' in resp_data else '',
                         "issuer_id": settings.THALES_API_ISSUER_ID,
                         "card_product_id": 'D1_VOLCAN_VISA_SANDBOX',
+                        "client": client,
                         "state": "ACTIVE"
                     }
                     resp = self.register_consumer_thalesapi(**obj_data)
@@ -327,7 +356,8 @@ class ThalesApiViewPrivate(ThalesApiView):
                             'RSP_DESCRIPCION': 'Transaccion aprobada',
                             'rsp_folio': folio,
                             "cardId": resp_data['CardID'] if 'CardID' in resp_data else '',
-                            "consumerId": resp_data['ConsumerID'] if 'ConsumerID' in resp_data else '',
+                            # "consumerId": resp_data['ConsumerID'] if 'ConsumerID' in resp_data else '',
+                            "consumerId": client.consumer_id,
                             "accountId": resp_data['AccountID'] if 'AccountID' in resp_data else ''
                         }
                     else:
@@ -344,7 +374,8 @@ class ThalesApiViewPrivate(ThalesApiView):
                     response_data = {
                         'RSP_ERROR': resp_data['RSP_ERROR'] if resp_data['RSP_ERROR'] != '' else 'RC',
                         'RSP_CODIGO': resp_data['RSP_CODIGO'] if resp_data['RSP_CODIGO'] != '' else '400',
-                        'RSP_DESCRIPCION': resp_data['RSP_DESCRIPCION'] if resp_data['RSP_DESCRIPCION'] != '' else 'Error en datos de origen'
+                        'RSP_DESCRIPCION': resp_data['RSP_DESCRIPCION'] if resp_data[
+                                                                               'RSP_DESCRIPCION'] != '' else 'Error en datos de origen'
                     }
         else:
             resp_msg, response_data, response_status = get_response_data_errors(serializer.errors)
@@ -373,10 +404,10 @@ class ThalesApiViewPrivate(ThalesApiView):
         else:
             print(f"AUD https://{settings.THALES_API_AUD}")
 
-        with open(settings.PRIV_KEY_AUTH_ISSUER_SERVER_TO_D1_SERVER_PEM, "rb") as pemfile:
-            private_key = pemfile.read()
-        with open(settings.PUB_KEY_AUTH_ISSUER_SERVER_TO_D1_SERVER_PEM, "rb") as pemfile:
-            public_key = pemfile.read()
+        with open(settings.PRIV_KEY_AUTH_ISSUER_SERVER_TO_D1_SERVER_PEM, "rb") as pem_file:
+            private_key = pem_file.read()
+        with open(settings.PUB_KEY_AUTH_ISSUER_SERVER_TO_D1_SERVER_PEM, "rb") as pem_file:
+            public_key = pem_file.read()
         if private_key:
             headers = {
                 "alg": "ES256",
@@ -427,7 +458,12 @@ class ThalesApiViewPrivate(ThalesApiView):
         card_id = kwargs.get('card_id', '')
         account_id = kwargs.get('account_id', '')
         consumer_id = kwargs.get('consumer_id', '')
+        client = kwargs.get('client', None)
+        identification = kwargs.get('identification', '')
         find_card_bin_configuration = kwargs.get('find_card_bin_configuration', True)
+
+        if not client:
+            client = get_card_client(identification=identification)
 
         if settings.DEBUG:
             print(f"Register Consumer Data: {kwargs}")
@@ -464,12 +500,12 @@ class ThalesApiViewPrivate(ThalesApiView):
         # return {'access_token': access_token}, 200
 
         if access_token:
-            url = get_url_thales_register_customer_with_cards(issuer_id=issuer_id, consumer_id=consumer_id)
+            url = get_url_thales_register_customer_with_cards(issuer_id=issuer_id, consumer_id=client.consumer_id)
 
             public_key = None
             payload = {}
-            with open(settings.PUB_KEY_ISSUER_SERVER_TO_D1_SERVER_PEM, "rb") as pemfile:
-                public_key = jwk.JWK.from_pem(pemfile.read())
+            with open(settings.PUB_KEY_ISSUER_SERVER_TO_D1_SERVER_PEM, "rb") as pem_file:
+                public_key = jwk.JWK.from_pem(pem_file.read())
             if public_key:
                 protected_header_back = {
                     "alg": "ECDH-ES",
@@ -504,13 +540,22 @@ class ThalesApiViewPrivate(ThalesApiView):
                 if card_bin_config:
                     card_bin_config = CardBinConfig.objects.filter(card_bin=str(card_real[0:8])).first()
                 try:
-                    CardDetail.objects.get_or_create(consumer_id=consumer_id,
-                                                     card_id=card_id,
-                                                     issuer_id=issuer_id,
-                                                     account_id=account_id,
-                                                     card_bin=str(card_real[
-                                                                  0:8]) if not card_bin_config else card_bin_config.card_bin,
-                                                     card_type='credit' if not card_bin_config else card_bin_config.card_type)
+                    if not card_bin_config:
+                        card_bin = card_real[0:8]
+                        card_type = 'credit'
+                        issuer = 'CMF'
+                    else:
+                        card_bin = card_bin_config.card_bin
+                        card_type = card_bin_config.card_type
+                        issuer = card_bin_config.emisor
+                    card_detail = CardDetail.objects.filter(card_id=card_id).first()
+                    if not card_detail:
+                        card_detail = CardDetail.objects.create(card_id=card_id, consumer_id=consumer_id,
+                                                                account_id=account_id, issuer_id=issuer_id,
+                                                                card_bin=card_bin, card_type=card_type, emisor=issuer)
+                    if client:
+                        card_detail.client = client
+                        card_detail.save()
                 except Exception as e:
                     print("Error al registrar card_detail")
                     print(e.args.__str__())
@@ -533,7 +578,8 @@ class ThalesV2ApiViewPrivate(ThalesApiViewPrivate):
         response_status = 200
         resp_msg = ''
         if serializer.is_valid():
-            validated_data = serializer.validated_data
+            validated_data = serializer.validated_data.copy()
+            client = validated_data.pop('client', None)
             response_data['RSP_ERROR'] = 'OK'
             response_data['RSP_CODIGO'] = '0000000000'
             response_data['RSP_DESCRIPCION'] = u'Transacción aprobada'
@@ -547,7 +593,8 @@ class ThalesV2ApiViewPrivate(ThalesApiViewPrivate):
                 "issuer_id": validated_data['ISSUER_ID'],
                 "card_product_id": validated_data['CARD_PRODUCT_ID'],
                 "state": validated_data['STATE'],
-                "find_card_bin_configuration": False
+                'client': client,
+                "find_card_bin_configuration": True
             }
             resp = self.register_consumer_thalesapi(**obj_data)
             if resp[1] == 200:

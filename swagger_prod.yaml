@@ -3407,6 +3407,10 @@ components:
           type: string
           description: 'Opcional. Folio de la operacion'
           maxLength: 30
+        identificacion:
+          type: string
+          description: 'Obligatorio. Identificacion del cliente'
+          maxLength: 20
         emisor:
           type: string
           description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
@@ -3415,6 +3419,7 @@ components:
         - tarjeta
         - fecha_exp
         - nombre
+        - identificacion
         - emisor
     GetCardDataTokenizationPaycard:
       type: object
@@ -3432,6 +3437,10 @@ components:
           type: string
           description: 'Mandatorio. Fecha de expiracion formato MMAA'
           maxLength: 4
+        identificacion:
+          type: string
+          description: 'Obligatorio. Identificacion del cliente'
+          maxLength: 20
         emisor:
           type: string
           description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
@@ -3439,6 +3448,7 @@ components:
       required:
         - tarjeta
         - manufactura
+        - identificacion
         - emisor
     RegisterConsumerCards:
       type: object
@@ -3480,6 +3490,10 @@ components:
           type: string
           description: 'Opcional. Folio de la operacion'
           maxLength: 30
+        identificacion:
+          type: string
+          description: 'Obligatorio. Identificacion del cliente'
+          maxLength: 20
         emisor:
           type: string
           description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
@@ -3493,6 +3507,7 @@ components:
         - issuer_id
         - card_product_id
         - state
+        - identificacion
         - emisor
 #    Webhook:
 #      type: object
