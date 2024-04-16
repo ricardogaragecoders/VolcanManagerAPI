@@ -434,7 +434,7 @@ def get_consumer_information_prepaid(request, *args, **kwargs):
     api_url = f'{url_server}{request.get_full_path()}'
 
     if client and card_detail:
-        api_url = api_url.replace(f'/{client.consumer_id}/', f'/{card_detail.consumer_id}/')
+        api_url = api_url.replace(f'/{client.consumer_id}', f'/{card_detail.consumer_id}')
 
     response_data, response_status = process_prepaid_api_request(data=dict(), url=api_url,
                                                                  request=request, http_verb='GET')
@@ -548,7 +548,7 @@ def get_url_deliver_otp(card_detail: CardDetail = None) -> str:
     return url
 
 
-def get_card_client(consumer_id=None, identification:str = ''):
+def get_card_client(consumer_id=None, identification: str = ''):
     client = None
     if consumer_id:
         card_detail = CardDetail.objects.filter(consumer_id=consumer_id, client__isnull=False).first()
