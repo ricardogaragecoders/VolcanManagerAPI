@@ -1596,7 +1596,7 @@ paths:
         - name: cardId
           in: query
           description: Card ID.
-          required: true
+          required: false
           schema:
             type: string
         - in: header

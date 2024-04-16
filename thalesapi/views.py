@@ -142,12 +142,17 @@ class ThalesApiView(CustomViewSet):
             card_detail = CardDetail.objects.select_related('client').filter(
                 card_id=card_id, issuer_id=issuer_id).first()
             client = card_detail.client if card_detail.client else get_or_create_card_client(card_detail=card_detail)
+        elif client := Client.objects.filter(consumer_id=consumer_id).first():
+            card_detail = CardDetail.objects.filter(client=client).first()
         else:
             client = get_card_client(consumer_id=consumer_id)
             if client:
-                card_detail = CardDetail.objects.filter(client=client).first()
+                card_detail = CardDetail.objects.filter(client=client, consumer_id=consumer_id).first()
+            else:
+                card_detail = CardDetail.objects.filter(issuer_id=issuer_id, consumer_id=consumer_id).first()
 
-        if card_detail and client:
+        if card_detail:
+            print(card_detail.card_type)
             if card_detail.card_type == CardType.CT_CREDIT:
                 from thalesapi.utils import get_consumer_information_credit
                 response_data, response_status = self.control_action(request=request,
@@ -197,9 +202,14 @@ class ThalesApiView(CustomViewSet):
         if card_id:
             card_detail = CardDetail.objects.filter(card_id=card_id, issuer_id=issuer_id).first()
             # client = Client.objects.filter(cards__id=card_detail.id).first()
+        elif client := Client.objects.filter(consumer_id=consumer_id).first():
+            card_detail = CardDetail.objects.filter(client=client).first()
         else:
-            client = Client.objects.filter(consumer_id=consumer_id).first()
-            card_detail = client.cards.filter(issuer_id=issuer_id).first()
+            client = get_card_client(consumer_id=consumer_id)
+            if client:
+                card_detail = CardDetail.objects.filter(client=client, consumer_id=consumer_id).first()
+            else:
+                card_detail = client.cards.filter(consumer_id=consumer_id, issuer_id=issuer_id).first()
 
         if card_detail:
             from thalesapi.utils import post_deliver_otp
