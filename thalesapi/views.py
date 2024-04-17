@@ -2,17 +2,15 @@ from rest_framework.exceptions import ParseError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from common.utils import model_code_generator
 from common.views import CustomViewSet
 from control.utils import mask_card
 from thalesapi.models import CardType, CardDetail, CardBinConfig, Client
 from thalesapi.serializers import GetDataTokenizationSerializer, CardBinConfigSerializer, GetVerifyCardSerializer, \
     GetDataTokenizationPaycardSerializer
 from thalesapi.utils import is_card_bin_valid, get_access_token_paycard, get_credentials_paycad, \
-    get_url_thales_register_customer_with_cards, get_cards_bin_prepaid, get_card_bin_config, get_or_create_card_client, \
+    get_url_thales_register_customer_with_cards, get_card_bin_config, get_or_create_card_client, \
     get_card_client
 from users.permissions import IsVerified, IsOperator, IsSupervisor
-from volcanmanagerapi import settings
 
 
 class CardBinConfigApiView(CustomViewSet):
@@ -105,6 +103,9 @@ class ThalesApiView(CustomViewSet):
                                                                      control_function=post_verify_card_prepaid,
                                                                      request_data=request_data,
                                                                      *args, **kwargs)
+                if response_status == 200 and 'error' in response_data and response_data['error'] is None:
+                    del response_data['error']
+
             code_error = response_data.pop('code_error', 0)
             card_bin = response_data.pop('cardBin', card_bin)
             card_name = response_data.pop('cardName', '')
@@ -126,6 +127,7 @@ class ThalesApiView(CustomViewSet):
                 response_data['consumerId'] = client.consumer_id
         else:
             response_data, response_status = {'error': 'Datos incompletos'}, 400
+
         print(f"Response Verify Card: {response_data}")
         return Response(data=response_data, status=response_status)
 
@@ -152,7 +154,6 @@ class ThalesApiView(CustomViewSet):
                 card_detail = CardDetail.objects.filter(issuer_id=issuer_id, consumer_id=consumer_id).first()
 
         if card_detail:
-            print(card_detail.card_type)
             if card_detail.card_type == CardType.CT_CREDIT:
                 from thalesapi.utils import get_consumer_information_credit
                 response_data, response_status = self.control_action(request=request,
@@ -166,9 +167,12 @@ class ThalesApiView(CustomViewSet):
                                                                      card_detail=card_detail,
                                                                      client=client,
                                                                      *args, **kwargs)
+                if response_status == 200 and 'error' in response_data and response_data['error'] is None:
+                    del response_data['error']
         else:
             response_data, response_status = {'error': f'Registro no encontrado'}, 404
-            print(f"Response Consumer info: {response_data}")
+
+        print(f"Response Consumer info: {response_data}")
         return Response(data=response_data, status=response_status)
 
     def get_card_credentials(self, request, *args, **kwargs):
@@ -187,6 +191,8 @@ class ThalesApiView(CustomViewSet):
                 response_data, response_status = self.control_action(request=request,
                                                                      control_function=get_card_credentials_prepaid,
                                                                      *args, **kwargs)
+                if response_status == 200 and 'error' in response_data and response_data['error'] is None:
+                    del response_data['error']
         else:
             response_data, response_status = {'error': f'Registro no encontrado'}, 404
         print(f"Response Card Credentials: {response_data}")
@@ -219,15 +225,20 @@ class ThalesApiView(CustomViewSet):
                                                                  *args, **kwargs)
         else:
             response_data, response_status = {'error': f'Registro no encontrado'}, 404
+
+        print(f"Response Deliver OTP: {response_data}")
         if response_status in [201, 200, 204]:
             return Response(status=204)
         else:
-            print(f"Response Deliver OTP: {response_data}")
             return Response(data=response_data, status=response_status)
 
     def post_notify_card_operation(self, request, *args, **kwargs):
         # from thalesapi.utils import get_card_credentials_credit_testing
-
+        try:
+            data = request.data.copy()
+            print(f"Request Notify Card: {data}")
+        except Exception as e:
+            print(f"Error Notify Card: {e.args.__str__()}")
         return Response(status=204)
 
     def get_card_credentials_testing(self, request, *args, **kwargs):

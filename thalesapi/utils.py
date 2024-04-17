@@ -1,4 +1,3 @@
-import base64
 import json
 import logging
 
@@ -541,10 +540,11 @@ def get_card_credentials_prepaid(request, *args, **kwargs):
 
 
 def get_url_deliver_otp(card_detail: CardDetail = None) -> str:
+    consumer_id = card_detail.client.consumer_id if card_detail.client else card_detail.consumer_id
     url = ''
     if card_detail and card_detail.emisor == 'CMF':
         url = settings.URL_CMF_DELIVER_OTP
-        url = url.replace('{consumerId}', card_detail.consumer_id)
+        url = url.replace('{consumerId}', consumer_id)
     return url
 
 
