@@ -97,7 +97,7 @@ def get_thales_api_headers(request=None):
         x_correlation_id = ''
 
     return {
-        'X-Correlation-Id': x_correlation_id,
+        'x-correlation-id': x_correlation_id,
         'Content-Type': 'application/json',
         'Accept': 'application/json'
     }
