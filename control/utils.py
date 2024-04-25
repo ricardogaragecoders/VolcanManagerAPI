@@ -257,7 +257,7 @@ def consulta_cuenta(request, **kwargs):
                                                   "RSP_PGO_MIN", "RSP_PGO_CONTADO", "RSP_SLD_PTOS",
                                                   "RSP_TASA_INTERES", "RSP_TASA_MORA"] and length >= 3:
                                     if v2[-1] in ["}", "-"]:
-                                        v2 = v2.replace("", "")
+                                        v2 = v2.replace("}", "")
                                         v2 = v2.replace("-", "")
                                         is_positive = "-"
                                     if v2.isnumeric() or "." in v2:
