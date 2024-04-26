@@ -105,7 +105,6 @@ class ThalesApiView(CustomViewSet):
                                                                      *args, **kwargs)
                 if response_status == 200 and 'error' in response_data and response_data['error'] is None:
                     del response_data['error']
-
             code_error = response_data.pop('code_error', 0)
             card_bin = response_data.pop('cardBin', card_bin)
             card_name = response_data.pop('cardName', '')
@@ -125,6 +124,9 @@ class ThalesApiView(CustomViewSet):
                 if not client:
                     client = get_or_create_card_client(card_name=card_name, card_detail=card_detail)
                 response_data['consumerId'] = client.consumer_id
+            else:
+                if card_detail and card_detail.client and 'consumerId' in response_data:
+                    response_data['consumerId'] = card_detail.client.consumer_id
         else:
             response_data, response_status = {'error': 'Datos incompletos'}, 400
 
