@@ -113,17 +113,25 @@ class ThalesApiView(CustomViewSet):
                 card_detail = card_detail if card_detail else CardDetail.objects.select_related('client').filter(
                                                                 card_id=response_data['cardId']).first()
                 if not card_detail:
-                    card_detail = CardDetail.objects.create(card_id=response_data['cardId'],
-                                                            consumer_id=response_data['consumerId'],
-                                                            account_id=response_data['accountId'],
-                                                            issuer_id=issuer_id,
-                                                            card_bin=card_bin,
-                                                            card_type=card_bin_config['card_type'],
-                                                            emisor=card_bin_config['emisor'])
-                client = card_detail.client
-                if not client:
-                    client = get_or_create_card_client(card_name=card_name, card_detail=card_detail)
-                response_data['consumerId'] = client.consumer_id
+                    card_detail, created = CardDetail.objects.get_or_create(card_id=response_data['cardId'],
+                                                                            consumer_id=response_data['consumerId'],
+                                                                            account_id=response_data['accountId'],
+                                                                            issuer_id=issuer_id,
+                                                                            card_bin=card_bin,
+                                                                            card_type=card_bin_config['card_type'],
+                                                                            emisor=card_bin_config['emisor'])
+                client = card_detail.client if card_detail else None
+                try:
+                    if not client:
+                        client = get_or_create_card_client(card_name=card_name, card_detail=card_detail)
+                    response_data['consumerId'] = client.consumer_id
+                except AssertionError as e:
+                    print(f"Error al crear el cliente: {e.args.__str__()}")
+                    client = Client.objects.create(consumer_id=response_data['consumerId'],
+                                          card_name=card_name, type_identification='TT',
+                                          document_identification=response_data['cardId'])
+                    card_detail.client = client
+                    card_detail.save()
             else:
                 if card_detail and card_detail.client and 'consumerId' in response_data:
                     response_data['consumerId'] = card_detail.client.consumer_id
@@ -141,7 +149,6 @@ class ThalesApiView(CustomViewSet):
         print("Get Consumer Info")
         print(request.get_full_path())
         # buscar el cliente primero
-
         if card_id:
             card_detail = CardDetail.objects.select_related('client').filter(
                 card_id=card_id, issuer_id=issuer_id).first()
