@@ -552,13 +552,15 @@ def get_card_client(consumer_id=None, identification: str = ''):
     client = None
     if consumer_id:
         card_detail = CardDetail.objects.filter(consumer_id=consumer_id, client__isnull=False).first()
-        client = card_detail.client
+        client = card_detail.client if card_detail else None
     elif len(identification) > 0:
         client = Client.objects.filter(document_identification=identification).first()
     return client
 
 
 def create_card_client(card_name: str = '', identification: str = '', consumer_id=None):
+    assert len(card_name) > 0, 'Card name is required'
+    assert len(identification) > 0, 'Identification is required'
     if not consumer_id:
         consumer_id = model_code_generator(Client, 8, code='consumer_id')
     client = Client.objects.filter(consumer_id=consumer_id).first()
