@@ -129,7 +129,9 @@ def send_notification_webhook_issuer(self, notification_id=None, emisor=''):
 
     if webhook:
         for result_item in results:
-            resp = send_transaction_url_webhook(data=result_item['notification'], webhook=webhook)
+            notification = result_item['notification']
+            notification['id'] = result_item['id']
+            resp = send_transaction_url_webhook(data=notification, webhook=webhook)
             filters = {'_id': ObjectId(result_item['id'])}
             data_update = {'$set': {
                 'delivery': {
