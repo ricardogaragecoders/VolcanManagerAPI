@@ -20,10 +20,11 @@ def get_str_from_date_az7(s_date):
         return s_date
 
 
-def get_cards_bin():
-    key_cache = 'cards-bin'
+def get_cards_bin(length=8):
+    key_cache = f'cards-bin-{length}'
     if key_cache not in cache:
         cards_bin = CardBinConfig.objects.values_list('card_bin', flat=True).all()
+        cards_bin = [card_bin[:length] for card_bin in cards_bin]
         cache.set(key_cache, cards_bin, 60 * 60 * 24)
     return cache.get(key_cache)
 
@@ -53,7 +54,7 @@ def get_card_bin_config(key_cache: str = ''):
 
 
 def is_card_bin_valid(card_bin):
-    return card_bin in get_cards_bin()
+    return card_bin in get_cards_bin(length=len(card_bin))
 
 
 def get_url_thales_register_customer_with_cards(issuer_id, consumer_id):
