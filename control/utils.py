@@ -8,7 +8,7 @@ from control.serializers import ConsultaCuentaSerializer, ConsultaTarjetaSeriali
     ReposicionTarjetasSerializer, CreacionEnteSerializer, GestionTransaccionesSerializer, ConsultaMovimientosSerializer, \
     IntraExtrasSerializer, ConsultaPuntosSerializer, AltaCuentaTarjetaSerializer, ConsultaIntraExtraF1Serializer, \
     ConsultaTransaccionesXFechaSerializer, ConsultaCVV2Serializer, CreacionEnteSectorizacionSerializer, \
-    ConsultaEnteSerializer, ConsultaEstadoCuentaSerializer
+    ConsultaEnteSerializer, ConsultaEstadoCuentaSerializer, ConsultaCobranzaSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -941,14 +941,66 @@ def consulta_estado_cuenta(request, **kwargs):
                 if 'RSP_WSMOVIMIENTOS' in resp[1]:
                     movements = []
                     for movement in resp[1]['RSP_WSMOVIMIENTOS']:
-                        print("movement")
-                        print(movement)
                         for k2, v2 in movement.items():
                             if '.' in v2 and len(v2) == 21:
                                 movement[k2] = get_float_from_numeric_str(v2)
                         if 'RSP_NUM_TARJETA' in movement and len(movement['RSP_NUM_TARJETA']) > 0:
                             movements.append({k.lower(): v for k, v in movement.items()})
                     resp[1]['RSP_WSMOVIMIENTOS'] = movements
+            elif resp[1]['RSP_ERROR'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
+            elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Transaccion erronea'}, resp[2]
+            else:
+                resp_copy = resp[1].copy()
+                for k in resp[1].keys():
+                    if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
+                        del resp_copy[k]
+                return resp[0], resp_copy, resp[2]
+    else:
+        resp = get_response_data_errors(serializer.errors)
+    return resp
+
+
+def consulta_cobranza(request, **kwargs):
+    times = kwargs.get('times', 0)
+    if 'request_data' not in kwargs:
+        request_data = request.data.copy()
+    else:
+        request_data = kwargs['request_data'].copy()
+    request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
+    request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
+    data = {k.upper(): v for k, v in request_data.items()}
+    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    api_url = f'{url_server}{settings.URL_AZ7_CONSULTA_COBRANZA}'
+    serializer = ConsultaCobranzaSerializer(data=data)
+    if serializer.is_valid():
+        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        if 'RSP_ERROR' in resp[1]:
+            if resp[1]['RSP_ERROR'].upper() == 'OK':
+                resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
+                if 'RSP_SALDOS' in resp[1]:
+                    items = []
+                    for balance in resp[1]['RSP_SALDOS']:
+                        if 'RSP_MONEDA' in balance and len(balance['RSP_MONEDA']) > 0:
+                            data_item = {k.lower(): v for k, v in balance.items()}
+                            for k2, v2 in data_item.items():
+                                length = len(v2)
+                                is_positive = ''
+                                # if k2.upper() in ["RSP_TASA_MOV", "RSP_TASA_MORA", "RSP_COD_COM"] and length == 2:
+                                #     v2 = f"00{v2}" if v2.isnumeric() else v2
+                                #     length = len(v2)
+                                if k2.upper() not in ["RSP_MONEDA", "RSP_TASA_INTERES",
+                                                  "RSP_TASA_MORA", "RSP_CANTIDAD_IV"] and length >= 19:
+                                    if v2[-1] in ["}", "-"]:
+                                        v2 = v2.replace("}", "")
+                                        v2 = v2.replace("-", "")
+                                        is_positive = "-"
+                                    if v2.isnumeric():
+                                        v2 = get_float_from_numeric_str(f"{v2}{is_positive}")
+                                        data_item[k2] = v2
+                            items.append(data_item)
+                    resp[1]['RSP_SALDOS'] = items
             elif resp[1]['RSP_ERROR'] == '':
                 return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
             elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':

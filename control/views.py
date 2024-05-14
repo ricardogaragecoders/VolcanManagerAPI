@@ -142,3 +142,9 @@ class ControlApiView(CustomViewSet):
         from control.utils import consulta_estado_cuenta
         return self.control_action(request=request, control_function=consulta_estado_cuenta,
                                    name_control_function="consulta_estado_cuenta")
+
+    def consulta_cobranza(self, request, *args, **kwargs):
+        from control.utils import consulta_cobranza
+        return self.control_action(request=request, control_function=consulta_cobranza,
+                                   name_control_function="consulta_cobranza")
+
