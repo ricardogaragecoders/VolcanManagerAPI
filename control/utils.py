@@ -987,16 +987,19 @@ def consulta_cobranza(request, **kwargs):
                             for k2, v2 in data_item.items():
                                 length = len(v2)
                                 is_positive = ''
+
                                 # if k2.upper() in ["RSP_TASA_MOV", "RSP_TASA_MORA", "RSP_COD_COM"] and length == 2:
                                 #     v2 = f"00{v2}" if v2.isnumeric() else v2
                                 #     length = len(v2)
                                 if k2.upper() not in ["RSP_MONEDA", "RSP_TASA_INTERES",
-                                                  "RSP_TASA_MORA", "RSP_CANTIDAD_IV"] and length >= 19:
+                                                      "RSP_TASA_MORA", "RSP_CANTIDAD_IV"] and length >= 3:
+                                    if v2 == ".00":
+                                        v2 = "0.00"
                                     if v2[-1] in ["}", "-"]:
                                         v2 = v2.replace("}", "")
                                         v2 = v2.replace("-", "")
                                         is_positive = "-"
-                                    if v2.isnumeric():
+                                    if '.' in v2 or v2.isnumeric():
                                         v2 = get_float_from_numeric_str(f"{v2}{is_positive}")
                                         data_item[k2] = v2
                             items.append(data_item)
