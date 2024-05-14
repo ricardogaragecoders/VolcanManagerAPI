@@ -159,7 +159,7 @@ class CreacionEnteSectorizacionSerializer(serializers.Serializer):
                   'DIRECCION_1', 'DIRECCION_2', 'DIRECCION_3', 'DIRECCION_4', 'DIRECCION_5', 'CODIGO_POSTAL',
                   'TELEFONO_CASA', 'CELULAR', 'TELEFONO_OFICINA', 'EMAIL_PERSONAL', 'EMAIL_OFICINA', 'LUGAR_TRABAJO',
                   'CODIGO_PROVINCIA_TRABAJO', 'CODIGO_CANTON_TRABAJO', 'CODIGO_DISTRITO_TRABAJO',
-                  'DIRECCION_1_TRABAJO', 'DIRECCION_2_TRABAJO','DIRECCION_3_TRABAJO','DIRECCION_4_TRABAJO',
+                  'DIRECCION_1_TRABAJO', 'DIRECCION_2_TRABAJO', 'DIRECCION_3_TRABAJO', 'DIRECCION_4_TRABAJO',
                   'DIRECCION_5_TRABAJO', 'PUESTO', 'INGRESO_MENSUAL', 'FECHA_INGRESO_TRABAJO', 'OFICINA_EXT',
                   'NOMBRE_CONYUGUE', 'APELLIDO_CONYUGUE', 'CEDULA_CONYUGUE', 'NOMBRE_PADRE', 'APELLIDO_PADRE',
                   'NOMBRE_MADRE', 'APELLIDO_MADRE', 'TIPO_GESTION', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
@@ -810,7 +810,6 @@ class ConsultaTransaccionesXFechaSerializer(serializers.Serializer):
         return data
 
 
-
 class ConsultaCVV2Serializer(serializers.Serializer):
     TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
     EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
@@ -838,6 +837,7 @@ class ConsultaCVV2Serializer(serializers.Serializer):
 
         return data
 
+
 class ConsultaEstadoCuentaSerializer(serializers.Serializer):
     TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
     FECHA_DE_CORTE = serializers.CharField(max_length=8, required=False, default="", allow_blank=True)
@@ -863,5 +863,29 @@ class ConsultaEstadoCuentaSerializer(serializers.Serializer):
             raise CustomValidationError(detail=u'Tarjeta es requerida', code='400')
 
         if len(emisor) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
+        return data
+
+
+class ConsultaCobranzaSerializer(serializers.Serializer):
+    CUENTA = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('CUENTA', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+
+    def validate(self, data):
+        data = super(ConsultaCobranzaSerializer, self).validate(data)
+        account = data.get('CUENTA', "").strip()
+        issuer = data.get('EMISOR', '').upper().strip()
+
+        data['CUENTA'] = account
+
+        if len(account) == 0:
+            raise CustomValidationError(detail=u'Cuenta es requerida', code='400')
+
+        if len(issuer) == 0:
             raise CustomValidationError(detail=u'Emisor es requerido', code='400')
         return data
