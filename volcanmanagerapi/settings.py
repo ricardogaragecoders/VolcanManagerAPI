@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
     # third parties
     'rest_framework',
+    'rest_framework_api_key',
     'corsheaders',
     # modules
     'users',
@@ -229,6 +230,10 @@ CSRF_COOKIE_SECURE = True
 SECURE_HSTS_PRELOAD = True
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_SECONDS = 3600
+
+# API KEY: X-Api-Key: <API_KEY>
+API_KEY_CUSTOM_HEADER = "HTTP_X_API_KEY"
+
 
 # only Debug mode
 if DEBUG:

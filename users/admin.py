@@ -2,7 +2,8 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 
-from .models import Profile, WhiteListedToken
+from .models import Profile, WhiteListedToken, OrganizationAPIKey, Organization
+from rest_framework_api_key.admin import APIKeyModelAdmin
 
 
 class ProfileInline(admin.StackedInline):
@@ -31,4 +32,15 @@ class WhiteListedTokenAdmin(admin.ModelAdmin):
     list_display = ('user', 'type_token', 'created_at')
     search_fields = ['user__username']
 
+
+@admin.register(Organization)
+class OrganizationAdmin(admin.ModelAdmin):
+    fields = ('name', 'active')
+    list_display = ('name', 'active')
+    search_fields = ['name']
+
+
+@admin.register(OrganizationAPIKey)
+class OrganizationAPIKeyModelAdmin(APIKeyModelAdmin):
+    pass
 

@@ -1,6 +1,6 @@
 from rest_framework import permissions
-
-from .models import Profile
+from rest_framework_api_key.permissions import BaseHasAPIKey
+from .models import Profile, OrganizationAPIKey
 
 
 class IsChangePassword(permissions.BasePermission):
@@ -110,3 +110,7 @@ class IsSuperadmin(permissions.BasePermission):
             if not profile.deleted_at:
                 return profile.role == Profile.SUPERADMIN
         return False
+
+
+class HasOrganizationAPIKey(BaseHasAPIKey):
+    model = OrganizationAPIKey

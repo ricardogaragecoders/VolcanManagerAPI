@@ -1,7 +1,6 @@
 amqp==5.1.1
 asgiref==3.7.2
 async-timeout==4.0.3
-backports.zoneinfo;python_version<"3.9"
 billiard==4.2.0
 celery==5.3.6
 certifi==2023.7.22
@@ -20,6 +19,7 @@ django-environ==0.10.0
 django-mail-templated==2.6.5
 django-sslserver==0.22
 djangorestframework==3.14.0
+djangorestframework-api-key==2.3.0
 djangorestframework-simplejwt==5.2.2
 dnspython==2.4.1
 ecdsa==0.18.0

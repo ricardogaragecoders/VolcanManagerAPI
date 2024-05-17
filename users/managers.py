@@ -1,4 +1,5 @@
 from django.db import models
+from rest_framework_api_key.models import BaseAPIKeyManager
 
 
 class ProfileManager(models.Manager):
@@ -16,3 +17,8 @@ class ProfileManager(models.Manager):
             Obtains Profile by username
         """
         return self.get_queryset().filter(user__username=username).first()
+
+
+class OrganizationAPIKeyManager(BaseAPIKeyManager):
+    def get_usable_keys(self):
+        return super().get_usable_keys().filter(organization__active=True)

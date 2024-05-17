@@ -7,6 +7,7 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
+from rest_framework_api_key.models import AbstractAPIKey
 
 # Create your models here.
 from common.models import BaseModelWithDeleted, ModelDiffMixin, BaseModelWithoutStatus
@@ -124,6 +125,26 @@ class ProfileVerification(BaseModelWithoutStatus):
 
     def __str__(self):
         return 'Usuario: {0} Tipo: {1}'.format(self.profile.get_full_name(), self.get_type_verification_display())
+
+
+class Organization(models.Model):
+    name = models.CharField(max_length=128)
+    active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
+
+
+class OrganizationAPIKey(AbstractAPIKey):
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name="api_keys",
+    )
+
+    class Meta(AbstractAPIKey.Meta):
+        verbose_name = "Organization API key"
+        verbose_name_plural = "Organization API keys"
 
 
 @receiver(user_logged_in)
