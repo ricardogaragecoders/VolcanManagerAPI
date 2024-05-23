@@ -2251,6 +2251,26 @@ paths:
         required: true
         schema:
           type: string
+  /volcan/api/EstadosCuenta/:
+    post:
+      operationId: api_estrato_account_statements_create
+      description: Get account statements.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/EstadosCuenta"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EstadosCuenta"
+        required: true
+      summary: Get account statements
+      responses:
+        '200':
+          description: 'Get account statements'
+      tags:
+        - Estrato::EstadosCuenta
+    parameters: []
 components:
   schemas:
     LoginToken:
@@ -3435,6 +3455,29 @@ components:
           maxLength: 3
       required:
         - tarjeta
+        - emisor
+    EstadosCuenta:
+      type: object
+      properties:
+        cuenta:
+          type: string
+          description: 'Opcional. Número de cuenta para cambiar el estado'
+          maxLength: 15
+        fecha_de_corte:
+          type: string
+          format: date
+          pattern: '^\d{4}\d{2}\d{2}$'
+          description: 'Fecha de corte. Formato AAAAMMDD'
+          maxLength: 8
+        pagina:
+          type: integer
+          description: 'Numero de pagina. Numero de pagina por default 1'
+          default: 1
+        emisor:
+          type: string
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+          maxLength: 3
+      required:
         - emisor
     Intra_Extras:
       type: object
