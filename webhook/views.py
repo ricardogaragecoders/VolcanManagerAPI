@@ -32,9 +32,9 @@ class WebHookApiView(CustomViewSet):
     def get_queryset_filters(self, *args, **kwargs):
         active = self.request.query_params.get('active', 'all')
         profile = self.request.user.profile
-        if profile.isAdminProgram():
-            account_issuer = self.request.query_params.get('emisor', '')
-        elif profile.isOperator(equal=True):
+        if profile.is_admin(equal=False):
+            account_issuer = self.request.query_params.get('issuer_id', '')
+        elif profile.is_operator():
             account_issuer = profile.user.first_name
         else:
             account_issuer = 'sin_emision'
@@ -44,7 +44,7 @@ class WebHookApiView(CustomViewSet):
             filters['account_issuer'] = account_issuer
 
         if active != 'all':
-            filters['active'] = active == 'true'
+            filters['is_active'] = active == 'true'
         return filters
 
     def get_queryset(self, *args, **kwargs):
@@ -101,7 +101,7 @@ class WebHookApiView(CustomViewSet):
 
     def perform_destroy(self, request, *args, **kwargs):
         register = kwargs['register']
-        if hasattr(register, 'active'):
+        if hasattr(register, 'is_active'):
             register.active = False
             if hasattr(register, 'deleted_at'):
                 from django.utils import timezone

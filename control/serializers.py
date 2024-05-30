@@ -1,8 +1,16 @@
 from decimal import Decimal, InvalidOperation, DecimalException
 
 from rest_framework import serializers
-
+from django.db import transaction
 from common.exceptions import CustomValidationError
+from common.utils import is_valid_uuid
+from control.models import Company, Operator
+from django.utils.translation import gettext_lazy as _
+
+from users.models import RoleType, Profile
+from users.validators import _password_regex_validator, _mobile_regex_validator
+from volcanmanagerapi import settings
+from django.contrib.auth.models import User, Group
 
 
 def get_decimal_from_request_data(data, field):
@@ -19,6 +27,215 @@ def get_decimal_from_request_data(data, field):
     except (InvalidOperation, DecimalException) as e:
         raise CustomValidationError(detail=f"{field}: error en conversion de valor a decimal",
                                     code='422')
+
+
+class CompanySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Company
+        fields = ('id', 'name', 'volcan_issuer_id', 'thales_issuer_id', 'is_active')
+
+    def validate(self, data):
+        data = super(CompanySerializer, self).validate(data)
+        company_name = data.get('name', None)
+        request = self.context['request']
+        user = request.user
+
+        if not self.instance:
+            if Company.objects.filter(name=company_name).exists():
+                raise CustomValidationError(detail={'name': _('Existe una empresa con el mismo nombre.')},
+                                            code='company_exists')
+        elif company_name and Company.objects.filter(name=company_name).exclude(id=self.instance.id).exists():
+            raise CustomValidationError(detail={'name': _('Existe una empresa con el mismo nombre.')},
+                                        code='company_exists')
+        return data
+
+
+class CompanySimpleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Company
+        fields = ('id', 'name', 'volcan_issuer_id')
+        read_only_fields = fields
+
+
+class OperatorSerializer(serializers.ModelSerializer):
+    # users
+    username = serializers.CharField(max_length=150, required=False, write_only=True)
+    password = serializers.CharField(
+        min_length=8,
+        max_length=45,
+        validators=[_password_regex_validator],
+        error_messages={
+            'password': _(u'Por favor introduce una contraseña válida.'),
+        },
+        required=False,
+        allow_null=True,
+        write_only=True
+    )
+    # data additional
+    profile_id = serializers.UUIDField(write_only=True, required=False, allow_null=True)
+    # profile
+    first_name = serializers.CharField(max_length=100, required=True, write_only=True)
+    last_name = serializers.CharField(max_length=100, required=True, write_only=True)
+    second_last_name = serializers.CharField(max_length=100, required=False, default='', write_only=True,
+                                             allow_blank=True, allow_null=True)
+    email = serializers.EmailField(max_length=100, required=False, write_only=True, default='',
+                                   allow_blank=True)
+    phone = serializers.CharField(max_length=10, validators=[_mobile_regex_validator,], required=False,
+                                  write_only=True, allow_blank=True, allow_null=True, default='')
+    role = serializers.IntegerField(write_only=True, allow_null=True, default=RoleType.OPERATOR)
+    # data additional
+    volcan_issuer_id = serializers.CharField(max_length=3, write_only=True, allow_null=True, allow_blank=True)
+
+    class Meta:
+        model = Operator
+        fields = ('id', 'username', 'password', 'first_name', 'last_name', 'second_last_name',
+                  'phone', 'email', 'role', 'profile_id',  'volcan_issuer_id', 'is_active',
+                  'created_at', 'updated_at')
+        # read_only_fields = ('active',)
+
+    def validate(self, data):
+        data = super(OperatorSerializer, self).validate(data)
+        username = data.get('username', None)
+        profile_id = data.pop('profile_id', None)
+        volcan_issuer_id = data.pop('volcan_issuer_id', None)
+        request = self.context['request']
+        user = request.user
+        profile = None
+        company = None if not self.instance else self.instance.company
+
+        if profile_id and is_valid_uuid(profile_id):
+            profile = Profile.objects.filter(unique_id=profile_id).first()
+
+        if volcan_issuer_id:
+            company = Company.objects.filter(volcan_issuer_id=volcan_issuer_id).first()
+
+        data['company'] = company
+
+        if not self.instance:
+            if not profile:
+                password = data.get('password', settings.DEFAULT_PASSWORD)
+
+                first_name = data.get('first_name', None)
+                last_name = data.get('last_name', None)
+                email = data.get('email', None)
+                if not username and email:
+                    username = email
+
+                if not username or not password:
+                    raise CustomValidationError(detail={'username': _(u'Username es requerido.')},
+                                                code='username_required')
+                if not first_name or not last_name:
+                    raise CustomValidationError(detail={'first_name': _('Nombre y apellidos son requeridos.')},
+                                                code='profile_required')
+                if User.objects.filter(username=username).exists():
+                    raise CustomValidationError(detail={'username': _(u'Hay un usuario con el mismo correo electrónico.')},
+                                                code='username_exists')
+            else:
+                data['profile'] = profile
+        elif username and User.objects.filter(username=username).exclude(id=self.instance.profile.user.id).exists():
+            raise CustomValidationError(detail={'username': _(u'Hay un usuario con el mismo correo electrónico.')},
+                                        code='username_exists')
+        if self.instance:
+            if self.instance.profile.role >= user.profile.role and self.instance.profile.id != user.profile.id:
+                raise CustomValidationError(
+                    detail={'username': _(u'No tiene permiso para actualizar un perfil que no sea el suyo.')},
+                    code='no_permissions')
+        return data
+
+    def create(self, validated_data):
+        profile = validated_data.pop('profile', None)
+
+        company = validated_data.get('company', None)
+        username = validated_data.pop('username', None)
+        password = validated_data.pop('password', settings.DEFAULT_PASSWORD)
+        role = validated_data.pop('role', RoleType.OPERATOR)
+        group = Group.objects.get(id=role)
+        first_name = validated_data.pop('first_name', '')
+        last_name = validated_data.pop('last_name', '')
+        second_last_name = validated_data.pop('second_last_name', '')
+        phone = validated_data.pop('phone', '')
+        email = validated_data.pop('email', '')
+
+        if not profile:
+            user = User.objects.create(username=username, first_name=first_name, last_name=last_name, email=email)
+            user.set_password(password)
+            user.groups.add(group)
+            user.save()
+
+            profile = user.profile
+            profile.first_name = first_name
+            profile.last_name = last_name
+            profile.second_last_name = second_last_name
+            profile.email = email
+            profile.phone = phone
+            profile.verification_email = True
+            profile.role = role
+            profile.save()
+
+        validated_data['profile'] = profile
+        validated_data['company'] = company
+        validated_data['is_active'] = True
+
+        with transaction.atomic():
+            instance = super(OperatorSerializer, self).create(validated_data)
+
+        return instance
+
+    def update(self, instance, validated_data):
+        username = validated_data.pop('username', instance.profile.user.username)
+        password = validated_data.pop('password', None)
+        profile = instance.profile
+
+        first_name = validated_data.pop('first_name', profile.first_name)
+        last_name = validated_data.pop('last_name', profile.last_name)
+        second_last_name = validated_data.pop('second_last_name', profile.second_last_name)
+        phone = validated_data.pop('phone', profile.phone)
+        email = validated_data.pop('email', profile.email)
+        role = validated_data.pop('role', profile.role)
+
+        profile.first_name = first_name
+        profile.last_name = last_name
+        profile.second_last_name = second_last_name
+        profile.email = email
+        profile.phone = phone
+        profile.role = role
+
+        if profile.has_changed:
+            profile.save()
+
+        with transaction.atomic():
+            instance = super(OperatorSerializer, self).update(instance, validated_data)
+
+        if username and password:
+            user = instance.profile.user
+            if username:
+                user.username = username
+            if password:
+                user.set_password(password)
+            user.save()
+
+        return instance
+
+    def to_representation(self, instance):
+        return {
+            'id': str(instance.id),
+            'username': instance.profile.user.username,
+            'issuer': {
+                'id': str(instance.company.id),
+                'name': instance.company.name,
+                'volcan_issuer_id': instance.company.volcan_issuer_id
+            },
+            'profile': {
+                'id': str(instance.profile.unique_id),
+                'first_name': instance.profile.first_name,
+                'last_name': instance.profile.last_name,
+                'second_last_name': instance.profile.second_last_name,
+                'email': instance.profile.email,
+                'phone': instance.profile.phone,
+                'role': instance.profile.role,
+            },
+            'is_active': instance.is_active
+        }
 
 
 class CreacionEnteSerializer(serializers.Serializer):

@@ -132,6 +132,231 @@ paths:
       tags:
         - VolcanManager::Auth
     parameters: []
+  /volcan/api/issuers/:
+    get:
+      operationId: api_control_issuers_read
+      description: Return all issuers.
+      summary: Return all issuers
+      parameters:
+        - name: limit
+          in: query
+          description: Number of results to return per page.
+          required: false
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          description: The initial index from which to return the results.
+          required: false
+          schema:
+            type: integer
+        - name: q
+          description: Find by issuer name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: orderBy
+          description: Order By field
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ 'name', 'updated_at' ]
+            default: name
+        - name: orderByDesc
+          description: Order desc
+          in: query
+          schema:
+            type: boolean
+            enum: [true, false]
+            default: false
+      responses:
+        '200':
+          description: 'Return all issuers'
+      tags:
+        - VolcanManager::Control::Issuers
+    post:
+      operationId: api_control_issuers_create
+      description: Create issuer.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/Company"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Company"
+        required: true
+      summary: Create issuer
+      responses:
+        '200':
+          description: 'Create issuer'
+      tags:
+        - VolcanManager::Control::Issuers
+    parameters: []
+  /volcan/api/issuers/{issuer_id}/:
+    get:
+      operationId: api_control_issuer_read
+      description: Return a issuer.
+      summary: Return a issuer.
+      parameters:
+        - name: wthConfig
+          description: With configurations
+          in: query
+          schema:
+            type: boolean
+            enum: [ 'false', 'true' ]
+            default: 'false'
+      responses:
+        '200':
+          description: 'Returns a issuer.'
+      tags:
+        - VolcanManager::Control::Issuers
+    patch:
+      operationId: api_control_issuer_update
+      description: Update a issuer.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/Company"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Company"
+        required: true
+      summary: Update a issuer.
+      responses:
+        '200':
+          description: 'Update a issuer.'
+      tags:
+        - VolcanManager::Control::Issuers
+    delete:
+      operationId: api_control_issuer_delete
+      description: Delete a issuer.
+      summary: Delete a issuer.
+      parameters: []
+      responses:
+        '200':
+          description: 'Delete a issuers.'
+      tags:
+        - VolcanManager::Control::Issuers
+    parameters:
+      - name: issuer_id
+        in: path
+        required: true
+        description: ID Issuer
+        schema:
+          type: string
+  /volcan/api/operators/:
+    get:
+      operationId: api_control_opeerators_read
+      description: Return all operators.
+      summary: Return all operators
+      parameters:
+        - name: limit
+          in: query
+          description: Number of results to return per page.
+          required: false
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          description: The initial index from which to return the results.
+          required: false
+          schema:
+            type: integer
+        - name: q
+          description: Find by issuer name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: orderBy
+          description: Order By field
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ 'operator_name', 'updated_at' ]
+            default: operator_name
+        - name: orderByDesc
+          description: Order desc
+          in: query
+          schema:
+            type: boolean
+            enum: [true, false]
+            default: false
+      responses:
+        '200':
+          description: 'Return all operators'
+      tags:
+        - VolcanManager::Control::Operators
+    post:
+      operationId: api_control_operators_create
+      description: Create operator.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/Operator"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Operator"
+        required: true
+      summary: Create issuer
+      responses:
+        '200':
+          description: 'Create operator'
+      tags:
+        - VolcanManager::Control::Operators
+    parameters: []
+  /volcan/api/operators/{operator_id}/:
+    get:
+      operationId: api_control_operator_read
+      description: Return a operator.
+      summary: Return a operator.
+      parameters: []
+      responses:
+        '200':
+          description: 'Returns a operator.'
+      tags:
+        - VolcanManager::Control::Operators
+    patch:
+      operationId: api_control_operator_update
+      description: Update a operator.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/Operator"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Operator"
+        required: true
+      summary: Update a operator.
+      responses:
+        '200':
+          description: 'Update a operator.'
+      tags:
+        - VolcanManager::Control::Operators
+    delete:
+      operationId: api_control_operator_delete
+      description: Delete a operator.
+      summary: Delete a operator.
+      parameters: []
+      responses:
+        '200':
+          description: 'Delete a operators.'
+      tags:
+        - VolcanManager::Control::Operators
+    parameters:
+      - name: operator_id
+        in: path
+        required: true
+        description: ID Issuer
+        schema:
+          type: string
   /volcan/api/CreacionEnte/:
     post:
       operationId: api_control_creacion_ente
@@ -1934,7 +2159,7 @@ paths:
           required: false
           schema:
             type: integer
-        - name: emisor
+        - name: issuer_id
           description: Emisor
           in: query
           required: false
@@ -2008,10 +2233,10 @@ paths:
             schema:
               $ref: "#/components/schemas/Webhook"
         required: true
-      summary: Update a loyalty program.
+      summary: Update a webhook.
       responses:
         '200':
-          description: 'Update a loyalty program.'
+          description: 'Update a webhook.'
       tags:
         - VolcanManager::Webhook
     delete:
@@ -2271,6 +2496,121 @@ paths:
       tags:
         - Estrato::EstadosCuenta
     parameters: []
+  /volcan/api/ApiKeys/:
+    get:
+      operationId: api_apikeys_read
+      description: Return all apikeys.
+      summary: Return all apikeys
+      parameters:
+        - name: limit
+          in: query
+          description: Number of results to return per page.
+          required: false
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          description: The initial index from which to return the results.
+          required: false
+          schema:
+            type: integer
+        - name: issuer_id
+          description: Emisor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: q
+          description: Find by issuer name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: orderBy
+          description: Order By field
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ 'volcan_issuer_id', 'updated_at' ]
+            default: volcan_issuer_id
+        - name: orderByDesc
+          description: Order desc
+          in: query
+          schema:
+            type: boolean
+            enum: [ true, false ]
+            default: false
+      responses:
+        '200':
+          description: 'Return all apikeys'
+      tags:
+        - Estrato::ApiKeys
+    post:
+      operationId: api_control_apikey
+      description: Create apikey by issuer.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/EstratoApiKey"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EstratoApiKey"
+        required: true
+      summary: Create webhook by issuer
+      responses:
+        '200':
+          description: 'Create apikey by issuer'
+      tags:
+        - Estrato::ApiKeys
+    parameters: []
+  /volcan/api/ApiKeys/{apikey_id}/:
+    get:
+      operationId: api_apikey_read
+      description: Return a apikey.
+      summary: Return a apikey.
+      parameters: []
+      responses:
+        '200':
+          description: 'Returns a apikey.'
+      tags:
+        - Estrato::ApiKeys
+    patch:
+      operationId: api_apikey_update
+      description: Update a apikey.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/EstratoApiKey"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EstratoApiKey"
+        required: true
+      summary: Update a Estrato Api Key.
+      responses:
+        '200':
+          description: 'Update a Estrato Api Key.'
+      tags:
+        - Estrato::ApiKeys
+    delete:
+      operationId: api_apikey_delete
+      description: Delete a apikey.
+      summary: Delete a apikey.
+      parameters: []
+      responses:
+        '200':
+          description: 'Delete a apikey.'
+      tags:
+        - Estrato::ApiKeys
+    parameters:
+      - name: apikey_id
+        in: path
+        required: true
+        description: ID Estrato Api Key
+        schema:
+          type: string
 components:
   schemas:
     LoginToken:
@@ -2303,6 +2643,58 @@ components:
           description: Verify access token
       required:
       - token
+    Company:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Issuer name
+        volcan_issuer_id:
+          type: string
+          description: Volcan Issuer ID
+        thales_issuer_id:
+          type: string
+          description: Thales Issuer ID
+        is_active:
+          type: boolean
+          enum: [true, false]
+          default: true
+      required:
+        - name
+        - volcan_issuer_id
+    Operator:
+      type: object
+      properties:
+        username:
+          type: string
+          description: Username
+        password:
+          type: string
+          description: Password
+        volcan_issuer_id:
+          type: string
+          description: Volcan Issuer ID. Emisor
+        first_name:
+          type: string
+          description: First name
+        last_name:
+          type: string
+          description: Last name
+        second_last_name:
+          type: string
+          description: Second last name
+        role:
+          type: integer
+          description: Role
+          enum: [2,3,4]
+          default: 2
+        is_active:
+          type: boolean
+          enum: [true, false]
+          default: true
+      required:
+        - first_name
+        - last_name
     CreacionEnte:
       type: object
       properties:
@@ -3479,6 +3871,27 @@ components:
           maxLength: 3
       required:
         - emisor
+    EstratoApiKey:
+      type: object
+      properties:
+        issuer_id:
+          type: string
+          description: Emisor
+        url_estrato:
+          type: string
+          description: URL estrato
+        api_key:
+          type: string
+          description: Api Key value
+        header_request:
+          type: string
+          description: Request header
+        is_active:
+          type: boolean
+          enum: [ true, false ]
+      required:
+        - issuer_id
+        - api_key
     Intra_Extras:
       type: object
       properties:
@@ -3764,7 +4177,7 @@ components:
     Webhook:
       type: object
       properties:
-        emisor:
+        issuer_id:
           type: string
           description: Emisor
         url_webhook:
@@ -3782,11 +4195,11 @@ components:
         header_webhook:
           type: string
           description: Webhook header
-        activo:
+        is_active:
           type: boolean
           enum: [true, false]
       required:
-        - emisor
+        - issuer_id
         - url_webhook
     Notification:
       type: object
