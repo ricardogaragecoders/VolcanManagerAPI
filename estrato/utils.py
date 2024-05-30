@@ -1,5 +1,7 @@
 import requests
 
+from estrato.models import EstratoApiKey
+
 
 def call_volcan_manager_api(url_path, headers, method='POST', data=None, cert=None):
     status_code = 200
@@ -38,3 +40,12 @@ def call_volcan_manager_api(url_path, headers, method='POST', data=None, cert=No
     finally:
         print(f"Response {str(status_code)}: {response_data}")
         return response_data, status_code
+
+
+def get_estrato_api_key_credentials(issuer_id):
+    from django.core.cache import cache
+    key_cache = f"estrato-api-key-{issuer_id}"
+    if key_cache not in cache:
+        register = EstratoApiKey.objects.filter(volcan_issuer_id=issuer_id).first()
+        cache.set(key_cache, register, 60 * 60 * 24)
+    return cache.get(key_cache)
