@@ -8,11 +8,11 @@ from rest_framework.permissions import IsAuthenticated
 
 from common.utils import get_date_from_querystring, make_day_start, make_day_end, get_response_data_errors
 from common.views import CustomViewSet, CustomViewSetWithPagination
-from webhook.models import Webhook, TransactionCollection, TransactionErrorCollection, NotificationCollection
+from users.permissions import IsVerified, IsOperator
+from webhook.models import Webhook, TransactionErrorCollection, NotificationCollection
 from webhook.permissions import HasPermissionByMethod, HasUserAndPasswordInData
 from webhook.serializers import WebhookSerializer, WebhookListSerializer, TransactionSerializer, \
     PaycardNotificationserializer
-from users.permissions import IsVerified, IsOperator
 from webhook.utils import get_notification_data
 
 
@@ -102,15 +102,14 @@ class WebHookApiView(CustomViewSet):
     def perform_destroy(self, request, *args, **kwargs):
         register = kwargs['register']
         if hasattr(register, 'is_active'):
-            register.active = False
+            register.is_active = False
             if hasattr(register, 'deleted_at'):
-                from django.utils import timezone
                 register.deleted_at = timezone.now()
+            if hasattr(register, 'is_deleted'):
+                register.is_deleted = True
             register.save()
-        response_data = dict()
-        response_data['rsp_codigo'] = '204'
-        response_data['rsp_descripcion'] = u'Webhook borrado'
-        self.make_response_success('Webhook borrado', response_data, 204)
+        response_data = {'rsp_codigo': '204', 'rsp_descripcion': u'Webhook borrado'}
+        self.make_response_success(data=response_data, status=204)
 
 
 class NotificationTransactionApiView(CustomViewSetWithPagination):
