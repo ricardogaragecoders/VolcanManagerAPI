@@ -217,14 +217,19 @@ class OperatorSerializer(serializers.ModelSerializer):
         return instance
 
     def to_representation(self, instance):
-        return {
-            'id': str(instance.id),
-            'username': instance.profile.user.username,
-            'issuer': {
+        issuer = dict()
+
+        if instance.company:
+            issuer = {
                 'id': str(instance.company.id),
                 'name': instance.company.name,
                 'volcan_issuer_id': instance.company.volcan_issuer_id
-            },
+            }
+
+        return {
+            'id': str(instance.id),
+            'username': instance.profile.user.username,
+            'issuer': issuer,
             'profile': {
                 'id': str(instance.profile.unique_id),
                 'first_name': instance.profile.first_name,
