@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'control',
     'thalesapi',
     'webhook',
+    'estrato'
 ]
 
 MIDDLEWARE = [
@@ -341,6 +342,8 @@ LOGGING = {
 # URLs
 URL_BACKEND = env.str('URL_BACKEND', 'http://localhost:8000')
 EMAIL_CONTACT = env.str('EMAIL_CONTACT', 'info@volcangroup.io')
+DEFAULT_PASSWORD = env.str('DEFAULT_PASSWORD', '')
+
 SERVER_VOLCAN_AZ7_URL = env.str('SERVER_VOLCAN_AZ7_URL', 'http://10.23.102.10:21005')
 SERVER_VOLCAN_PAYCARD_URL = env.str('SERVER_VOLCAN_PAYCARD_URL', 'http://10.23.106.33/wsParabiliumVolcan')
 
@@ -383,6 +386,13 @@ PASSWORD_DEFAULT = env.str('PASSWORD_DEFAULT', '')
 VERIFICATION_ADMINISTRATOR_DEFAULT = env.bool('VERIFICATION_ADMINISTRATOR_DEFAULT', True)
 PATH_IMAGE_LOGO = env.str('PATH_IMAGE_LOGO')
 PATH_ISO_COUNTRIES_CSV = env.str('PATH_ISO_COUNTRIES_CSV', '')
+
+# API KEY
+APIKEY_ESTRATO_VOLCAN_API_ENABLED = env.bool('APIKEY_ESTRATO_VOLCAN_API_ENABLED', False)
+API_KEY_FID = env.str('API_KEY_FID', '')
+SERVER_ESTRATO_VOLCAN_URL = env.str('SERVER_ESTRATO_VOLCAN_URL', '')
+ESTRATO_LIMIT_QUERY = env.int('ESTRATO_LIMIT_QUERY', 5)
+
 
 from corsheaders.defaults import default_headers, default_methods
 

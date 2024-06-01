@@ -1,20 +1,22 @@
 import uuid
 from django.db import models
 
-from common.models import BaseModelWithDeleted, MonitorCollection
+from common.models import BaseModelExtra, MonitorCollection
 
 
-class Webhook(BaseModelWithDeleted):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+class Webhook(BaseModelExtra):
+    # id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    company = models.ForeignKey('control.Company', on_delete=models.DO_NOTHING,
+                                related_name='webhooks', null=True, blank=True)
     account_issuer = models.CharField(max_length=100)
     url_webhook = models.URLField(blank=True, null=True)
     key_webhook = models.TextField(blank=True, null=True)
     header_webhook = models.CharField(max_length=20, default='Authorization')
-    active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):
         if not self.pk:
-            self.active = True
+            self.is_active = True
         super(Webhook, self).save(*args, **kwargs)
 
     def __str__(self):

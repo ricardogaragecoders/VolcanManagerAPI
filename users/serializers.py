@@ -7,7 +7,8 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from common.exceptions import CustomValidationError
 from common.middleware import get_request
 from common.serializers import StatusSerializer, CreatedAndUpdatedReadOnlyMixin
-from .models import Profile, WhiteListedToken, ProfileVerification
+from volcanmanagerapi import settings
+from .models import Profile, WhiteListedToken, ProfileVerification, VerificationType, RoleType
 from .utils import get_role_and_data
 from .validators import _mobile_regex_validator, _password_regex_validator
 
@@ -25,14 +26,16 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 class RegisterAdminSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=100, required=False, default='',
+                                     allow_null=True, allow_blank=True)
     first_name = serializers.CharField(max_length=100, required=True)
     last_name = serializers.CharField(max_length=100, required=True)
-    second_last_name = serializers.CharField(max_length=100, required=False,
-                                             default='', allow_blank=True, allow_null=True)
+    second_last_name = serializers.CharField(max_length=100, required=False, default='',
+                                             allow_blank=True, allow_null=True)
     email = serializers.EmailField(max_length=100, required=True)
     phone = serializers.CharField(max_length=10, validators=[_mobile_regex_validator], required=False,
                                   default='', allow_blank=True, allow_null=True)
-    role = serializers.IntegerField(default=2, required=False)
+    role = serializers.IntegerField(default=RoleType.OPERATOR, required=False)
     password = serializers.CharField(
         min_length=8,
         max_length=16,
@@ -44,13 +47,13 @@ class RegisterAdminSerializer(serializers.Serializer):
     def validate(self, data):
         data = super(RegisterAdminSerializer, self).validate(data)
         email = data.get('email', None)
-        role = int(data.get('role', Profile.SUPERADMIN))
-        request = get_request()
+        role = int(data.get('role', RoleType.ADMIN))
+        request = self.context['request']
         if email:
-            if User.objects.filter(username=email).exists():
+            if User.objects.filter(email=email).exists():
                 raise CustomValidationError(detail=_(u'El correo electrónico ya estaba registrado'),
                                             code='email_exists')
-        if role >= Profile.SUPERADMIN and not request.user.profile.isSuperadmin():
+        if role > RoleType.ADMIN and not request.user.profile.isSuperadmin():
             raise CustomValidationError(detail=_(u'Solo personal de autorizado.'),
                                         code='no_permissions')
 
@@ -63,12 +66,14 @@ class RegisterAdminSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         try:
+            username = validated_data.get('username', '')
             email = validated_data.get('email', '')
-            password = validated_data.pop('password', 'Garage$21')
+            password = validated_data.pop('password', settings.DEFAULT_PASSWORD)
             second_last_name = validated_data.pop('second_last_name', '')
             phone = validated_data.pop('phone', '')
-            role = validated_data.pop('role', 2)
-            username = email
+            role = validated_data.pop('role', RoleType.OPERATOR)
+            if len(username) == 0:
+                username = email
             if not User.objects.filter(username=username).exists():
                 validated_data['username'] = username
                 user = User.objects.create(**validated_data)
@@ -139,8 +144,8 @@ class VerificationCodeSerializer(serializers.Serializer):
     def create(self, validated_data):
         try:
             verification = validated_data.get('verification', None)
-            if verification.type_verification in [ProfileVerification.VERIFICATION_EMAIL,
-                                                  ProfileVerification.RECOVER_PASSWORD_EMAIL]:
+            if verification.type_verification in [VerificationType.VERIFICATION_EMAIL,
+                                                  VerificationType.RECOVER_PASSWORD_EMAIL]:
                 profile = verification.profile
                 profile.verification_email = True
                 if profile.has_changed:
@@ -191,11 +196,11 @@ class ResendCodeSerializer(serializers.Serializer):
             profile = validated_data.get('profile', None)
             if code == 'verification_2factor':
                 if profile.verification_email:
-                    type_verification = ProfileVerification.VERIFICATION_2FACTOR
+                    type_verification = VerificationType.VERIFICATION_2FACTOR
                 else:
-                    type_verification = ProfileVerification.VERIFICATION_EMAIL
+                    type_verification = VerificationType.VERIFICATION_EMAIL
             elif code == 'recover_password_email':
-                type_verification = ProfileVerification.RECOVER_PASSWORD_EMAIL
+                type_verification = VerificationType.RECOVER_PASSWORD_EMAIL
 
             try:
                 verification = ProfileVerification.objects.get(
@@ -261,11 +266,11 @@ class RecoverPasswordSerializer(serializers.Serializer):
             try:
                 verification = ProfileVerification.objects.get(profile=profile,
                                                                data_verification=profile.user.email,
-                                                               type_verification=ProfileVerification.RECOVER_PASSWORD_EMAIL)
+                                                               type_verification=VerificationType.RECOVER_PASSWORD_EMAIL)
             except ProfileVerification.DoesNotExist:
                 data = {
                     'profile': profile,
-                    'type_verification': ProfileVerification.RECOVER_PASSWORD_EMAIL,
+                    'type_verification': VerificationType.RECOVER_PASSWORD_EMAIL,
                     'data_verification': profile.user.email
                 }
                 verification = ProfileVerification.objects.create(**data)
@@ -347,8 +352,8 @@ class ChangePasswordSerializer(serializers.Serializer):
                 raise CustomValidationError(detail=_(u'El tiempo se acabo.'),
                                             code='time_is_over')
 
-            if verification.type_verification not in [ProfileVerification.RECOVER_PASSWORD_PHONE,
-                                                      ProfileVerification.RECOVER_PASSWORD_EMAIL]:
+            if verification.type_verification not in [VerificationType.RECOVER_PASSWORD_PHONE,
+                                                      VerificationType.RECOVER_PASSWORD_EMAIL]:
                 raise CustomValidationError(detail=_(u'El tipo de codigo no es de este proceso.'),
                                             code='code_type_invalid')
 
@@ -462,6 +467,7 @@ class ProfileVerySimpleSerializer(CreatedAndUpdatedReadOnlyMixin, serializers.Mo
 
 
 class ProfileSerializer(CreatedAndUpdatedReadOnlyMixin, serializers.ModelSerializer):
+    id = serializers.CharField(source='unique_id', read_only=True)
     username = serializers.CharField(max_length=100, required=False, source='user.username')
     email = serializers.EmailField(max_length=100, required=False)
     phone = serializers.CharField(max_length=10, validators=[_mobile_regex_validator], required=False, default='')
