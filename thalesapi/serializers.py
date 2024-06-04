@@ -45,6 +45,9 @@ class VerifyCardCreditSerializer(serializers.Serializer):
                 data['CVV'] = payload['cvv'] if 'cvv' in payload else ''
                 if len(data['FECHA_EXP']) == 4:
                     data['FECHA_EXP'] = data['FECHA_EXP'][2:4] + data['FECHA_EXP'][0:2]
+        except jwe.InvalidJWEData as e:
+            print(f"Error en desifrado de datos: {e.args.__str__()}")
+            raise CustomValidationError(detail=f'Error en descifrado de datos', code='400')
         except Exception as e:
             import logging
             logger = logging.getLogger(__name__)
