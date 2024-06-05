@@ -412,3 +412,14 @@ def is_float(number: str):
         return True
     else:
         return False
+
+
+def sanitize_log_headers(headers: dict) -> dict:
+    headers_copy = headers.copy()
+    if 'X-Api-Key' in headers_copy:
+        headers_copy['X-Api-Key'] = f"{headers_copy['X-Api-Key'][:6]}..."
+    if 'Authorization' in headers_copy:
+        headers_copy['Authorization'] = f"...{headers_copy['Authorization'][-4:]}"
+    if 'Credenciales' in headers_copy:
+        headers_copy['Credenciales'] = f"...{headers_copy['Credenciales'][-4:]}"
+    return headers_copy

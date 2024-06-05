@@ -157,7 +157,7 @@ class GetDataTokenizationSerializer(serializers.Serializer):
         if len(name) <= 3:
             raise CustomValidationError(detail=u'NOMBRE es requerido', code='400')
 
-        if not profile.isSuperadmin():
+        if not profile.is_superadmin():
             if profile.first_name != issuer:
                 raise CustomValidationError(detail=u'EMISOR desconocido', code='400')
 
@@ -212,7 +212,7 @@ class GetDataTokenizationPaycardSerializer(serializers.Serializer):
 
         exp_date = exp_date[2:4] + exp_date[0:2]
 
-        if not profile.isSuperadmin():
+        if not profile.is_superadmin():
             if profile.first_name != issuer:
                 raise CustomValidationError(detail=u'EMISOR desconocido', code='400')
 
@@ -276,7 +276,7 @@ class GetVerifyCardSerializer(serializers.Serializer):
 
         exp_date = exp_date[2:4] + exp_date[0:2]
 
-        if not profile.isSuperadmin():
+        if not profile.is_superadmin():
             if profile.first_name != issuer:
                 raise CustomValidationError(detail=u'EMISOR desconocido', code='400')
 

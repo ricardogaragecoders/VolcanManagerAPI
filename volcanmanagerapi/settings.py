@@ -441,6 +441,7 @@ URL_AZ7_CONSULTA_ESTADO_CUENTA = env.str('URL_AZ7_CONSULTA_ESTADO_CUENTA',
 
 # obtenerDatosTokenizacionPrepago
 URL_AZ7_LOGIN = env.str('URL_AZ7_LOGIN', '/wsParabiliumVolcan/api/Login')
-URL_AZ7_CONSULTA_TOKEN_TARJETA = env.str('URL_AZ7_CONSULTA_TOKEN_TARJETA', '/wsParabiliumVolcan/api/ConsultarTokenTarjeta')
-PARAM_AZ7_PAYCARD_USUARIO = env.str('PARAM_AZ7_PAYCARD_USUARIO', 'Prueba')
-PARAM_AZ7_PAYCARD_PASSWORD = env.str('PARAM_AZ7_PAYCARD_PASSWORD', 'Prueba')
+URL_AZ7_CONSULTA_TOKEN_TARJETA = env.str('URL_AZ7_CONSULTA_TOKEN_TARJETA',
+                                         '/wsParabiliumVolcan/api/ConsultarTokenTarjeta')
+PARAM_AZ7_PAYCARD_USUARIO = env.str('PARAM_AZ7_PAYCARD_USUARIO', '')
+PARAM_AZ7_PAYCARD_PASSWORD = env.str('PARAM_AZ7_PAYCARD_PASSWORD', '')

@@ -144,9 +144,9 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
     def get_queryset_filters(self, *args, **kwargs):
         filters = dict()
         profile = self.request.user.profile
-        if profile.isAdminProgram():
+        if profile.is_superadmin():
             issuer = self.request.query_params.get('emisor', '')
-        elif profile.isOperator(equal=True):
+        elif profile.is_operator(equal=True):
             issuer = profile.user.first_name
         else:
             issuer = 'sin_emision'

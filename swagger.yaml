@@ -2565,7 +2565,7 @@ paths:
       tags:
         - Estrato::ApiKeys
     parameters: []
-  /volcan/api/ApiKeys/{apikey_id}/:
+  /volcan/api/ApiKeys/{api_key_id}/:
     get:
       operationId: api_apikey_read
       description: Return a apikey.
@@ -2605,7 +2605,7 @@ paths:
       tags:
         - Estrato::ApiKeys
     parameters:
-      - name: apikey_id
+      - name: api_key_id
         in: path
         required: true
         description: ID Estrato Api Key
