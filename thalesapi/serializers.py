@@ -52,6 +52,8 @@ class VerifyCardCreditSerializer(serializers.Serializer):
             import logging
             logger = logging.getLogger(__name__)
             logger.exception(e)
+            print(f"Error en desifrado de datos: {e.args.__str__()}")
+            raise CustomValidationError(detail=f'Error en descifrado de datos', code='400')
 
         from thalesapi.utils import get_card_triple_des_process
         data['card_bin'] = data['TARJETA'][0:8]
