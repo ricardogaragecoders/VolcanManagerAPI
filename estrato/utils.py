@@ -1,13 +1,16 @@
 import requests
 
+from common.utils import sanitize_log_headers
 from estrato.models import EstratoApiKey
+
+
 
 
 def call_volcan_manager_api(url_path, headers, method='POST', data=None, cert=None):
     status_code = 200
     response_data = {}
     print(f"Request {method}: {url_path}")
-    print(f"Headers: {headers}")
+    print(f"Headers: {sanitize_log_headers(headers=headers)}")
     print(f"Request json: {data}")
     try:
         # Make the API request using the provided headers and data

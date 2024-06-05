@@ -8,6 +8,6 @@ urlpatterns = [
 
     path('ApiKeys/',
          EstratoApiKeyApiView.as_view({'get': 'list', 'post': 'create'})),
-    path('ApiKeys/<str:apikey_id>/',
+    path('ApiKeys/<str:api_key_id>/',
          EstratoApiKeyApiView.as_view({'get': 'retrieve', 'patch': 'update', 'delete': 'destroy'})),
 ]

@@ -6,7 +6,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.utils import timezone
 
-from common.utils import get_response_data_errors, model_code_generator
+from common.utils import get_response_data_errors, model_code_generator, sanitize_log_headers
 from control.utils import mask_card
 from thalesapi.models import ISOCountry, DeliverOtpCollection, CardDetail, CardBinConfig, CardType, Client
 
@@ -140,7 +140,7 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
     response_status = 500
     headers = get_thales_api_headers(request)
     print(f"Request: {url}")
-    print(f"Headers: {headers}")
+    print(f"Headers: {sanitize_log_headers(headers=headers)}")
     print(f"Request json: {data}")
     try:
         if http_verb == 'POST':
@@ -198,7 +198,7 @@ def process_volcan_api_request(data, url, request=None, headers=None, method='PO
     else:
         data_json = data
     print(f"Request: {url}")
-    print(f"Headers: {headers}")
+    print(f"Headers: {sanitize_log_headers(headers=headers)}")
     print(f"Request json: {data_json}")
     r = None
     try:
