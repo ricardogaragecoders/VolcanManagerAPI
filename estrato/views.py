@@ -59,17 +59,12 @@ class EstratoEstadosCuentaApiView(CustomViewSet, MixinEstratoVolcanApi):
                 url='/api/statements/account/statements/', method='GET'
             )
             if status_code in [200, 201]:
-                self.make_response_success(data=response_data['data'], 
-                                           message=response_data['message'], 
+                self.make_response_success(data=response_data['data'], message=response_data['message'],
                                            status=status_code)
-            else:
-                self.make_response_success(data=response_data['data'], 
-                                           message=response_data['message'], 
-                                           status=status_code)
+            elif 'error' in response_data:
+                self.make_response_success(data={}, message=response_data['error'], status=status_code)
         else:
-            self.make_response_success(data=response_data, 
-                                       message='Servicio Estrato no disponible', 
-                                       status=200)
+            self.make_response_success(data=response_data, message='Servicio Estrato no disponible',  status=200)
 
 
 class EstratoApiKeyApiView(CustomViewSet):
