@@ -128,8 +128,8 @@ class ThalesApiView(CustomViewSet):
                 except AssertionError as e:
                     print(f"Error al crear el cliente: {e.args.__str__()}")
                     client = Client.objects.create(consumer_id=response_data['consumerId'],
-                                          card_name=card_name, type_identification='TT',
-                                          document_identification=response_data['cardId'])
+                                                   card_name=card_name, type_identification='TT',
+                                                   document_identification=response_data['cardId'])
                     card_detail.client = client
                     card_detail.save()
             else:
