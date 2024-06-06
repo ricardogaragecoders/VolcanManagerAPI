@@ -734,7 +734,7 @@ class ConsultaIntraExtraF1Serializer(serializers.Serializer):
     DOC_IDENTIFICACION = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
     DOC_FINAN = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
     TIPO_FINAN = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
-    PAGINA = serializers.CharField(max_length=30, required=False, default="", allow_blank=True)
+    PAGINA = serializers.CharField(max_length=100, required=False, default="", allow_blank=True)
     DIRECCION = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
     EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
     USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
