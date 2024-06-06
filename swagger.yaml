@@ -3824,7 +3824,7 @@ components:
         pagina:
           type: string
           description: 'Pagina'
-          maxLength: 30
+          maxLength: 100
         direccion:
           type: string
           description: 'Direccion'
