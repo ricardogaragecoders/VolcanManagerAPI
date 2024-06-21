@@ -364,20 +364,21 @@ class ExtrafinanciamientoSerializer(serializers.Serializer):
     REFERENCIA = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
     TIPO = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
     COMERCIO = serializers.CharField(max_length=40, required=False, default="", allow_blank=True)
+    OFICINA = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
     EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
     USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
     ACCESO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
 
     class Meta:
         fields = ('TARJETA', 'MONEDA', 'IMPORTE', 'TASA', 'PLAZO', 'REFERENCIA', 'TIPO',
-                  'COMERCIO', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+                  'COMERCIO','OFICINA', 'EMISOR',  'USUARIO_ATZ', 'ACCESO_ATZ')
 
     def validate(self, data):
         data = super(ExtrafinanciamientoSerializer, self).validate(data)
         card = data.get('TARJETA', "").strip()
         amount = get_decimal_from_request_data(data, 'IMPORTE')
         tax = get_decimal_from_request_data(data, 'TASA')
-        emisor = data.get('EMISOR', '').strip()
+        emisor = data.get('EMISOR', '').strip().upper()
 
         if isinstance(amount, Decimal):
             amounts = ("%.2f" % amount).split('.')
@@ -398,6 +399,15 @@ class ExtrafinanciamientoSerializer(serializers.Serializer):
 
         if len(emisor) == 0:
             raise CustomValidationError(detail=u'Emisor es requerido', code='400')
+
+        data['EMISOR'] = emisor
+
+        if emisor == "CMF":
+            data['OFICINA'] = "CMF00007"
+        elif emisor == "FID":
+            data['OFICINA'] = "0002"
+        elif emisor == 'GMO':
+            data['OFICINA'] = "GMG002"
         return data
 
 
