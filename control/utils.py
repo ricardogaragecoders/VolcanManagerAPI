@@ -1,4 +1,6 @@
 import json
+
+import newrelic.agent
 import requests
 from django.conf import settings
 import logging
@@ -66,10 +68,11 @@ def get_volcan_api_headers():
         'Content-Type': 'application/json'
     }
 
-
+@newrelic.agent.background_task()
 def process_volcan_api_request(data, url, request, headers=None, times=0):
     response_data = dict()
     response_status = 0
+    response_message = ''
     if not headers:
         headers = get_volcan_api_headers()
     data_json = json.dumps(data)
@@ -123,8 +126,16 @@ def process_volcan_api_request(data, url, request, headers=None, times=0):
         response_status = 500
         response_message = 'error'
         response_data = {'RSP_CODIGO': '500', 'RSP_DESCRIPCION': e.args.__str__()}
-
-    return response_message, response_data, response_status
+    finally:
+        newrelic.agent.add_custom_attributes(
+            [
+                ("request_url", url),
+                ("emisor", data['EMISOR'] if 'EMISOR' in data else ''),
+                ("response_code", response_status),
+                ("response_json", response_data),
+            ]
+        )
+        return response_message, response_data, response_status
 
 
 def creation_ente(request, **kwargs):
