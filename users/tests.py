@@ -97,7 +97,7 @@ class AuthLoginTestCase(DataBaseTestCase):
     #     if not self.admin_register.verification_email:
     #         from users.models import ProfileVerification
     #         verification = ProfileVerification.objects.get(profile=self.admin_register,
-    #                                                        type_verification=ProfileVerification.VERIFICATION_EMAIL)
+    #                                                        type_verification=VerificationType.VERIFICATION_EMAIL)
     #
     #         import jwt
     #         from django.conf import settings

@@ -1,12 +1,13 @@
 import json
 import logging
 
+import newrelic.agent
 import requests
 from django.conf import settings
 from django.core.cache import cache
 from django.utils import timezone
 
-from common.utils import get_response_data_errors, model_code_generator
+from common.utils import get_response_data_errors, model_code_generator, sanitize_log_headers
 from control.utils import mask_card
 from thalesapi.models import ISOCountry, DeliverOtpCollection, CardDetail, CardBinConfig, CardType, Client
 
@@ -134,13 +135,13 @@ def get_card_triple_des_process(card_data, is_descript=False):
         logger.exception(e)
         return None
 
-
+@newrelic.agent.background_task()
 def process_prepaid_api_request(data, url, request, http_verb='POST'):
     response_data = dict()
     response_status = 500
     headers = get_thales_api_headers(request)
     print(f"Request: {url}")
-    print(f"Headers: {headers}")
+    print(f"Headers: {sanitize_log_headers(headers=headers)}")
     print(f"Request json: {data}")
     try:
         if http_verb == 'POST':
@@ -185,9 +186,17 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
         response_data, response_status = {'error': e.args.__str__()}, 500
         print(response_data)
     finally:
+        newrelic.agent.add_custom_attributes(
+            [
+                ("request_url", url),
+                ("emisor", data['EMISOR'] if 'EMISOR' in data else ''),
+                ("response_code", response_status),
+                ("response_json", response_data),
+            ]
+        )
         return response_data, response_status
 
-
+@newrelic.agent.background_task()
 def process_volcan_api_request(data, url, request=None, headers=None, method='POST', cert=None, times=0):
     response_data = dict()
     response_status = 500
@@ -198,7 +207,7 @@ def process_volcan_api_request(data, url, request=None, headers=None, method='PO
     else:
         data_json = data
     print(f"Request: {url}")
-    print(f"Headers: {headers}")
+    print(f"Headers: {sanitize_log_headers(headers=headers)}")
     print(f"Request json: {data_json}")
     r = None
     try:
@@ -245,6 +254,14 @@ def process_volcan_api_request(data, url, request=None, headers=None, method='PO
         response_data, response_status = {'error': e.args.__str__()}, 500
         print(response_data)
     finally:
+        newrelic.agent.add_custom_attributes(
+            [
+                ("request_url", url),
+                ("emisor", data['EMISOR'] if 'EMISOR' in data else ''),
+                ("response_code", response_status),
+                ("response_json", response_data),
+            ]
+        )
         return response_data, response_status
 
 

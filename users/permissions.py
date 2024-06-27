@@ -1,6 +1,6 @@
 from rest_framework import permissions
 
-from .models import Profile
+from .models import Profile, RoleType
 
 
 class IsChangePassword(permissions.BasePermission):
@@ -56,7 +56,7 @@ class IsClient(permissions.BasePermission):
         if request.user and request.user.profile:
             profile = request.user.profile
             if not profile.deleted_at:
-                return profile.role >= Profile.CLIENT
+                return profile.role >= RoleType.CLIENT
         return False
 
 
@@ -69,7 +69,7 @@ class IsOperator(permissions.BasePermission):
         if request.user and request.user.profile:
             profile = request.user.profile
             if not profile.deleted_at:
-                return profile.role >= Profile.OPERATOR
+                return profile.role >= RoleType.OPERATOR
         return False
 
 
@@ -82,7 +82,7 @@ class IsSupervisor(permissions.BasePermission):
         if request.user and request.user.profile:
             profile = request.user.profile
             if not profile.deleted_at:
-                return profile.role >= Profile.SUPERVISOR
+                return profile.role >= RoleType.SUPERVISOR
         return False
 
 
@@ -95,7 +95,7 @@ class IsAdministrator(permissions.BasePermission):
         if request.user and request.user.profile:
             profile = request.user.profile
             if not profile.deleted_at:
-                return profile.role >= Profile.ADMINISTRATOR
+                return profile.role >= RoleType.ADMIN
         return False
 
 
@@ -108,5 +108,5 @@ class IsSuperadmin(permissions.BasePermission):
         if request.user and request.user.profile:
             profile = request.user.profile
             if not profile.deleted_at:
-                return profile.role == Profile.SUPERADMIN
+                return profile.role == RoleType.SUPER_ADMIN
         return False

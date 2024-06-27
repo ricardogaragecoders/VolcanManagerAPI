@@ -105,11 +105,11 @@ class RegisterAdminAPIView(CustomViewSet):
         try:
             verification = ProfileVerification.objects.get(profile=profile,
                                                            data_verification=profile.user.email,
-                                                           type_verification=ProfileVerification.VERIFICATION_EMAIL)
+                                                           type_verification=VerificationType.VERIFICATION_EMAIL)
         except ProfileVerification.DoesNotExist:
             data = {
                 'profile': profile,
-                'type_verification': ProfileVerification.VERIFICATION_EMAIL,
+                'type_verification': VerificationType.VERIFICATION_EMAIL,
                 'data_verification': profile.user.email
             }
             verification = ProfileVerification.objects.create(**data)
@@ -149,12 +149,12 @@ class VerificationCodeAPIView(CustomViewSet):
     def perform_create(self, request, *args, **kwargs):
         verification = self.serializer.save()
         profile = verification.profile
-        if verification.type_verification == ProfileVerification.VERIFICATION_2FACTOR:
+        if verification.type_verification == VerificationType.VERIFICATION_2FACTOR:
             response_data = get_role_and_data(profile.user, {})
             refresh = RefreshToken.for_user(profile.user)
             response_data['refresh'] = str(refresh)
             response_data['access'] = str(refresh.access_token)
-        elif verification.type_verification == ProfileVerification.RECOVER_PASSWORD_EMAIL:
+        elif verification.type_verification == VerificationType.RECOVER_PASSWORD_EMAIL:
             profile.change_password = True
             profile.verification_email = True
             if profile.has_changed:
@@ -164,7 +164,7 @@ class VerificationCodeAPIView(CustomViewSet):
             user.set_password(new_password)
             user.save()
             response_data = {'password': new_password, 'code': 'change-password', 'message': u'Cambiar contraseña'}
-        elif verification.type_verification == ProfileVerification.VERIFICATION_EMAIL:
+        elif verification.type_verification == VerificationType.VERIFICATION_EMAIL:
             profile.verification_email = True
             if profile.has_changed:
                 profile.save()
@@ -188,12 +188,12 @@ class ResendCodeAPIView(CustomViewSet):
                 verification = self.serializer.save()
                 if settings.ENABLE_SEND_EMAIL:
                     type_verification = verification.type_verification
-                    if type_verification == ProfileVerification.RECOVER_PASSWORD_EMAIL:
+                    if type_verification == VerificationType.RECOVER_PASSWORD_EMAIL:
                         self.resp = send_recover_password(verification, security=True)
-                    elif type_verification == ProfileVerification.VERIFICATION_2FACTOR \
+                    elif type_verification == VerificationType.VERIFICATION_2FACTOR \
                             and settings.ENABLE_2FACTOR_AUTHENTICATION:
                         self.resp = send_verification_2factor(verification)
-                    elif type_verification == ProfileVerification.VERIFICATION_EMAIL:
+                    elif type_verification == VerificationType.VERIFICATION_EMAIL:
                         self.resp = send_verification_2factor(verification)
                     else:
                         self.resp = ['La solicitud no pudo ser procesada', {'code': 'unknown'}, 400]

@@ -1,6 +1,10 @@
+import uuid
+
 from django.db import models
 from django.forms import model_to_dict
 from django.utils.text import slugify
+
+from common.managers import SoftDeletionManager
 
 
 class NameStrMixin:
@@ -12,6 +16,30 @@ class BaseModel(models.Model, NameStrMixin):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     status = models.ForeignKey('common.Status', on_delete=models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        abstract = True
+
+
+class BaseModelExtra(models.Model, NameStrMixin):
+    """
+        Abstract base model that provides common fields for all models.
+
+        Fields:
+        - id: Unique identifier for the model (UUIDField).
+        - created_at: Date and time when the model was created (DateTimeField).
+        - modified_at: Date and time when the model was last modified (DateTimeField).
+        - is_deleted: Boolean indicating whether the model is deleted or not (BooleanField).
+    """
+    id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    objects = SoftDeletionManager()
+
+    all_objects = models.Manager()
 
     class Meta:
         abstract = True

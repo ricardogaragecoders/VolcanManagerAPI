@@ -13,19 +13,16 @@ from common.models import BaseModelWithDeleted, ModelDiffMixin, BaseModelWithout
 from users.managers import ProfileManager
 
 
+class RoleType(models.IntegerChoices):
+    """ These are role types that we have in our system """
+    CLIENT = (1, "Client")
+    OPERATOR = (2, "Operator")
+    SUPERVISOR = (3, "Supervisor")
+    ADMIN = (4, "Admin")
+    SUPER_ADMIN = (10, "Superadmin")
+
+
 class Profile(ModelDiffMixin, BaseModelWithDeleted):
-    CLIENT = 1
-    OPERATOR = 2
-    SUPERVISOR = 3
-    ADMINISTRATOR = 4
-    SUPERADMIN = 10
-    ROLE_CHOICES = (
-        (CLIENT, _('Cliente')),
-        (OPERATOR, _('Operador')),
-        (SUPERVISOR, _('Supervisor')),
-        (ADMINISTRATOR, _('Administrador general')),
-        (SUPERADMIN, _('Superadmin'))
-    )
     id = models.AutoField(primary_key=True)
     unique_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -37,7 +34,8 @@ class Profile(ModelDiffMixin, BaseModelWithDeleted):
     change_password = models.BooleanField(default=False)
     verification_phone = models.BooleanField(default=False)
     verification_email = models.BooleanField(default=False)
-    role = models.PositiveSmallIntegerField(choices=ROLE_CHOICES, default=CLIENT, null=True, blank=True)
+    role = models.PositiveSmallIntegerField(choices=RoleType.choices, default=RoleType.CLIENT,
+                                            null=True, blank=True)
 
     objects = ProfileManager()
 
@@ -50,32 +48,32 @@ class Profile(ModelDiffMixin, BaseModelWithDeleted):
         else:
             return self.email
 
-    def isClient(self, equal=False):
+    def is_client(self, equal=True):
         if equal:
-            return self.role == self.CLIENT
+            return self.role == RoleType.CLIENT
         else:
-            return self.role >= self.CLIENT
+            return self.role >= RoleType.CLIENT
 
-    def isOperator(self, equal=False):
+    def is_operator(self, equal=True):
         if equal:
-            return self.role == self.OPERATOR
+            return self.role == RoleType.OPERATOR
         else:
-            return self.role >= self.OPERATOR
+            return self.role >= RoleType.OPERATOR
 
-    def isAdminProgram(self, equal=False):
+    def is_supervisor(self, equal=True):
         if equal:
-            return self.role == self.SUPERVISOR
+            return self.role == RoleType.SUPERVISOR
         else:
-            return self.role >= self.SUPERVISOR
+            return self.role >= RoleType.SUPERVISOR
 
-    def isAdministrator(self, equal=False):
+    def is_admin(self, equal=True):
         if equal:
-            return self.role == self.ADMINISTRATOR
+            return self.role == RoleType.ADMIN
         else:
-            return self.role >= self.ADMINISTRATOR
+            return self.role >= RoleType.ADMIN
 
-    def isSuperadmin(self):
-        return self.role == self.SUPERADMIN
+    def is_superadmin(self, equal=True):
+        return self.role >= RoleType.SUPER_ADMIN
 
 
 @receiver(post_save, sender=User)
@@ -93,31 +91,24 @@ class WhiteListedToken(models.Model):
     created_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.user.username
+        return str(self.user)
+
+
+class VerificationType(models.IntegerChoices):
+    """ Verification types """
+    VERIFICATION_PHONE = (1, _(u'Verificación de teléfono'))
+    VERIFICATION_EMAIL = (2, _(u'Verificación de correo electrónico'))
+    RECOVER_PASSWORD_PHONE = (3, _(u'Recuperar contraseña con teléfono'))
+    RECOVER_PASSWORD_EMAIL = (4, _(u'Recuperar contraseña con correo electrónico'))
+    CHANGE_PHONE = (5, _(u'Cambiar el numero teléfono'))
+    VERIFICATION_2FACTOR = (6, _(u'Verificación doble factor de autentificación'))
 
 
 class ProfileVerification(BaseModelWithoutStatus):
-    VERIFICATION_PHONE = 1
-    VERIFICATION_EMAIL = 2
-    RECOVER_PASSWORD_PHONE = 3
-    RECOVER_PASSWORD_EMAIL = 4
-    CHANGE_PHONE = 5
-    VERIFICATION_2FACTOR = 6
-    AUTORIZATION_REDEMPTION = 7
-    AUTORIZATION_TRANSFER = 8
-    VERIFICATION_CHOICES = (
-        (VERIFICATION_PHONE, _(u'Verificación de teléfono')),
-        (VERIFICATION_EMAIL, _(u'Verificación de correo electrónico')),
-        (RECOVER_PASSWORD_PHONE, _(u'Recuperar contraseña con teléfono')),
-        (RECOVER_PASSWORD_EMAIL, _(u'Recuperar contraseña con correo electrónico')),
-        (CHANGE_PHONE, _(u'Cambiar el numero teléfono')),
-        (VERIFICATION_2FACTOR, _(u'Verificación doble factor de autentificación')),
-        (AUTORIZATION_REDEMPTION, _(u'Autorización de redención')),
-        (AUTORIZATION_TRANSFER, _(u'Autorización de transferencia de puntos')),
-    )
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, blank=True, null=True)
     data_verification = models.CharField(max_length=150, blank=True, null=True)
-    type_verification = models.SmallIntegerField(choices=VERIFICATION_CHOICES, default=VERIFICATION_PHONE)
+    type_verification = models.SmallIntegerField(choices=VerificationType.choices,
+                                                 default=VerificationType.VERIFICATION_PHONE)
     code = models.CharField(max_length=32, default='', blank=True, null=True)
     is_verified = models.BooleanField(default=False)
     validity_code = models.DateTimeField(blank=True, null=True)

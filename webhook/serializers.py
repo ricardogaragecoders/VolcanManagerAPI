@@ -7,7 +7,8 @@ from webhook.models import Webhook
 
 
 class WebhookSerializer(serializers.ModelSerializer):
-    emisor = serializers.CharField(source='account_issuer', max_length=3, required=True, write_only=True)
+    issuer_id = serializers.CharField(source='account_issuer', max_length=3, required=True, write_only=True)
+
     auth_username = serializers.CharField(max_length=45, required=False, write_only=True,
                                           allow_null=True, allow_blank=True)
     auth_password = serializers.CharField(max_length=45, required=False, write_only=True,
@@ -16,11 +17,12 @@ class WebhookSerializer(serializers.ModelSerializer):
                                         allow_null=True, allow_blank=True)
     header_webhook = serializers.CharField(max_length=20, required=False, default='Authorization', write_only=True,
                                            allow_null=True, allow_blank=True)
-    activo = serializers.BooleanField(source='active', required=False, default=True, write_only=True)
+    is_active = serializers.BooleanField(required=False, default=True, write_only=True)
 
     class Meta:
         model = Webhook
-        fields = ('emisor', 'url_webhook', 'auth_username', 'auth_password', 'key_webhook', 'header_webhook', 'activo')
+        fields = ('issuer_id', 'url_webhook', 'auth_username', 'auth_password',
+                  'key_webhook', 'header_webhook', 'is_active')
 
     def validate(self, data):
         data = super(WebhookSerializer, self).validate(data)
@@ -69,12 +71,12 @@ class WebhookSerializer(serializers.ModelSerializer):
 
 class WebhookListSerializer(serializers.ModelSerializer):
     webhook_id = serializers.CharField(source='id')
-    emisor = serializers.CharField(source='account_issuer')
-    activo = serializers.BooleanField(source='active')
+    issuer_id = serializers.CharField(source='account_issuer')
+    is_active = serializers.BooleanField(default=True)
 
     class Meta:
         model = Webhook
-        fields = ('webhook_id', 'emisor', 'url_webhook', 'activo')
+        fields = ('webhook_id', 'issuer_id', 'url_webhook', 'is_active')
         read_only_fields = fields
 
 

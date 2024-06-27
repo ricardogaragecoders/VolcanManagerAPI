@@ -74,7 +74,8 @@ class CardDetail(BaseModelWithDeleted, ModelDiffMixin):
         help_text=_("Thales Card Type"),
         default=CardType.CT_PREPAID
     )
-
+    company = models.ForeignKey('control.Company', on_delete=models.DO_NOTHING, related_name='cards',
+                                null=True, blank=True)
     emisor = models.CharField(
         max_length=3,
         verbose_name=_('Volcan Emisor ID'),
@@ -136,6 +137,8 @@ class CardBinConfig(models.Model):
         null=False,
         blank=False
     )
+    company = models.ForeignKey('control.Company', on_delete=models.DO_NOTHING, related_name='card_bin_configs',
+                                null=True, blank=True)
     emisor = models.CharField(
         max_length=3,
         verbose_name=_('Volcan Emisor ID'),

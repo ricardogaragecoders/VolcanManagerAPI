@@ -273,11 +273,15 @@ class CustomViewSet(viewsets.GenericViewSet):
             register.status = Status.objects.get(slug='deleted')
             if hasattr(register, 'deleted_at'):
                 register.deleted_at = timezone.now()
+            if hasattr(register, 'is_deleted'):
+                register.is_deleted = True
             register.save()
-        elif hasattr(register, 'active'):
-            register.active = False
+        elif hasattr(register, 'is_active'):
+            register.is_active = False
             if hasattr(register, 'deleted_at'):
                 register.deleted_at = timezone.now()
+            if hasattr(register, 'is_deleted'):
+                register.is_deleted = True
             register.save()
         self.make_response_success('Registro borrado', {}, 204)
 

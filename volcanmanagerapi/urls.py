@@ -21,15 +21,22 @@ from django.contrib.staticfiles.urls import static
 from users.views import CustomTokenObtainPairView, CustomTokenRefreshView, CustomTokenVerifyView
 
 urlpatterns = [
-    path('volcan/api/auth/token/', CustomTokenObtainPairView.as_view({'post': 'post'}), name='token_obtain_pair'),
-    path('volcan/api/auth/token/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
-    path('volcan/api/auth/token/verify/', CustomTokenVerifyView.as_view(), name='token_verify'),
+    path('volcan/api/auth/token/',
+         CustomTokenObtainPairView.as_view({'post': 'post'}), name='token_obtain_pair'),
+
+    path('volcan/api/auth/token/refresh/',
+         CustomTokenRefreshView.as_view(), name='token_refresh'),
+
+    path('volcan/api/auth/token/verify/',
+         CustomTokenVerifyView.as_view(), name='token_verify'),
 
     path('volcan/api/commons/', include('common.urls')),
     path('volcan/api/users/', include('users.urls')),
 
     path('volcan/api/', include('control.urls')),
     path('volcan/api/', include('webhook.urls')),
+
+    path('volcan/api/', include('estrato.urls')),
 
     path('', include('thalesapi.urls')),
 

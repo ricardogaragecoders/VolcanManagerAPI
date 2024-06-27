@@ -9,7 +9,7 @@ from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, Bl
 
 from common.middleware import get_request
 from common.utils import get_access_token_from_request, send_email, model_code_generator, get_data_email_general
-from users.models import WhiteListedToken, ProfileVerification
+from users.models import WhiteListedToken, ProfileVerification, VerificationType
 
 
 async def send_email_verification(user=None, profile=None, email=None):
@@ -60,7 +60,7 @@ def get_role_and_data(user, data={}):
 def send_verification_2factor(verification: ProfileVerification,
                               resp_msg: str = '', resp_data: Union[dict, list] = {}, resp_status: int = 200):
     verification = set_code_and_validity_code(
-        verification, verification.type_verification == ProfileVerification.VERIFICATION_EMAIL)
+        verification, verification.type_verification == VerificationType.VERIFICATION_EMAIL)
     profile = verification.profile
 
     import jwt
@@ -72,14 +72,14 @@ def send_verification_2factor(verification: ProfileVerification,
 
     d = get_data_email_general()
 
-    if verification.type_verification == ProfileVerification.VERIFICATION_EMAIL:
+    if verification.type_verification == VerificationType.VERIFICATION_EMAIL:
         header_text = u'Verificación de email'
         url_text = '{0}/#/auth/verification-code/?{1}'.format(
             settings.URL_FRONTEND, urlencode({'token': token}))
         message_text = 'Código de verificación de email'
         button_text = 'Validar email'
         response_code = 'verification_email'
-    elif verification.type_verification == ProfileVerification.VERIFICATION_2FACTOR:
+    elif verification.type_verification == VerificationType.VERIFICATION_2FACTOR:
         header_text = u'Código de verificación'
         url_text = ''
         message_text = 'Por medio de este mensaje, le hacemos llegar el código para accesar a la plataforma.'

@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'control',
     'thalesapi',
     'webhook',
+    'estrato'
 ]
 
 MIDDLEWARE = [
@@ -317,19 +318,19 @@ LOGGING = {
     'loggers': {
         'control': {
             'handlers': ['console', 'logfile'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'DEBUG'),
+            'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
         },
         'thalesapi': {
             'handlers': ['console', 'logfile'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'DEBUG'),
+            'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
         },
         'users': {
             'handlers': ['console', 'logfile'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'DEBUG'),
+            'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
         },
         'common': {
             'handlers': ['console', 'logfile'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'DEBUG'),
+            'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
         },
         'django': {
             'handlers': ['console'],
@@ -341,6 +342,8 @@ LOGGING = {
 # URLs
 URL_BACKEND = env.str('URL_BACKEND', 'http://localhost:8000')
 EMAIL_CONTACT = env.str('EMAIL_CONTACT', 'info@volcangroup.io')
+DEFAULT_PASSWORD = env.str('DEFAULT_PASSWORD', '')
+
 SERVER_VOLCAN_AZ7_URL = env.str('SERVER_VOLCAN_AZ7_URL', 'http://10.23.102.10:21005')
 SERVER_VOLCAN_PAYCARD_URL = env.str('SERVER_VOLCAN_PAYCARD_URL', 'http://10.23.106.33/wsParabiliumVolcan')
 
@@ -352,11 +355,9 @@ PUB_KEY_ISSUER_SERVER_TO_D1_SERVER_PEM = env.str('PUB_KEY_ISSUER_SERVER_TO_D1_SE
 PRIV_KEY_AUTH_ISSUER_SERVER_TO_D1_SERVER_PEM = env.str('PRIV_KEY_AUTH_ISSUER_SERVER_TO_D1_SERVER_PEM', '')
 PUB_KEY_AUTH_ISSUER_SERVER_TO_D1_SERVER_PEM = env.str('PUB_KEY_AUTH_ISSUER_SERVER_TO_D1_SERVER_PEM', '')
 
-
 # certificates Thales
 SSL_CERTIFICATE_THALES_CRT = env.str('SSL_CERTIFICATE_THALES_CRT', '')
 SSL_CERTIFICATE_THALES_KEY = env.str('SSL_CERTIFICATE_THALES_KEY', '')
-
 
 VOLCAN_USUARIO_ATZ = env.str('USUARIO_ATZ', 'KLEWIS')
 VOLCAN_ACCESO_ATZ = env.str('ACCESO_ATZ', 'KLEWIS')
@@ -368,7 +369,7 @@ THALES_API_ENCRYPTED_K06_AUTH_KID = env.str('THALES_API_ENCRYPTED_K06_AUTH_KID',
 THALES_API_EMISOR_DEFAULT = env.str('THALES_API_EMISOR_DEFAULT', 'CMF')
 
 THALES_API_AUD = env.str('THALES_API_AUD', '')
-THALES_API_ISSUER_ID = env.str('THALES_API_ISSUER_ID','')
+THALES_API_ISSUER_ID = env.str('THALES_API_ISSUER_ID', '')
 URL_THALES_AUTHORIZATION_TOKEN = env.str('URL_THALES_AUTHORIZATION_TOKEN', '')
 URL_THALES_REGISTER_CONSUMER = env.str('URL_THALES_REGISTER_CONSUMER', '')
 URL_THALES_REGISTER_CONSUMER_CARDS = env.str('URL_THALES_REGISTER_CONSUMER_CARDS', '')
@@ -385,6 +386,13 @@ PASSWORD_DEFAULT = env.str('PASSWORD_DEFAULT', '')
 VERIFICATION_ADMINISTRATOR_DEFAULT = env.bool('VERIFICATION_ADMINISTRATOR_DEFAULT', True)
 PATH_IMAGE_LOGO = env.str('PATH_IMAGE_LOGO')
 PATH_ISO_COUNTRIES_CSV = env.str('PATH_ISO_COUNTRIES_CSV', '')
+
+# API KEY
+APIKEY_ESTRATO_VOLCAN_API_ENABLED = env.bool('APIKEY_ESTRATO_VOLCAN_API_ENABLED', False)
+API_KEY_FID = env.str('API_KEY_FID', '')
+SERVER_ESTRATO_VOLCAN_URL = env.str('SERVER_ESTRATO_VOLCAN_URL', '')
+ESTRATO_LIMIT_QUERY = env.int('ESTRATO_LIMIT_QUERY', 5)
+
 
 from corsheaders.defaults import default_headers, default_methods
 
@@ -428,9 +436,12 @@ URL_AZ7_CONSULTA_TRANSACCION_X_FECHA = env.str('URL_AZ7_CONSULTA_TRANSACCION_X_F
 URL_AZ7_CONSULTA_CVV2 = env.str('URL_AZ7_CONSULTA_CVV2', '/web/services/Volcan_CVV2_1')
 URL_AZ7_CONSULTA_ESTADO_CUENTA = env.str('URL_AZ7_CONSULTA_ESTADO_CUENTA',
                                          '/web/services/Volcan_ConsultaEstadoCta_1')
+URL_AZ7_CONSULTA_COBRANZA = env.str('URL_AZ7_CONSULTA_COBRANZA',
+                                    '/web/services/Volcan_Consulta_cobranza_1')
 
 # obtenerDatosTokenizacionPrepago
 URL_AZ7_LOGIN = env.str('URL_AZ7_LOGIN', '/wsParabiliumVolcan/api/Login')
-URL_AZ7_CONSULTA_TOKEN_TARJETA = env.str('URL_AZ7_CONSULTA_TOKEN_TARJETA', '/wsParabiliumVolcan/api/ConsultarTokenTarjeta')
-PARAM_AZ7_PAYCARD_USUARIO = env.str('PARAM_AZ7_PAYCARD_USUARIO', 'Prueba')
-PARAM_AZ7_PAYCARD_PASSWORD = env.str('PARAM_AZ7_PAYCARD_PASSWORD', 'Prueba')
+URL_AZ7_CONSULTA_TOKEN_TARJETA = env.str('URL_AZ7_CONSULTA_TOKEN_TARJETA',
+                                         '/wsParabiliumVolcan/api/ConsultarTokenTarjeta')
+PARAM_AZ7_PAYCARD_USUARIO = env.str('PARAM_AZ7_PAYCARD_USUARIO', '')
+PARAM_AZ7_PAYCARD_PASSWORD = env.str('PARAM_AZ7_PAYCARD_PASSWORD', '')
