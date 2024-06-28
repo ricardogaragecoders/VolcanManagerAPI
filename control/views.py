@@ -24,7 +24,7 @@ class CompanyApiView(CustomViewSetWithPagination):
     serializer_class = CompanySerializer
     model_class = Company
     permission_classes = (IsAuthenticated, IsVerified, IsAdministrator)
-    field_pk = 'company_id'
+    field_pk = 'issuer_id'
 
     def initial(self, request, *args, **kwargs):
         if self.request.method == "GET":
