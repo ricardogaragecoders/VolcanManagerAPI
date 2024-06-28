@@ -14,6 +14,16 @@ from thalesapi.models import ISOCountry, DeliverOtpCollection, CardDetail, CardB
 logger = logging.getLogger(__name__)
 
 
+def print_error(response_data=None, e=None):
+    if e:
+        error_string = e.args.__str__()
+        print(error_string)
+        logger.error(error_string)
+    if response_data:
+        print(response_data)
+        logger.error(response_data)
+
+
 def get_str_from_date_az7(s_date):
     if len(s_date) >= 8:
         return f"{s_date[0:4]}-{s_date[4:6]}-{s_date[6:8]}"
@@ -130,9 +140,7 @@ def get_card_triple_des_process(card_data, is_descript=False):
             enc_buf = ''.join(["%02X" % x for x in enc_bytes]).strip()
             return str(enc_buf)
     except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.exception(e)
+        print_error(e=e)
         return None
 
 @newrelic.agent.background_task()
@@ -174,24 +182,23 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
             # print(f"Data server: {str(r.text)}")
     except requests.exceptions.Timeout:
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (Timeout)'}, 408
-        print(response_data)
+        print_error(response_data=response_data)
     except requests.exceptions.TooManyRedirects:
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (TooManyRedirects)'}, 429
-        print(response_data)
+        print_error(response_data=response_data)
     except requests.exceptions.RequestException as e:
-        print(e.args.__str__())
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (RequestException)'}, 400
-        print(response_data)
+        print_error(response_data=response_data, e=e)
     except Exception as e:
         response_data, response_status = {'error': e.args.__str__()}, 500
-        print(response_data)
+        print_error(response_data=response_data, e=e)
     finally:
         newrelic.agent.add_custom_attributes(
             [
-                ("request_url", url),
-                ("emisor", data['EMISOR'] if 'EMISOR' in data else ''),
-                ("response_code", response_status),
-                ("response_json", response_data),
+                ("request.url", url),
+                ("request.emisor", data['EMISOR'] if 'EMISOR' in data else ''),
+                ("response.code", response_status),
+                # ("response_json", response_data),
             ]
         )
         return response_data, response_status
@@ -238,28 +245,27 @@ def process_volcan_api_request(data, url, request=None, headers=None, method='PO
             # print(f"Data server: {str(r.text)}")
     except requests.exceptions.Timeout:
         response_data, response_status = {'error': 'Error de conexion con servidor (Timeout)'}, 408
-        print(response_data)
+        print_error(response_data=response_data)
     except requests.exceptions.TooManyRedirects:
         response_data, response_status = {'error': 'Error de conexion con servidor (TooManyRedirects)'}, 429
-        print(response_data)
+        print_error(response_data=response_data)
     except requests.exceptions.RequestException as e:
-        print(e.args.__str__())
         if r:
             print(r.raise_for_status())
         response_data, response_status = {'error': 'Error de conexion con servidor (RequestException)'}, 400
-        print(response_data)
+        print_error(response_data=response_data, e=e)
     except Exception as e:
         if r:
             print(r.raise_for_status())
         response_data, response_status = {'error': e.args.__str__()}, 500
-        print(response_data)
+        print_error(response_data=response_data, e=e)
     finally:
         newrelic.agent.add_custom_attributes(
             [
-                ("request_url", url),
-                ("emisor", data['EMISOR'] if 'EMISOR' in data else ''),
-                ("response_code", response_status),
-                ("response_json", response_data),
+                ("request.url", url),
+                ("request.emisor", data['EMISOR'] if 'EMISOR' in data else ''),
+                ("response.code", response_status),
+                # ("response_json", response_data),
             ]
         )
         return response_data, response_status

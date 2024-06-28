@@ -15,6 +15,16 @@ from control.serializers import ConsultaCuentaSerializer, ConsultaTarjetaSeriali
 logger = logging.getLogger(__name__)
 
 
+def print_error_control(response_data=None, e=None):
+    if e:
+        error_string = e.args.__str__()
+        print(error_string)
+        logger.error(error_string)
+    if response_data:
+        print(response_data)
+        logger.error(response_data)
+
+
 def get_float_from_numeric_str(value: str) -> str:
     from decimal import Decimal
     try:
@@ -91,48 +101,43 @@ def process_volcan_api_request(data, url, request, headers=None, times=0):
             if len(response_data) == 0:
                 print(f"Response: empty")
                 response_data = {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}
-            # else:
-            #     print(f"Response: {response_data}")
         elif response_status == 404:
             response_data = {'RSP_CODIGO': '404', 'RSP_DESCRIPCION': 'Recurso no disponible'}
             print(f"Response: 404 Recurso no disponible")
         else:
             response_data = {'RSP_CODIGO': str(response_status), 'RSP_DESCRIPCION': 'Error desconocido'}
-            # print(f"Response: {str(response_status)} Error desconocido")
-            # print(f"Data server: {str(r.text)}")
         response_message = ''
     except requests.exceptions.Timeout:
         response_data = {'RSP_CODIGO': "408",
                          'RSP_DESCRIPCION': 'Error de conexion con servidor VOLCAN (Timeout)'}
         response_status = 408
         response_message = 'Error de conexion con servidor VOLCAN (Timeout)'
-        print(response_message)
+        print_error_control(response_data=response_data)
     except requests.exceptions.TooManyRedirects:
         response_data = {'RSP_CODIGO': "429",
                          'RSP_DESCRIPCION': 'Error de conexion con servidor VOLCAN (TooManyRedirects)'}
         response_status = 429
         response_message = 'Error de conexion con servidor VOLCAN (TooManyRedirects)'
-        print(response_message)
+        print_error_control(response_data=response_data)
     except requests.exceptions.RequestException as e:
-        print(e.args.__str__())
         response_data = {'RSP_CODIGO': "400",
                          'RSP_DESCRIPCION': 'Error de conexion con servidor VOLCAN (RequestException)'}
         response_status = 400
         response_message = 'Error de conexion con servidor VOLCAN (RequestException)'
-        print(response_message)
+        print_error_control(response_data=response_data, e=e)
     except Exception as e:
         print("Error peticion")
-        print(e.args.__str__())
         response_status = 500
         response_message = 'error'
         response_data = {'RSP_CODIGO': '500', 'RSP_DESCRIPCION': e.args.__str__()}
+        print_error_control(response_data=response_data, e=e)
     finally:
         newrelic.agent.add_custom_attributes(
             [
-                ("request_url", url),
-                ("emisor", data['EMISOR'] if 'EMISOR' in data else ''),
-                ("response_code", response_status),
-                ("response_json", response_data),
+                ("request.url", url),
+                ("request.emisor", data['EMISOR'] if 'EMISOR' in data else ''),
+                ("response.code", response_status),
+                # ("response.json", response_data),
             ]
         )
         return response_message, response_data, response_status

@@ -1,6 +1,8 @@
+import json
 from collections import OrderedDict
 from typing import Union
 
+import newrelic.agent
 from django.core import exceptions
 from django.utils import timezone
 from rest_framework import viewsets
@@ -37,6 +39,7 @@ class CustomViewSet(viewsets.GenericViewSet):
     lookup_field = 'id'
     pk = None
 
+    @newrelic.agent.background_task()
     def get_response(self, message: str = '', data: Union[dict, list] = {}, status: int = 200, lower_response=True):
         request = get_request()
         if len(self.resp) > 0:
@@ -120,6 +123,16 @@ class CustomViewSet(viewsets.GenericViewSet):
                     response_data_2[k] = v
         if status == 422 or status == 400 or status == 403:
             status = 200
+
+        keys = list(response_data_2.keys())
+        len_keys = 3 if len(keys) >= 3 else len(keys)
+        response_data_string = {keys[i]: response_data_2[keys[i]] for i in range(len_keys)}
+        newrelic.agent.add_custom_attributes(
+            [
+                ("response.json", json.dumps(response_data_string)),
+            ]
+        )
+
         return Response(response_data_2, status=status)
 
     def get_queryset_filters(self, *args, **kwargs):
