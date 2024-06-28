@@ -316,25 +316,9 @@ LOGGING = {
         },
     },
     'loggers': {
-        'control': {
-            'handlers': ['console', 'logfile'],
-            'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
-        },
-        'thalesapi': {
-            'handlers': ['console', 'logfile'],
-            'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
-        },
-        'users': {
-            'handlers': ['console', 'logfile'],
-            'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
-        },
-        'common': {
-            'handlers': ['console', 'logfile'],
-            'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
-        },
         'django': {
-            'handlers': ['console'],
-            'level': 'INFO',
+            'handlers': ['console', 'logfile'],
+            'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
         }
     },
 }
