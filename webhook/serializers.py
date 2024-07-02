@@ -97,7 +97,7 @@ class TransactionSerializer(serializers.Serializer):
     pais = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
     email = serializers.CharField(max_length=150, default='', required=False, allow_blank=True)
     tarjetahabiente = serializers.CharField(max_length=150, default='', required=False, allow_blank=True)
-    user = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
+    user = serializers.CharField(max_length=100, default='', write_only=True, required=False, allow_blank=True)
     password = serializers.CharField(max_length=100, default='', write_only=True, required=False, allow_blank=True)
 
     class Meta:
@@ -129,7 +129,7 @@ class TransactionSerializer(serializers.Serializer):
                                         code='400')
 
         if len(monto) == 0 and not is_float(monto):
-            raise CustomValidationError(detail=f'Solo se aceptan valores numericos.',
+            raise CustomValidationError(detail=f'Monto solo se aceptan valores numericos.',
                                         code='400')
         data['monto'] = monto
         if len(tarjeta) < 16:

@@ -2417,6 +2417,75 @@ paths:
       tags:
         - VolcanManager::Notificaciones
     parameters: []
+  /volcan/api/Transacciones/Error/:
+    get:
+      operationId: api_transactions_error_read
+      description: Return all transactions_error.
+      summary: Return all transactions_error
+      parameters:
+        - name: limit
+          in: query
+          description: Number of results to return per page.
+          required: false
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          description: The initial index from which to return the results.
+          required: false
+          schema:
+            type: integer
+        - name: emisor
+          description: Emisor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: q
+          description: Find by program name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: orderBy
+          description: Order By field
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ 'issuer', 'created_at' ]
+            default: issuer
+        - name: orderByDesc
+          description: Order desc
+          in: query
+          schema:
+            type: boolean
+            enum: [ true, false ]
+            default: false
+      responses:
+        '200':
+          description: 'Return all notifications'
+      tags:
+        - VolcanManager::Transactions::Error
+    parameters: []
+  /volcan/api/Transacciones/Error/{transaction_error_id}/Detalle/:
+    get:
+      operationId: api_transaction_error_read
+      description: Return a transaction error.
+      summary: Return a transaction error.
+      parameters: []
+      responses:
+        '200':
+          description: 'Returns a transaction error.'
+      tags:
+        - VolcanManager::Transactions::Error
+    parameters:
+      - name: transaction_error_id
+        in: path
+        required: true
+        description: ID Transaction Error
+        schema:
+          type: string
   /thales/api/bin/configurations/:
     get:
       operationId: api_thales_card_bin_configurations_read
