@@ -197,7 +197,7 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
             pass
 
         db = NotificationCollection()
-        self._total = db.find(filters).count()
+        self._total = db.collection.count_documents(filters)
 
         return db.find(filters, sort, direction, self._limit, self._page)
 
@@ -357,6 +357,139 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
                     time.sleep(3)
                     results.append(str(item['_id']))
                 response_data = results[0] if len(results) > 0 else []
+                self.make_response_success(data=response_data)
+            else:
+                self.make_response_not_found()
+        except Exception as e:
+            from common.utils import handler_exception_general
+            self.resp = handler_exception_general(__name__, e)
+        finally:
+            return self.get_response()
+
+
+class TransactionErrorApiView(CustomViewSetWithPagination):
+    """
+    get:
+        Return all transactions error from mongodb.
+    """
+    serializer_class = TransactionSerializer
+    model_class = TransactionErrorCollection
+    field_pk = 'notification_error_id'
+    permission_classes = (HasPermissionByMethod,)
+    http_method_names = ['get', 'options', 'head']
+    method_permissions = {
+        'GET': [IsAuthenticated, IsVerified, IsOperator]
+    }
+    _limit = 20
+    _offset = 0
+    _page = 0
+    _order_by = 'action'
+    _total = 0
+
+    def get_queryset_filters(self, *args, **kwargs):
+        filters = dict()
+        profile = self.request.user.profile
+        if profile.is_superadmin():
+            issuer = self.request.query_params.get('emisor', '')
+        elif profile.is_operator(equal=True):
+            issuer = profile.user.first_name
+        else:
+            issuer = 'sin_emision'
+
+        s_from_date = self.request.query_params.get('from_date', None)
+        s_to_date = self.request.query_params.get('to_date', None)
+        from_date = get_date_from_querystring(self.request, 'from_date', timezone.localtime(timezone.now()))
+        to_date = get_date_from_querystring(self.request, 'to_date', timezone.localtime(timezone.now()))
+        from_date = make_day_start(from_date)
+        to_date = make_day_end(to_date)
+        if s_from_date and s_to_date:
+            filters['created_at'] = {"$gte": from_date, "$lt": to_date}
+        elif s_from_date:
+            filters['created_at'] = {"$gte": from_date}
+        elif s_to_date:
+            filters['created_at'] = {"$lt": to_date}
+
+        if len(issuer) > 0:
+            filters['request_data.emisor'] = issuer.upper()
+
+        return filters
+
+    def get_queryset(self, *args, **kwargs):
+        filters = self.get_queryset_filters(*args, **kwargs)
+        self._limit = int(self.request.query_params.get('limit', 20))
+        self._offset = int(self.request.query_params.get('offset', 0))
+        self._page = int(self._offset / self._limit) if self._offset > 0 else 0
+        self._order_by = self.request.query_params.get('orderBy', 'created_at')
+        order_by_desc = self.request.query_params.get('orderByDesc', 'false')
+        q = self.request.query_params.get('q', None)
+        # export = self.request.query_params.get('export', None)
+        sort = self._order_by
+        direction = pymongo.ASCENDING if order_by_desc == 'false' else pymongo.DESCENDING
+        if q:
+            filters['$or'] = [
+                {'request_data.tarjeta': {'$regex': q, '$options': 'i'}},
+                {'request_data.referencia': {'$regex': q, '$options': 'i'}},
+                {'request_data.numero_autorizacion': {'$regex': q, '$options': 'i'}},
+                {'request_data.codigo_autorizacion': {'$regex': q, '$options': 'i'}},
+                {'request_data.email': {'$regex': q, '$options': 'i'}},
+                {'request_data.tarjetahabiente': {'$regex': q, '$options': 'i'}},
+                {'request_data.comercio': {'$regex': q, '$options': 'i'}}
+            ]
+
+        db = self.model_class()
+        self._total = db.collection.count_documents(filters)
+
+        return db.find(filters, sort, direction, self._limit, self._page)
+
+    def list(self, request, *args, **kwargs):
+        try:
+            query = self.get_queryset(*args, **kwargs)
+            results = []
+            for item in query:
+                # created_at = item['created_at'].strftime("%d/%m/%Y %H:%M:%S")
+                results.append({
+                    'id': str(item['_id']),
+                    'data': item['request_data'],
+                    'error': item['error'],
+                    'created_at': item['created_at']
+                })
+            pages = int(self._total / self._limit)
+            current_page = self._offset / self._limit
+            response_data = {
+                'paginas': pages,
+                'pagina_actual': current_page,
+                'registros_totales': self._total,
+                'registros': results
+            }
+            self.make_response_success(data=response_data)
+        except Exception as e:
+            from common.utils import handler_exception_general
+            self.resp = handler_exception_general(__name__, e)
+        finally:
+            return self.get_response()
+
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            from bson.objectid import ObjectId
+            db = self.model_class()
+            filters = self.get_queryset_filters(*args, **kwargs)
+            pk = kwargs.pop(self.field_pk)
+            if len(pk) > 10:
+                filters['_id'] = ObjectId(pk)
+
+            item = db.find_one(filters)
+            if item:
+                # created_at = item['created_at'].strftime("%d/%m/%Y %H:%M:%S")
+                response_data = {
+                    'RSP_CODIGO': '00',
+                    'RSP_DESCRIPCION': 'Aprobado',
+                    'transaction_error': {
+                        'id': str(item['_id']),
+                        'data': item['request_data'],
+                        'error': item['error'],
+                        'created_at': item['created_at']
+                    }
+                }
                 self.make_response_success(data=response_data)
             else:
                 self.make_response_not_found()
