@@ -1,3 +1,5 @@
+import base64
+from django.core.cache import cache
 from django.conf import settings
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
@@ -27,30 +29,39 @@ class CustomTokenObtainPairView(CustomViewSet, TokenObtainPairView):
             Send code 2factor verification
         """
         try:
-            self.serializer = self.serializer_class(data=request.data)
-            if self.serializer.is_valid():
-                response_data = self.serializer.validated_data
-                if 'user' in response_data:
-                    user = response_data.pop('user')
-                    if settings.ENABLE_SEND_EMAIL and settings.ENABLE_2FACTOR_AUTHENTICATION:
-                        serializer = ResendCodeSerializer(data={'email': user.email, 'code': 'verification_2factor'})
-                        serializer.is_valid()
-                        verification = serializer.save()
-                        self.resp = send_verification_2factor(verification)
+            username = request.data.get('username', 'hola')
+            password = request.data.get('password', '-----')
+            message_bytes = bytes(f"{username}:{password}", 'ascii')
+            key_cache = base64.b64encode(message_bytes).decode('ascii')
+
+            if key_cache not in cache:
+                self.serializer = self.serializer_class(data=request.data)
+                if self.serializer.is_valid():
+                    response_data = self.serializer.validated_data
+                    if 'user' in response_data:
+                        user = response_data.pop('user')
+                        if settings.ENABLE_SEND_EMAIL and settings.ENABLE_2FACTOR_AUTHENTICATION:
+                            serializer = ResendCodeSerializer(data={'email': user.email, 'code': 'verification_2factor'})
+                            serializer.is_valid()
+                            verification = serializer.save()
+                            self.resp = send_verification_2factor(verification)
+                        else:
+                            from rest_framework_simplejwt.tokens import RefreshToken
+                            self.resp[1]['send_email'] = False
+                            self.resp[1] = get_role_and_data(user, self.resp[1])
+                            refresh = RefreshToken.for_user(user)
+                            self.resp[1]['refresh'] = str(refresh)
+                            self.resp[1]['access'] = str(refresh.access_token)
                     else:
-                        from rest_framework_simplejwt.tokens import RefreshToken
-                        self.resp[1]['send_email'] = False
-                        self.resp[1] = get_role_and_data(user, self.resp[1])
-                        refresh = RefreshToken.for_user(user)
-                        self.resp[1]['refresh'] = str(refresh)
-                        self.resp[1]['access'] = str(refresh.access_token)
+                        response_data['RSP_CODIGO'] = '0000000000'
+                        response_data['RSP_DESCRIPCION'] = 'Auth login success'
+                        response_data['RSP_ERROR'] = 'OK'
+                        cache.set(key_cache, response_data, (60 * 60 * 24) - 120)
+                        self.make_response_success(data=response_data)
                 else:
-                    response_data['RSP_CODIGO'] = '0000000000'
-                    response_data['RSP_DESCRIPCION'] = 'Auth login success'
-                    response_data['RSP_ERROR'] = 'OK'
-                    self.make_response_success(data=response_data)
+                    self.resp = get_response_data_errors(self.serializer.errors)
             else:
-                self.resp = get_response_data_errors(self.serializer.errors)
+                self.make_response_success(data=cache.get(key_cache))
         except exceptions.AuthenticationFailed as e:
             self.resp = ['Usuario no activo o no encontrado', {'code': 'no_active_account'}, 400]
         except Exception as e:
