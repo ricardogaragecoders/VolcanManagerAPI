@@ -20,6 +20,10 @@ from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'volcanmanagerapi.settings')
 
+# prevenimos UnicodeEncodeError
+# os.environ.setdefault("LANG", "es_ES.UTF-8")
+# os.environ.setdefault("LC_ALL", "es_ES.UTF-8")
+
 application = get_wsgi_application()
 
 if newrelic_exists:

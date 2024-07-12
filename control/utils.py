@@ -75,7 +75,7 @@ def mask_card(card):
 
 def get_volcan_api_headers():
     return {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json; charset=utf-8',
     }
 
 @newrelic.agent.background_task()
@@ -95,8 +95,11 @@ def process_volcan_api_request(data, url, request, headers=None, times=0):
             if 'application/json' in r.headers['Content-Type']:
                 response_data = r.json() if response_status != 204 else {}
             else:
+                print(f"Response headers: {r.headers}")
                 response_data = r.content
         print(f"Response {str(response_status)}: {response_data}")
+        print(f"Response encoding: {r.encoding}")
+
         if 200 <= response_status <= 299:
             if len(response_data) == 0:
                 print(f"Response: empty")
