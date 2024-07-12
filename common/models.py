@@ -187,10 +187,10 @@ class MonitorCollection(MongoConnection):
         import pytz
         time_zone = pytz.timezone('America/Mexico_City')
         collection = self.collection.with_options(codec_options=CodecOptions(tz_aware=True, tzinfo=time_zone))
-        return collection.find(filters).count()
+        return collection.count_documents(filters)
 
     def update_one(self, filters, data):
-        if self.collection.find(filters).count():
+        if self.collection.count_documents(filters):
             return self.collection.update_one(filters, data)
         return False
 
