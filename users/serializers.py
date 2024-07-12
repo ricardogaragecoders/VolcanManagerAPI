@@ -467,7 +467,7 @@ class ProfileVerySimpleSerializer(CreatedAndUpdatedReadOnlyMixin, serializers.Mo
 
 
 class ProfileSerializer(CreatedAndUpdatedReadOnlyMixin, serializers.ModelSerializer):
-    # id = serializers.CharField(source='unique_id', read_only=True)
+    id = serializers.CharField(source='unique_id', read_only=True)
     username = serializers.CharField(max_length=100, required=False, source='user.username')
     email = serializers.EmailField(max_length=100, required=False)
     phone = serializers.CharField(max_length=10, validators=[_mobile_regex_validator], required=False, default='')
