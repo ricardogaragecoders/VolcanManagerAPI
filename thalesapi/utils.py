@@ -110,7 +110,7 @@ def get_thales_api_headers(request=None):
 
     return {
         'x-correlation-id': x_correlation_id,
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json; charset=utf-8',
         'Accept': 'application/json'
     }
 
@@ -161,8 +161,11 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
             if 'application/json' in r.headers['Content-Type']:
                 response_data = r.json() if response_status != 204 else {}
             else:
+                print(f"Response headers: {r.headers}")
                 response_data = r.content
         print(f"Response {str(response_status)}: {response_data}")
+        print(f"Response encoding: {r.encoding}")
+
         if 200 <= response_status <= 299:
             if len(response_data) == 0:
                 # print(f"Response: {str(response_status)} empty")
@@ -224,8 +227,11 @@ def process_volcan_api_request(data, url, request=None, headers=None, method='PO
             if 'application/json' in r.headers['Content-Type']:
                 response_data = r.json() if response_status != 204 else {}
             else:
+                print(f"Response headers: {r.headers}")
                 response_data = r.content
         print(f"Response {str(response_status)}: {response_data}")
+        print(f"Response encoding: {r.encoding}")
+
         if 200 <= response_status <= 299:
             if len(response_data) == 0:
                 # print(f"Response: {str(response_status)} empty")
