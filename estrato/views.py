@@ -25,7 +25,7 @@ class MixinEstratoVolcanApi:
         status_code = 400
         if self.api_key:
             headers = {
-                "Content-Type": "application/json",
+                "Content-Type": "application/json; charset=UTF-8",
                 f"{self.api_key.header_request}": f"{self.api_key.api_key}"
             }
 
