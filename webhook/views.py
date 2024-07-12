@@ -4,7 +4,7 @@ import pymongo
 from django.db.models import Q
 from django.utils import timezone
 from rest_framework.exceptions import ParseError
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from common.utils import get_date_from_querystring, make_day_start, make_day_end, get_response_data_errors
 from common.views import CustomViewSet, CustomViewSetWithPagination
@@ -131,7 +131,7 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
     permission_classes = (HasPermissionByMethod,)
     http_method_names = ['get', 'post', 'patch', 'options', 'head']
     method_permissions = {
-        'POST': [HasUserAndPasswordInData, ],
+        'POST': [AllowAny, ],
         'GET': [IsAuthenticated, IsVerified, IsOperator],
         'PATCH': [IsAuthenticated, IsVerified, IsOperator]
     }
@@ -203,6 +203,10 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
 
     def create(self, request, *args, **kwargs):
         try:
+            print(f"Request encoding: {request.encoding}")
+            if not request.encoding:
+                request.encoding = 'utf-8'
+            print(f"Request: {request.body}")
             self.serializer = self.get_serializer(data=request.data)
             if self.serializer.is_valid():
                 db = NotificationCollection()
@@ -224,7 +228,7 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
             from common.utils import handler_exception_general
             db = TransactionErrorCollection()
             data = {
-                'request_data': request.data,
+                'request_data': request.body,
                 'error': "%s" % e,
                 'created_at': timezone.localtime(timezone.now()),
             }
