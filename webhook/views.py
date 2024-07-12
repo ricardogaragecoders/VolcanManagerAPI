@@ -206,7 +206,6 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
             print(f"Request encoding: {request.encoding}")
             if not request.encoding:
                 request.encoding = 'utf-8'
-            print(f"Request: {request.body}")
             self.serializer = self.get_serializer(data=request.data)
             if self.serializer.is_valid():
                 db = NotificationCollection()
@@ -227,6 +226,7 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
         except ParseError as e:
             from common.utils import handler_exception_general
             db = TransactionErrorCollection()
+            print(f"Request: {request.body}")
             data = {
                 'request_data': request.body,
                 'error': "%s" % e,
@@ -237,6 +237,7 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
         except Exception as e:
             from common.utils import handler_exception_general
             db = TransactionErrorCollection()
+            print(f"Request: {request.body}")
             data = {
                 'request_data': request.data,
                 'error': self.resp[0],
