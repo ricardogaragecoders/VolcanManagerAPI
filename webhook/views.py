@@ -1,3 +1,4 @@
+import logging
 import time
 
 import pymongo
@@ -14,6 +15,8 @@ from webhook.permissions import HasPermissionByMethod, HasUserAndPasswordInData
 from webhook.serializers import WebhookSerializer, WebhookListSerializer, TransactionSerializer, \
     PaycardNotificationserializer
 from webhook.utils import get_notification_data
+
+logger = logging.getLogger(__name__)
 
 
 class WebHookApiView(CustomViewSet):
@@ -203,7 +206,7 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
 
     def create(self, request, *args, **kwargs):
         try:
-            print(f"Request encoding: {request.encoding}")
+            logger.info(f"Request encoding: {request.encoding}")
             if not request.encoding:
                 request.encoding = 'utf-8'
             self.serializer = self.get_serializer(data=request.data)
@@ -226,7 +229,8 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
         except ParseError as e:
             from common.utils import handler_exception_general
             db = TransactionErrorCollection()
-            print(f"Request: {request.body}")
+            logger.exception(e)
+            logger.error(f"Request: {request.body}")
             data = {
                 'request_data': request.body,
                 'error': "%s" % e,
@@ -237,7 +241,8 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
         except Exception as e:
             from common.utils import handler_exception_general
             db = TransactionErrorCollection()
-            print(f"Request: {request.body}")
+            logger.exception(e)
+            logger.error(f"Request: {request.body}")
             data = {
                 'request_data': request.data,
                 'error': self.resp[0],

@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib.auth.models import User, Group
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -12,6 +14,7 @@ from .models import Profile, WhiteListedToken, ProfileVerification, Verification
 from .utils import get_role_and_data
 from .validators import _mobile_regex_validator, _password_regex_validator
 
+logger = logging.getLogger(__name__)
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
@@ -94,9 +97,9 @@ class RegisterAdminSerializer(serializers.Serializer):
             user.save()
             return profile
         except Exception as e:
-            print("Error at register users")
-            print(validated_data)
-            print(e.args.__str__())
+            logger.error("Error at register users")
+            logger.error(validated_data)
+            logger.error(e.args.__str__())
             return None
 
 
@@ -156,9 +159,9 @@ class VerificationCodeSerializer(serializers.Serializer):
             verification.save()
             return verification
         except Exception as e:
-            print("Error at register users")
-            print(validated_data)
-            print(e.args.__str__())
+            logger.error("Error at Verification code")
+            logger.error(validated_data)
+            logger.error(e.args.__str__())
             return None
 
 
@@ -216,9 +219,9 @@ class ResendCodeSerializer(serializers.Serializer):
                 verification = ProfileVerification.objects.create(**data)
             return verification
         except Exception as e:
-            print("Error at register users")
-            print(validated_data)
-            print(e.args.__str__())
+            logger.error("Error at resend code")
+            logger.error(validated_data)
+            logger.error(e.args.__str__())
             return None
 
 
@@ -276,9 +279,9 @@ class RecoverPasswordSerializer(serializers.Serializer):
                 verification = ProfileVerification.objects.create(**data)
             return verification
         except Exception as e:
-            print("Error at changepassword users")
-            print(validated_data)
-            print(e.args.__str__())
+            logger.error("Error at recover password")
+            logger.error(validated_data)
+            logger.error(e.args.__str__())
             return None
 
 
@@ -381,9 +384,9 @@ class ChangePasswordSerializer(serializers.Serializer):
 
             return {'status': 1}
         except Exception as e:
-            print("Error at changepassword users")
-            print(validated_data)
-            print(e.args.__str__())
+            logger.error("Error at changepassword users")
+            logger.error(validated_data)
+            logger.error(e.args.__str__())
             return None
 
 
@@ -439,9 +442,9 @@ class ResetPasswordSerializer(serializers.Serializer):
             else:
                 return {'status': -1}
         except Exception as e:
-            print("Error at reset password")
-            print(validated_data)
-            print(e.args.__str__())
+            logger.error("Error at reset password")
+            logger.error(validated_data)
+            logger.error(e.args.__str__())
             return None
 
 

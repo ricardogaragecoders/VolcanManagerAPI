@@ -1,10 +1,14 @@
 import json
 from collections import OrderedDict
+from datetime import datetime
 from typing import Union
 
 import newrelic.agent
+import pymongo
 from django.core import exceptions
+from django.http import HttpResponse
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from rest_framework import viewsets
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.pagination import LimitOffsetPagination
@@ -12,11 +16,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
+from common.export_excel import WriteToExcel
+from common.export_pdf import WriteToPdf
 from common.middleware import get_request
-from common.models import Status
+from common.models import Status, MonitorCollection
 from common.serializers import StatusSerializer
-from common.utils import get_response_data_errors, handler_exception_general, handler_exception_404
-from users.permissions import IsVerified, IsChangePassword
+from common.utils import get_response_data_errors, handler_exception_general, handler_exception_404, \
+    get_date_from_querystring, make_day_start, make_day_end
+from users.permissions import IsVerified, IsChangePassword, IsAdministrator
 
 
 class LimitOffsetSetPagination(LimitOffsetPagination):
@@ -442,3 +449,200 @@ class StatusApiView(CustomViewSet):
     http_method_names = ['get', 'options', 'head']
 
 
+class MonitorCollectionApiView(CustomViewSetWithPagination):
+    """
+    get:
+        Return all monitor systems from mongodb.
+    retrieve:
+        Return one monitor system from mongodb.
+    """
+    serializer_class = None
+    model_class = None
+    field_pk = 'monitor_system_id'
+    permission_classes = (IsAuthenticated, IsVerified, IsAdministrator)
+    http_method_names = ['get', 'options', 'head']
+
+    def get_results(self, *args, **kwargs):
+        operator_id = int(self.request.query_params.get('oId', 0))
+        company_id = int(self.request.query_params.get('cId', 0))
+        self._limit = int(self.request.query_params.get('limit', 20))
+        self._offset = int(self.request.query_params.get('offset', 0))
+        self._page = int(self._offset / self._limit) if self._offset > 0 else 0
+        self._order_by = self.request.query_params.get('orderBy', 'action')
+        order_by_desc = self.request.query_params.get('orderByDesc', 'false')
+        q = self.request.query_params.get('q', None)
+        export = self.request.query_params.get('export', None)
+
+        filters = dict()
+        sort = self._order_by
+        direction = pymongo.ASCENDING if order_by_desc == 'false' else pymongo.DESCENDING
+
+        s_from_date = self.request.query_params.get('from_date', None)
+        s_to_date = self.request.query_params.get('to_date', None)
+        from_date = get_date_from_querystring(self.request, 'from_date', timezone.localtime(timezone.now()))
+        to_date = get_date_from_querystring(self.request, 'to_date', timezone.localtime(timezone.now()))
+        from_date = make_day_start(from_date)
+        to_date = make_day_end(to_date)
+        if s_from_date and s_to_date:
+            filters['created_at'] = {
+                "$gte": from_date,
+                "$lt": to_date
+            }
+        elif s_from_date:
+            filters['created_at'] = {
+                "$gte": from_date
+            }
+        elif s_to_date:
+            filters['created_at'] = {
+                "$lt": to_date
+            }
+
+        if operator_id > 0:
+            try:
+                from control.models import Operator
+                operator = Operator.objects.get(pk=operator_id)
+                filters['user.user_id'] = operator.profile.user.id
+            except Operator.DoesNotExist:
+                operator = None
+
+        if company_id > 0:
+            try:
+                from control.models import Company
+                company = Company.objects.get(pk=company_id)
+                filters['user.emisor'] = company.volcan_issuer_id
+            except Company.DoesNotExist:
+                company = None
+
+        if q:
+            filters['$or'] = [
+                {'url': {'$regex': q, '$options': 'i'}},
+                {'method': {'$regex': q, '$options': 'i'}},
+                {'user.username': {'$regex': q, '$options': 'i'}},
+                {'user.emisor': {'$regex': q, '$options': 'i'}}
+            ]
+
+        db = MonitorCollection()
+        self._total = db.count_all(filters)
+
+        if not export:
+            return db.find(filters, sort, direction, self._limit, self._page)
+        else:
+            return db.find(filters, sort, direction, self._total, self._page)
+
+    def get_response_from_export(self, export):
+        response_data = []
+        for item in self.results:
+            data = {
+                'ID': item['id'],
+                _('fecha'): timezone.localtime(item['updated_at']).strftime("%d/%m/%Y %H:%M"),
+                _('nombre'): item['user'],
+                _('correo'): item['email'],
+                _('empresa'): item['company'],
+                _(u'acción'): item['action'],
+                _(u'descripción'): item['description'],
+            }
+            response_data.append(data)
+        fields = ['ID', _('fecha'), _('nombre'), _('correo'), _('empresa'), _(u'acción'), _(u'descripción'), ]
+        title = _(u'Bitacora')
+        if export == 'excel':
+            xlsx_data = WriteToExcel(response_data, title=title, fields=fields)
+            response = HttpResponse(content_type='application/vnd.ms-excel')
+            response['Content-Disposition'] = 'attachment; filename=Bitacora.xlsx'
+            response.write(xlsx_data)
+        else:
+            pdf_data = WriteToPdf(response_data, title=title, fields=fields)
+            response = HttpResponse(content_type='application/pdf')
+            response['Content-Disposition'] = 'attachement; filename=Bitacora.pdf'
+            response['Content-Transfer-Encoding'] = 'binary'
+            response.write(pdf_data)
+        return response
+
+    def get(self, request, *args, **kwargs):
+        response = None
+        try:
+            from bson.json_util import dumps
+            # import pytz
+            query = self.get_results()
+            results = []
+            # local_tz = pytz.timezone('America/Mexico_City')
+            for item in query:
+                if isinstance(item['created_at'], datetime):
+                    created_at = timezone.localtime(item['created_at']).isoformat()
+                else:
+                    created_at = item['created_at']
+                results.append({
+                    'id': '{}'.format(str(item['_id'])),
+                    'user': item['user'],
+                    'endpoint': f"{item['method']}: {item['url']}",
+                    'request_data': item['request_data'] if 'request_data' in item else '',
+                    'response_data': item['response_data'] if 'response_data' in item else '',
+                    'status_code': item['status_code'] if 'status_code' in item else '',
+                    'created_at': created_at
+                })
+            export = request.query_params.get('export', None)
+            if not export:
+                pages = int(self._total / self._limit)
+                current_page = self._offset / self._limit
+                response_data = {
+                    'pages': pages,
+                    'current_page': current_page,
+                    'limit': self._limit,
+                    'offset': self._offset,
+                    'count': self._total,
+                    'results': results
+                }
+                self.make_response_success(data=response_data)
+            else:
+                self.results = results
+                response = self.get_response_from_export(export=export)
+        except Exception as e:
+            from common.utils import handler_exception_general
+            self.resp = handler_exception_general(__name__, e)
+        finally:
+            if not response:
+                return self.get_response()
+            return response
+
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            from common.models import MonitorCollection
+            db = MonitorCollection()
+            pk = kwargs.pop(self.field_pk)
+            query = None
+            if len(pk) > 10:
+                from bson.objectid import ObjectId
+                query = db.find({'_id': ObjectId(pk)})
+            else:
+                query = db.find({'_id': int(pk)})
+
+            if query:
+                # import pytz
+                results = []
+                # local_tz = pytz.timezone('America/Mexico_City')
+                for item in query:
+                    if isinstance(item['created_at'], datetime):
+                        created_at = timezone.localtime(item['created_at']).isoformat()
+                    else:
+                        created_at = item['created_at']
+
+                    results.append({
+                        'id': '{}'.format(str(item['_id'])),
+                        'user': item['user'],
+                        'method': item['method'],
+                        'url':  item['url'],
+                        'headers': item['headers'],
+                        'request_data': item['request_data'] if 'request_data' in item else '',
+                        'response_data': item['response_data'] if 'response_data' in item else '',
+                        'status_code': item['status_code'] if 'status_code' in item else '',
+                        'time_seconds': item['time_seconds'],
+                        'created_at': created_at
+                    })
+                response_data = results[0] if len(results) > 0 else []
+                self.make_response_success(data=response_data)
+            else:
+                self.make_response_not_found()
+        except Exception as e:
+            from common.utils import handler_exception_general
+            self.resp = handler_exception_general(__name__, e)
+        finally:
+            return self.get_response()

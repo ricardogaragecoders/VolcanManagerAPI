@@ -2680,6 +2680,105 @@ paths:
         description: ID Estrato Api Key
         schema:
           type: string
+  /volcan/api/commons/monitor/systems/:
+    get:
+      operationId: api_monitor_systems_read
+      description: Return all monitor system.
+      summary: Return all monitor system.
+      parameters:
+        - name: limit
+          in: query
+          description: Number of results to return per page.
+          required: false
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          description: The initial index from which to return the results.
+          required: false
+          schema:
+            type: integer
+        - name: from_date
+          description: Date from register
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+            examples: '2021-01-01'
+            pattern: '^\d{4}-\d{2}-\d{2}$'
+        - name: to_date
+          description: Date to register.
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+            examples: '2021-01-31'
+            pattern: '^\d{4}-\d{2}-\d{2}$'
+        - name: oId
+          in: query
+          description: ID Operador
+          required: false
+          schema:
+            type: integer
+        - name: cId
+          in: query
+          description: ID Company
+          required: false
+          schema:
+            type: integer
+        - name: q
+          in: query
+          description: Search for Keyword
+          required: false
+          schema:
+            type: string
+        - name: orderBy
+          description: Order By field
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ['url', 'method', 'status_code', 'created_at']
+            default: action
+        - name: orderByDesc
+          description: Order desc
+          in: query
+          schema:
+            type: boolean
+            enum: [true, false]
+            default: false
+        - name: export
+          description: Type of export data
+          in: query
+          schema:
+            type: string
+            enum: [ excel, pdf ]
+      responses:
+        '200':
+          description: 'Return all monitor system item'
+      tags:
+        - VolcanManager::General::MonitorSystem
+    parameters: []
+  /volcan/api/commons/monitor/systems/{monitor_system_id}/:
+    get:
+      operationId: api_monitor_system_read
+      description: Return a monitor system complete.
+      summary: Return a monitor system complete.
+      parameters: []
+      responses:
+        '200':
+          description: 'Returns a monitor system complete.'
+      tags:
+        - VolcanManager::General::MonitorSystem
+    parameters:
+      - name: monitor_system_id
+        in: path
+        required: true
+        description: ID Monitor System
+        schema:
+          type: string
 components:
   schemas:
     LoginToken:

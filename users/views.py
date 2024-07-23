@@ -1,6 +1,6 @@
 import base64
+
 from django.core.cache import cache
-from django.conf import settings
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status, exceptions

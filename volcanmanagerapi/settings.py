@@ -69,6 +69,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'common.middleware.RequestMiddleware',
+    'common.middleware.RequestLoggingMiddleware',
 ]
 
 APPEND_SLASH = False
@@ -282,11 +283,11 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
-        'standard': {
+        'complete': {
             'format': '[%(asctime)s][%(threadName)s:%(thread)d][task_id:%(name)s][%(filename)s:%(lineno)d]'
                       '[%(levelname)s][%(message)s]'
         },
-        'simple': {
+        'standard': {
             'format': '[%(levelname)s][%(asctime)s][%(filename)s:%(lineno)d]%(message)s'
         },
         'collect': {
@@ -299,27 +300,64 @@ LOGGING = {
         },
     },
     'handlers': {
-        'console': {
+        'console_debug': {
             'level': 'DEBUG',
             'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
-            'formatter': 'simple'
+            'formatter': 'collect'
+        },
+        'console_error': {
+            'level': 'ERROR',
+            'class': 'logging.StreamHandler',
+            'formatter': 'standard'
         },
         'logfile': {
-            'level': 'DEBUG',
-            'class': 'logging.handlers.RotatingFileHandler',
+            'level': 'ERROR',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
             'filename': os.path.join(BASE_DIR, "logfile.log"),
-            'maxBytes': 1024 * 1024 * 50,  # 5OMB
-            'backupCount': 3,
-            'formatter': 'standard',
+            'when': 'midnight',  # rotar a medianoche
+            'interval': 1,
+            'backupCount': 30,  # mantener 30 días de backups
+            'formatter': 'complete',
             'encoding': 'utf-8',
         },
     },
     'loggers': {
-        'django': {
-            'handlers': ['console', 'logfile'],
+        '': {
+            'handlers': ['console_debug', 'console_error', 'logfile'],
             'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
-        }
+            'propagate': True,
+        },
+        'django': {
+            'handlers': ['console_debug', 'console_error', 'logfile'],
+            'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console_debug', 'console_error', 'logfile'],
+            'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
+            'propagate': False,
+        },
+        'django.server': {
+            'handlers': ['console_debug', 'console_error', 'logfile'],
+            'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
+            'propagate': False,
+        },
+        'django.db.backends': {
+            'handlers': ['console_debug', 'console_error', 'logfile'],
+            'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
+            'propagate': False,
+        },
+        'django.template': {
+            'handlers': ['console_debug', 'console_error', 'logfile'],
+            'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
+            'propagate': False,
+        },
+        # 'common.middleware.RequestLoggingMiddleware': {
+        #     'handlers': ['console_debug', 'console_error', 'logfile'],
+        #     'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
+        #     'propagate': False,
+        # },
     },
 }
 

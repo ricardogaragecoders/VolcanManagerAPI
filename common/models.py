@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from django.db import models
@@ -5,6 +6,8 @@ from django.forms import model_to_dict
 from django.utils.text import slugify
 
 from common.managers import SoftDeletionManager
+
+logger = logging.getLogger(__name__)
 
 
 class NameStrMixin:
@@ -163,7 +166,7 @@ class MonitorCollection(MongoConnection):
             collection = self.collection.with_options(codec_options=CodecOptions(tz_aware=True, tzinfo=time_zone))
             data = collection.find(filters).limit(per_page).skip(per_page * page).sort(sort, direction)
         except Exception as e:
-            print(e.args.__str__())
+            logger.error(e.args.__str__())
             data = {}
         return data
 
@@ -175,7 +178,7 @@ class MonitorCollection(MongoConnection):
             collection = self.collection.with_options(codec_options=CodecOptions(tz_aware=True, tzinfo=time_zone))
             data = collection.find(filters).sort(sort, direction)
         except Exception as e:
-            print(e.args.__str__())
+            logger.error(e.args.__str__())
             data = {}
         return data
 

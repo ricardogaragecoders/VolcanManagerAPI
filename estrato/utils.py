@@ -1,17 +1,19 @@
+import logging
+
 import requests
 
 from common.utils import sanitize_log_headers
 from estrato.models import EstratoApiKey
 
-
+logger = logging.getLogger(__name__)
 
 
 def call_volcan_manager_api(url_path, headers, method='POST', data=None, cert=None):
     status_code = 200
     response_data = {}
-    print(f"Request {method}: {url_path}")
-    print(f"Headers: {sanitize_log_headers(headers=headers)}")
-    print(f"Request json: {data}")
+    logger.info(f"Request {method}: {url_path}")
+    logger.info(f"Headers: {sanitize_log_headers(headers=headers)}")
+    logger.info(f"Request json: {data}")
     try:
         # Make the API request using the provided headers and data
         if method == 'GET':
@@ -36,12 +38,12 @@ def call_volcan_manager_api(url_path, headers, method='POST', data=None, cert=No
     except requests.exceptions.TooManyRedirects:
         response_data, status_code = {'error': 'Error de conexion con servidor (TooManyRedirects)'}, 429
     except requests.exceptions.RequestException as e:
-        print(e.args.__str__())
+        logger.error(e.args.__str__())
         response_data, status_code = {'error': 'Error de conexion con servidor (RequestException)'}, 400
     except Exception as e:
         response_data, status_code = {'error': e.args.__str__()}, 500
     finally:
-        print(f"Response {str(status_code)}: {response_data}")
+        logger.info(f"Response {str(status_code)}: {response_data}")
         return response_data, status_code
 
 
