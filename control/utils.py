@@ -18,10 +18,8 @@ logger = logging.getLogger(__name__)
 def print_error_control(response_data=None, e=None):
     if e:
         error_string = e.args.__str__()
-        print(error_string)
         logger.error(error_string)
     if response_data:
-        print(response_data)
         logger.error(response_data)
 
 
@@ -78,6 +76,7 @@ def get_volcan_api_headers():
         'Content-Type': 'application/json; charset=utf-8',
     }
 
+
 @newrelic.agent.background_task()
 def process_volcan_api_request(data, url, request, headers=None, times=0):
     response_data = dict()
@@ -86,8 +85,8 @@ def process_volcan_api_request(data, url, request, headers=None, times=0):
     if not headers:
         headers = get_volcan_api_headers()
     data_json = json.dumps(data)
-    print(f"Request: {url}")
-    print(f"Request json: {data_json}")
+    logger.info(f"Request: {url}")
+    logger.info(f"Request json: {data_json}")
     try:
         r = requests.post(url=url, data=data_json, headers=headers)
         response_status = r.status_code
@@ -95,18 +94,18 @@ def process_volcan_api_request(data, url, request, headers=None, times=0):
             if 'application/json' in r.headers['Content-Type']:
                 response_data = r.json() if response_status != 204 else {}
             else:
-                print(f"Response headers: {r.headers}")
+                logger.info(f"Response headers: {r.headers}")
                 response_data = r.content
-        print(f"Response {str(response_status)}: {response_data}")
-        print(f"Response encoding: {r.encoding}")
+        logger.info(f"Response {str(response_status)}: {response_data}")
+        logger.info(f"Response encoding: {r.encoding}")
 
         if 200 <= response_status <= 299:
             if len(response_data) == 0:
-                print(f"Response: empty")
+                logger.info(f"Response: empty")
                 response_data = {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}
         elif response_status == 404:
             response_data = {'RSP_CODIGO': '404', 'RSP_DESCRIPCION': 'Recurso no disponible'}
-            print(f"Response: 404 Recurso no disponible")
+            logger.info(f"Response: 404 Recurso no disponible")
         else:
             response_data = {'RSP_CODIGO': str(response_status), 'RSP_DESCRIPCION': 'Error desconocido'}
         response_message = ''
@@ -616,7 +615,6 @@ def consulta_ente(request, **kwargs):
     return resp
 
 
-
 def consulta_movimientos(request, **kwargs):
     times = kwargs.get('times', 0)
     if 'request_data' not in kwargs:
@@ -902,7 +900,6 @@ def consulta_transaciones_x_fecha(request, **kwargs):
     else:
         resp = get_response_data_errors(serializer.errors)
     return resp
-
 
 
 def consulta_cvv2(request, **kwargs):
