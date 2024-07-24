@@ -31,8 +31,8 @@ class CustomTokenObtainPairView(CustomViewSet, TokenObtainPairView):
         try:
             username = request.data.get('username', 'hola')
             password = request.data.get('password', '-----')
-            message_bytes = bytes(f"{username}:{password}", 'ascii')
-            key_cache = base64.b64encode(message_bytes).decode('ascii')
+            message_bytes = bytes(f"{username}:{password}", 'latin1')
+            key_cache = base64.b64encode(message_bytes).decode('latin1')
 
             if key_cache not in cache:
                 self.serializer = self.serializer_class(data=request.data)
@@ -56,7 +56,7 @@ class CustomTokenObtainPairView(CustomViewSet, TokenObtainPairView):
                         response_data['RSP_CODIGO'] = '0000000000'
                         response_data['RSP_DESCRIPCION'] = 'Auth login success'
                         response_data['RSP_ERROR'] = 'OK'
-                        cache.set(key_cache, response_data, (60 * 60 * 24) - 120)
+                        cache.set(key_cache, response_data, 60 * 60 * 2)
                         self.make_response_success(data=response_data)
                 else:
                     self.resp = get_response_data_errors(self.serializer.errors)
