@@ -587,8 +587,8 @@ def get_card_client(consumer_id=None, identification: str = ''):
 
 
 def create_card_client(card_name: str = '', identification: str = '', consumer_id=None):
-    assert len(card_name) > 0, 'Card name is required'
-    assert len(identification) > 0, 'Identification is required'
+    assert len(card_name) > 0 or len(identification) > 0, 'Card name or identification is required'
+    # assert len(identification) > 0, 'Identification is required'
     if not consumer_id:
         consumer_id = model_code_generator(Client, 8, code='consumer_id')
     client = Client.objects.filter(consumer_id=consumer_id).first()
