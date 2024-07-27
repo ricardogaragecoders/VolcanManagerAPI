@@ -2716,18 +2716,32 @@ paths:
             format: date
             examples: '2021-01-31'
             pattern: '^\d{4}-\d{2}-\d{2}$'
-        - name: oId
+        - name: username
           in: query
-          description: ID Operador
+          description: Username
           required: false
           schema:
             type: integer
-        - name: cId
+        - name: issuer
           in: query
-          description: ID Company
+          description: Issuer
           required: false
           schema:
+            type: string
+        - name: status_code
+          description: Status code
+          in: query
+          schema:
             type: integer
+            enum: [0, 200, 201, 203, 204, 400, 401, 403, 500]
+            default: 0
+        - name: rsp_success
+          description: Solicitud no exitosa
+          in: query
+          schema:
+            type: boolean
+            enum: [false, true]
+            default: false
         - name: q
           in: query
           description: Search for Keyword
