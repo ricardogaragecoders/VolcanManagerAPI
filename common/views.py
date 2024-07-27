@@ -463,8 +463,10 @@ class MonitorCollectionApiView(CustomViewSetWithPagination):
     http_method_names = ['get', 'options', 'head']
 
     def get_results(self, *args, **kwargs):
-        operator_id = int(self.request.query_params.get('oId', 0))
-        company_id = int(self.request.query_params.get('cId', 0))
+        username = self.request.query_params.get('username', '')
+        issuer = self.request.query_params.get('issuer', '')
+        status_code = int(self.request.query_params.get('status_code', '0'))
+        rsp_success = self.request.query_params.get('rsp_success', 'all')
         self._limit = int(self.request.query_params.get('limit', 20))
         self._offset = int(self.request.query_params.get('offset', 0))
         self._page = int(self._offset / self._limit) if self._offset > 0 else 0
@@ -497,28 +499,25 @@ class MonitorCollectionApiView(CustomViewSetWithPagination):
                 "$lt": to_date
             }
 
-        if operator_id > 0:
-            try:
-                from control.models import Operator
-                operator = Operator.objects.get(pk=operator_id)
-                filters['user.user_id'] = operator.profile.user.id
-            except Operator.DoesNotExist:
-                operator = None
+        if status_code > 0:
+            filters['status_code'] = status_code
 
-        if company_id > 0:
-            try:
-                from control.models import Company
-                company = Company.objects.get(pk=company_id)
-                filters['user.emisor'] = company.volcan_issuer_id
-            except Company.DoesNotExist:
-                company = None
+        if rsp_success != "all":
+            filters['response_data.rsp_success'] = rsp_success == "true"
+
+        if len(username) > 0:
+            filters['user.username'] = username
+
+        if len(issuer) > 0:
+            filters['user.emisor'] = issuer
 
         if q:
             filters['$or'] = [
                 {'url': {'$regex': q, '$options': 'i'}},
                 {'method': {'$regex': q, '$options': 'i'}},
                 {'user.username': {'$regex': q, '$options': 'i'}},
-                {'user.emisor': {'$regex': q, '$options': 'i'}}
+                {'user.emisor': {'$regex': q, '$options': 'i'}},
+                {'headers.X-Correlation-Id': {'$regex': q, '$options': 'i'}}
             ]
 
         db = MonitorCollection()
@@ -532,17 +531,38 @@ class MonitorCollectionApiView(CustomViewSetWithPagination):
     def get_response_from_export(self, export):
         response_data = []
         for item in self.results:
+            rsp_success = True
+            rsp_codigo = 200
+            rsp_descripcion = 'ok'
+            x_correlation_id = ''
+            if 'response_data' in item:
+                if 'rsp_success' in item['response_data']:
+                    rsp_success = item['response_data']['rsp_success']
+                if 'rsp_codigo' in item['response_data']:
+                    rsp_codigo = item['response_data']['rsp_codigo']
+                if 'rsp_descripcion' in item['response_data']:
+                    rsp_descripcion = item['response_data']['rsp_descripcion']
+
+            if 'headers' in item:
+                if 'X-Correlation-Id' in item['headers']:
+                    x_correlation_id = item['headers']['X-Correlation-Id']
+
             data = {
                 'ID': item['id'],
-                _('fecha'): timezone.localtime(item['updated_at']).strftime("%d/%m/%Y %H:%M"),
-                _('nombre'): item['user'],
-                _('correo'): item['email'],
-                _('empresa'): item['company'],
-                _(u'acción'): item['action'],
-                _(u'descripción'): item['description'],
+                _('fecha'): timezone.localtime(item['created_at']).strftime("%d/%m/%Y %H:%M"),
+                _('username'): item['user.username'],
+                _('emisor'): item['user.emisor'],
+                _('status_code'): item['status_code'],
+                _('method'): item['method'],
+                _('url'): item['url'],
+                _('X-Correlaction-Id'): x_correlation_id,
+                _('success'): rsp_success,
+                _('code'): rsp_codigo,
+                _('descripiton'): rsp_descripcion,
             }
             response_data.append(data)
-        fields = ['ID', _('fecha'), _('nombre'), _('correo'), _('empresa'), _(u'acción'), _(u'descripción'), ]
+        fields = ['ID', _('fecha'), _('username'), _('emisor'), _('status_code'), _('method'), _('url'),
+                  _('X-Correlaction-Id'), _('success'), _('code'), _('descripiton')]
         title = _(u'Bitacora')
         if export == 'excel':
             xlsx_data = WriteToExcel(response_data, title=title, fields=fields)
