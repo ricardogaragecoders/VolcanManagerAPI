@@ -129,6 +129,10 @@ class RequestLoggingMiddleware(MiddlewareMixin):
             if 'refresh_token' in response_data:
                 response_data['refresh_token'] = '***'
 
+            for k, v in response_data.items():
+                if isinstance(v, list):
+                    response_data[k] = len(v)
+
         # Calculate the time taken to process the request
         if hasattr(request, 'start_time'):
             time_taken = "{:.4f}".format(((timezone.now() - request.start_time).total_seconds()/1))
