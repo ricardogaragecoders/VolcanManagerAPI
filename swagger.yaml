@@ -1479,6 +1479,81 @@ paths:
       tags:
         - VolcanManager::Acciones
     parameters: []
+  /volcan/api/AltaPoliza/:
+    post:
+      operationId: api_control_alta_poliza
+      description: 'Alta Poliza'
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/AltaPoliza"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AltaPoliza"
+        required: true
+      summary: 'Alta Poliza'
+      responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
+        '200':
+          description: 'Alta Poliza'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_folio": "0000000000000000",
+                "rsp_tarjeta": "1234123412341234",
+                "rsp_tip_tar": "0",
+                "rsp_cuenta": "000000",
+                "rsp_funcion": "000000000000",
+                "rsp_codigo_pol": "000000",
+                "rsp_num_pol": "12345678901234567890",
+                "rsp_motivo_ex": "000000",
+                "rsp_nom_ben_1": "000000",
+                "rsp_ide_ben_1": "000000",
+                "rsp_por_ben_1": "000000",
+                "rsp_nom_ben_2": "000000",
+                "rsp_ide_ben_2": "000000",
+                "rsp_por_ben_2": "000000",
+                "rsp_nom_ben_3": "000000",
+                "rsp_ide_ben_3": "000000",
+                "rsp_por_ben_3": "000000",
+                "rsp_nom_ben_4": "000000",
+                "rsp_ide_ben_4": "000000",
+                "rsp_por_ben_4": "000000",
+                "rsp_tip_cobro": "000000",
+                "rsp_forma_cob": "000000",
+                "rsp_monto_fijo": "000000",
+                "rsp_moneda_cob": "000000",
+                "rsp_dia_cob": "000000",
+                "rsp_mes_gra": "000000",
+                "rsp_por_descto": "000000"
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error consulta cobranza"
+              }
+      tags:
+        - VolcanManager::Acciones
+    parameters: []
   /volcan/api/IntraExtras/:
     post:
       operationId: api_control_intra_extras_mock
@@ -3435,6 +3510,98 @@ components:
           maxLength: 3
       required:
         - tarjeta
+        - emisor
+    AltaPoliza:
+      type: object
+      properties:
+        tarjeta:
+          type: string
+          description: 'Mandatorio. Número tarjeta cifrada con la llave compartida con Volcán'
+          maxLength: 16
+        funcion:
+          type: string
+          description: 'Mandatorio. Enviar lo siguiente: L = Ligar Póliza/D=Desligar Póliza'
+          enum: ['L', 'D']
+          maxLength: 1
+        codigo_pol:
+          type: string
+          description: 'Mandatorio. Codigo que identifica la categoria de la Póliza'
+          maxLength: 8
+        num_pol:
+          type: string
+          description: 'Condicional. Número de la póliza, necesario para relacionar a la tarjeta'
+          maxLength: 30
+        por_descto:
+          type: string
+          description: 'Opcional. Porcentaje de descuento del pago mensual'
+          maxLength: 6
+        meses_descto:
+          type: string
+          description: 'Condicional. Meses que aplica el descuento'
+          maxLength: 2
+        motivo_ex:
+          type: string
+          description: 'Condicional. Este campo es necesario para desligar pólizas, baja de poliza'
+          maxLength: 3
+        nom_ben_1:
+          type: string
+          description: 'Mandatorio. Nombre del beneficiario 1'
+          maxLength: 60
+        ide_ben_1:
+          type: string
+          description: 'Mandatorio. Documento de identificacion 1'
+          maxLength: 15
+        por_ben_1:
+          type: string
+          description: 'Mandatorio. Porcentaje del beneficiario 1'
+          maxLength: 6
+        nom_ben_2:
+          type: string
+          description: 'Opcional. Nombre del beneficiario 2'
+          maxLength: 60
+        ide_ben_2:
+          type: string
+          description: 'Opcional. Documento de identificacion 2'
+          maxLength: 15
+        por_ben_2:
+          type: string
+          description: 'Opcional. Porcentaje del beneficiario 2'
+          maxLength: 6
+        nom_ben_3:
+          type: string
+          description: 'Opcional. Nombre del beneficiario 3'
+          maxLength: 60
+        ide_ben_3:
+          type: string
+          description: 'Opcional. Documento de identificacion 3'
+          maxLength: 15
+        por_ben_3:
+          type: string
+          description: 'Opcional. Porcentaje del beneficiario 3'
+          maxLength: 6
+        nom_ben_4:
+          type: string
+          description: 'Opcional. Nombre del beneficiario 4'
+          maxLength: 60
+        ide_ben_4:
+          type: string
+          description: 'Opcional. Documento de identificacion 4'
+          maxLength: 15
+        por_ben_4:
+          type: string
+          description: 'Opcional. Porcentaje del beneficiario 4'
+          maxLength: 6
+        emisor:
+          type: string
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+          maxLength: 3
+      required:
+        - tarjeta
+        - funcion
+        - codigo_pol
+        - nom_ben_1
+        - ide_ben_1
+        - por_ben_1
         - emisor
     Intra_Extras:
       type: object
