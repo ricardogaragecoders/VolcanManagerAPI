@@ -1111,3 +1111,53 @@ class ConsultaCobranzaSerializer(serializers.Serializer):
         if len(issuer) == 0:
             raise CustomValidationError(detail=u'Emisor es requerido', code='400')
         return data
+
+
+class AltaPolizaSerializer(serializers.Serializer):
+    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    FUNCION = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
+    CODIGO_POL = serializers.CharField(max_length=8, required=False, default="", allow_blank=True)
+    NUM_POL = serializers.CharField(max_length=30, required=False, default="", allow_blank=True)
+    POR_DESCTO = serializers.CharField(max_length=6, required=False, default="", allow_blank=True)
+    MESES_DESCTO = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
+    MOTIVO_EX = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    NOM_BEN_1 = serializers.CharField(max_length=60, required=False, default="", allow_blank=True)
+    IDE_BEN_1 = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    POR_BEN_1 = serializers.CharField(max_length=6, required=False, default="", allow_blank=True)
+    NOM_BEN_2 = serializers.CharField(max_length=60, required=False, default="", allow_blank=True)
+    IDE_BEN_2 = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    POR_BEN_2 = serializers.CharField(max_length=6, required=False, default="", allow_blank=True)
+    NOM_BEN_3 = serializers.CharField(max_length=60, required=False, default="", allow_blank=True)
+    IDE_BEN_3 = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    POR_BEN_3 = serializers.CharField(max_length=6, required=False, default="", allow_blank=True)
+    NOM_BEN_4 = serializers.CharField(max_length=60, required=False, default="", allow_blank=True)
+    IDE_BEN_4 = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    POR_BEN_4 = serializers.CharField(max_length=6, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('TARJETA', 'FUNCION', 'CODIGO_POL', 'NUM_POL', 'NUM_POL', 'POR_DESCTO', 'MESES_DESCTO','MOTIVO_EX',
+                  'NOM_BEN_1', 'IDE_BEN_1', 'POR_BEN_1', 'NOM_BEN_2', 'IDE_BEN_2', 'POR_BEN_2',
+                  'NOM_BEN_3', 'IDE_BEN_3', 'POR_BEN_3','NOM_BEN_4', 'IDE_BEN_4', 'POR_BEN_4',
+                  'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+
+    def validate(self, data):
+        data = super(AltaPolizaSerializer, self).validate(data)
+        card = data.get('TARJETA', "").strip()
+        issuer = data.get('EMISOR', '').upper().strip()
+        number_polize = data.get('NUM_POL', '').upper().strip()
+
+        data['TARJETA'] = card
+        data['NUM_POL'] = number_polize
+
+        if len(card) == 0:
+            raise CustomValidationError(detail=u'Tarjeta es requerida', code='400')
+
+        if len(number_polize) == 0:
+            raise CustomValidationError(detail=u'Numero de poliza es requerida', code='400')
+
+        if len(issuer) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
+        return data

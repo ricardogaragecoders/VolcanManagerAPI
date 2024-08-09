@@ -24,6 +24,7 @@ urlpatterns = [
     path('ConsultaCvv2/', ControlApiView.as_view({'post': 'consulta_cvv2'})),
     path('ConsultaEstadoCta/', ControlApiView.as_view({'post': 'consulta_estado_cuenta'})),
     path('ConsultaCobranza/', ControlApiView.as_view({'post': 'consulta_cobranza'})),
+    path('AltaPoliza/', ControlApiView.as_view({'post': 'alta_poliza'})),
 
 
     path('issuers/',
