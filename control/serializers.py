@@ -915,3 +915,27 @@ class AltaPolizaSerializer(serializers.Serializer):
         if len(issuer) == 0:
             raise CustomValidationError(detail=u'Emisor es requerido', code='400')
         return data
+
+
+class ConsultaPolizaSerializer(serializers.Serializer):
+    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('TARJETA', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+
+    def validate(self, data):
+        data = super(ConsultaPolizaSerializer, self).validate(data)
+        card = data.get('TARJETA', "").strip()
+        issuer = data.get('EMISOR', '').upper().strip()
+
+        data['TARJETA'] = card
+
+        if len(card) == 0:
+            raise CustomValidationError(detail=u'Tarjeta es requerida', code='400')
+
+        if len(issuer) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
+        return data

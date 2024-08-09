@@ -147,3 +147,8 @@ class ControlApiView(CustomViewSet):
         from control.utils import alta_poliza
         return self.control_action(request=request, control_function=alta_poliza,
                                    name_control_function="alta_poliza")
+
+    def consulta_poliza(self, request, *args, **kwargs):
+        from control.utils import consulta_poliza
+        return self.control_action(request=request, control_function=consulta_poliza,
+                                   name_control_function="consulta_poliza")
