@@ -1860,6 +1860,84 @@ paths:
       tags:
         - VolcanManager::Acciones
     parameters: []
+  /volcan/api/ConsultaPoliza/:
+    post:
+      operationId: api_control_consulta_poliza
+      description: 'Consulta Poliza'
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ConsultaPoliza"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsultaPoliza"
+        required: true
+      summary: 'Consulta Poliza'
+      responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
+        '200':
+          description: 'Consulta Poliza'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_folio": "0000000000000000",
+                "rsp_tarjeta": "1234123412341234",
+                "rsp_tip_tar": "0",
+                "rsp_cuenta": "000000",
+                "rsp_polizas": [
+                  {
+                    "rsp_codigo_pol": "000000",
+                    "rsp_desc_pol": "000000",
+                    "rsp_num_pol": "000000",
+                    "rsp_nom_ben_1": "000000",
+                    "rsp_ide_ben_1": "000000",
+                    "rsp_por_ben_1": "000000",
+                    "rsp_nom_ben_2": "000000",
+                    "rsp_ide_ben_2": "000000",
+                    "rsp_por_ben_2": "000000",
+                    "rsp_nom_ben_3": "000000",
+                    "rsp_ide_ben_3": "000000",
+                    "rsp_por_ben_3": "000000",
+                    "rsp_nom_ben_4": "000000",
+                    "rsp_ide_ben_4": "000000",
+                    "rsp_por_ben_4": "000000",
+                    "rsp_tip_cobro": "0",
+                    "rsp_forma_cob": "0",
+                    "rsp_monto_fijo": "0000000000000000000",
+                    "rsp_moneda_cob": "000",
+                    "rsp_dia_cob": "00",
+                    "rsp_mes_gra": "000000",
+                    "rsp_por_descto": "00"
+                  }
+                ]
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error consulta cobranza"
+              }
+      tags:
+        - VolcanManager::Acciones
+    parameters: []
   /volcan/api/IntraExtras/:
     post:
       operationId: api_control_intra_extras_mock
@@ -4286,6 +4364,20 @@ components:
       required:
         - tarjeta
         - num_pol
+        - emisor
+    ConsultaPoliza:
+      type: object
+      properties:
+        tarjeta:
+          type: string
+          description: 'Mandatorio. Consulta por número de Tarjeta Cifrada con la llame de Emisor'
+          maxLength: 16
+        emisor:
+          type: string
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+          maxLength: 3
+      required:
+        - tarjeta
         - emisor
     EstadosCuenta:
       type: object

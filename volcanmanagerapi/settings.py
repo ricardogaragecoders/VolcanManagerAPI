@@ -415,7 +415,6 @@ API_KEY_FID = env.str('API_KEY_FID', '')
 SERVER_ESTRATO_VOLCAN_URL = env.str('SERVER_ESTRATO_VOLCAN_URL', '')
 ESTRATO_LIMIT_QUERY = env.int('ESTRATO_LIMIT_QUERY', 5)
 
-
 from corsheaders.defaults import default_headers, default_methods
 
 CORS_ORIGIN_ALLOW_ALL = False
@@ -461,7 +460,9 @@ URL_AZ7_CONSULTA_ESTADO_CUENTA = env.str('URL_AZ7_CONSULTA_ESTADO_CUENTA',
 URL_AZ7_CONSULTA_COBRANZA = env.str('URL_AZ7_CONSULTA_COBRANZA',
                                     '/web/services/Volcan_Consulta_cobranza_1')
 URL_AZ7_ALTA_POLIZA = env.str('URL_AZ7_ALTA_POLIZA',
-                                         '/web/services/Volcan_Alta_Poliza_1')
+                              '/web/services/Volcan_Alta_Poliza_1')
+URL_AZ7_CONSULTA_POLIZA = env.str('URL_AZ7_CONSULTA_POLIZA',
+                                  '/web/services/Volcan_Consulta_Poliza_1')
 
 # obtenerDatosTokenizacionPrepago
 URL_AZ7_LOGIN = env.str('URL_AZ7_LOGIN', '/wsParabiliumVolcan/api/Login')
