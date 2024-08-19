@@ -3680,7 +3680,6 @@ components:
         - nom_ben_1
         - ide_ben_1
         - por_ben_1
-        - num_pol
         - emisor
     ConsultaPoliza:
       type: object
