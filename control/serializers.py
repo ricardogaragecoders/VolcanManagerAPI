@@ -1146,17 +1146,34 @@ class AltaPolizaSerializer(serializers.Serializer):
     def validate(self, data):
         data = super(AltaPolizaSerializer, self).validate(data)
         card = data.get('TARJETA', "").strip()
+        funcion_param = data.get('FUNCION', "").strip()
         issuer = data.get('EMISOR', '').upper().strip()
-        number_polize = data.get('NUM_POL', '').upper().strip()
+        code_polize = data.get('CODIGO_POL', '').upper().strip()
+        nom_beneficiario = data.get('NOM_BEN_1', "").strip()
+        iden_beneficiario = data.get('IDEN_BEN_1', '').upper().strip()
+        por_beneficiario = data.get('POR_BEN_1', '').upper().strip()
 
         data['TARJETA'] = card
-        data['NUM_POL'] = number_polize
+        data['FUNCION'] = funcion_param
+        data['CODIGO_POL'] = code_polize
 
         if len(card) == 0:
             raise CustomValidationError(detail=u'Tarjeta es requerida', code='400')
 
-        if len(number_polize) == 0:
-            raise CustomValidationError(detail=u'Numero de poliza es requerida', code='400')
+        if len(code_polize) == 0:
+            raise CustomValidationError(detail=u'Codigo de poliza es requerida', code='400')
+
+        if len(funcion_param) == 0:
+            raise CustomValidationError(detail=u'Funcion es requerida', code='400')
+
+        if len(nom_beneficiario) == 0:
+            raise CustomValidationError(detail=u'Nombre de beneficiario 1 es requerida', code='400')
+
+        if len(iden_beneficiario) == 0:
+            raise CustomValidationError(detail=u'Identificacion de beneficiario 1 es requerida', code='400')
+
+        if len(por_beneficiario) == 0:
+            raise CustomValidationError(detail=u'Porcentaje de beneficiario 1 es requerida', code='400')
 
         if len(issuer) == 0:
             raise CustomValidationError(detail=u'Emisor es requerido', code='400')

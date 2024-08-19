@@ -4283,79 +4283,80 @@ components:
       properties:
         tarjeta:
           type: string
-          description: 'Mandatorio. Consulta por número de Tarjeta Cifrada con la llame de Emisor'
+          description: 'Mandatorio. Número tarjeta cifrada con la llave compartida con Volcán'
           maxLength: 16
         funcion:
           type: string
-          description: 'Funcion'
+          description: 'Mandatorio. Enviar lo siguiente: L = Ligar Póliza/D=Desligar Póliza'
+          enum: ['L', 'D']
           maxLength: 1
         codigo_pol:
           type: string
-          description: 'Codigo Poliza'
+          description: 'Mandatorio. Codigo que identifica la categoria de la Póliza'
           maxLength: 8
         num_pol:
           type: string
-          description: 'Mandatorio. Numero poliza'
+          description: 'Condicional. Número de la póliza, necesario para relacionar a la tarjeta'
           maxLength: 30
         por_descto:
           type: string
-          description: 'Por descto'
+          description: 'Opcional. Porcentaje de descuento del pago mensual'
           maxLength: 6
         meses_descto:
           type: string
-          description: 'Meses descto'
+          description: 'Condicional. Meses que aplica el descuento'
           maxLength: 2
         motivo_ex:
           type: string
-          description: 'Motivo Ex'
+          description: 'Condicional. Este campo es necesario para desligar pólizas, baja de poliza'
           maxLength: 3
         nom_ben_1:
           type: string
-          description: 'Nom Ben 1'
+          description: 'Mandatorio. Nombre del beneficiario 1'
           maxLength: 60
         ide_ben_1:
           type: string
-          description: 'Ide Ben 1'
+          description: 'Mandatorio. Documento de identificacion 1'
           maxLength: 15
         por_ben_1:
           type: string
-          description: 'Por Ben 1'
+          description: 'Mandatorio. Porcentaje del beneficiario 1'
           maxLength: 6
         nom_ben_2:
           type: string
-          description: 'Nom Ben 2'
+          description: 'Opcional. Nombre del beneficiario 2'
           maxLength: 60
         ide_ben_2:
           type: string
-          description: 'Ide Ben 2'
+          description: 'Opcional. Documento de identificacion 2'
           maxLength: 15
         por_ben_2:
           type: string
-          description: 'Por Ben 2'
+          description: 'Opcional. Porcentaje del beneficiario 2'
           maxLength: 6
         nom_ben_3:
           type: string
-          description: 'Nom Ben 3'
+          description: 'Opcional. Nombre del beneficiario 3'
           maxLength: 60
         ide_ben_3:
           type: string
-          description: 'Ide Ben 3'
+          description: 'Opcional. Documento de identificacion 3'
           maxLength: 15
         por_ben_3:
           type: string
-          description: 'Por Ben 3'
+          description: 'Opcional. Porcentaje del beneficiario 3'
           maxLength: 6
         nom_ben_4:
           type: string
-          description: 'Nom Ben 4'
+          description: 'Opcional. Nombre del beneficiario 4'
           maxLength: 60
         ide_ben_4:
           type: string
-          description: 'Ide Ben 4'
+          description: 'Opcional. Documento de identificacion 4'
           maxLength: 15
         por_ben_4:
           type: string
-          description: 'Por Ben 4'
+          description: 'Opcional. Porcentaje del beneficiario 4'
           maxLength: 6
         emisor:
           type: string
@@ -4363,7 +4364,11 @@ components:
           maxLength: 3
       required:
         - tarjeta
-        - num_pol
+        - funcion
+        - codigo_pol
+        - nom_ben_1
+        - ide_ben_1
+        - por_ben_1
         - emisor
     ConsultaPoliza:
       type: object
