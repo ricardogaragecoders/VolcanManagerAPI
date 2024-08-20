@@ -147,6 +147,7 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
     def get_queryset_filters(self, *args, **kwargs):
         filters = dict()
         profile = self.request.user.profile
+        delivered = self.request.query_params.get('delivered', 'all')
         if profile.is_superadmin():
             issuer = self.request.query_params.get('emisor', '')
         elif profile.is_operator(equal=True):
@@ -169,6 +170,9 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
 
         if len(issuer) > 0:
             filters['issuer.issuer'] = issuer.upper()
+
+        if delivered != 'all':
+            filters['delivery.delivered'] = delivered == 'true'
 
         return filters
 
@@ -364,7 +368,7 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
                 results = []
                 for item in query:
                     send_notification_webhook_issuer.delay(notification_id=str(item['_id']))
-                    time.sleep(3)
+                    time.sleep(0.1)
                     results.append(str(item['_id']))
                 response_data = results[0] if len(results) > 0 else []
                 self.make_response_success(data=response_data)
