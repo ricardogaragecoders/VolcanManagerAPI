@@ -586,7 +586,7 @@ class ExtrafinanciamientoSerializer(serializers.Serializer):
     REFERENCIA = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
     TIPO = serializers.CharField(max_length=1, required=False, default="", allow_blank=True)
     COMERCIO = serializers.CharField(max_length=40, required=False, default="", allow_blank=True)
-    OFICINA = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    OFICINA = serializers.CharField(max_length=8, required=False, default="", allow_blank=True)
     EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
     USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
     ACCESO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
@@ -625,7 +625,8 @@ class ExtrafinanciamientoSerializer(serializers.Serializer):
         data['EMISOR'] = emisor
 
         if emisor == "CMF":
-            data['OFICINA'] = "CMF00007"
+            # data['OFICINA'] = "CMF00007"
+            pass
         elif emisor == "FID":
             data['OFICINA'] = "0002"
         elif emisor == 'GMO':
