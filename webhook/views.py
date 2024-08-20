@@ -363,7 +363,7 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
                 from webhook.tasks import send_notification_webhook_issuer
                 results = []
                 for item in query:
-                    send_notification_webhook_issuer.delay(transaction_id=str(item['_id']))
+                    send_notification_webhook_issuer.delay(notification_id=str(item['_id']))
                     time.sleep(3)
                     results.append(str(item['_id']))
                 response_data = results[0] if len(results) > 0 else []
