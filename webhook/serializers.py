@@ -80,6 +80,17 @@ class WebhookListSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class WebhookDataSerializer(serializers.ModelSerializer):
+    webhook_id = serializers.CharField(source='id')
+    issuer_id = serializers.CharField(source='account_issuer')
+    is_active = serializers.BooleanField(default=True)
+
+    class Meta:
+        model = Webhook
+        fields = ('webhook_id', 'issuer_id', 'url_webhook', 'header_webhook', 'key_webhook', 'is_active')
+        read_only_fields = fields
+
+
 class TransactionSerializer(serializers.Serializer):
     monto = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)
     moneda = serializers.CharField(max_length=100, default='', required=False, allow_blank=True)

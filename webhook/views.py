@@ -13,7 +13,7 @@ from users.permissions import IsVerified, IsOperator
 from webhook.models import Webhook, TransactionErrorCollection, NotificationCollection
 from webhook.permissions import HasPermissionByMethod, HasUserAndPasswordInData
 from webhook.serializers import WebhookSerializer, WebhookListSerializer, TransactionSerializer, \
-    PaycardNotificationserializer
+    PaycardNotificationserializer, WebhookDataSerializer
 from webhook.utils import get_notification_data
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ class WebHookApiView(CustomViewSet):
     serializer_class = WebhookSerializer
     list_serializer_class = WebhookListSerializer
     response_serializer_class = WebhookListSerializer
-    one_serializer_class = WebhookListSerializer
+    one_serializer_class = WebhookDataSerializer
     model_class = Webhook
     permission_classes = (IsAuthenticated, IsVerified, IsOperator)
     field_pk = 'webhook_id'
