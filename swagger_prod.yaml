@@ -2749,6 +2749,10 @@ components:
           type: string
           description: 'Mandatorio. Nombre del comercio de la transaccion'
           maxLength: 40
+        oficina:
+          type: string
+          description: 'Condicional. Numero de oficina'
+          maxLength: 8
         emisor:
           type: string
           description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
@@ -2796,6 +2800,10 @@ components:
           type: string
           description: 'Mandatorio. Nombre del comercio de la transaccion'
           maxLength: 40
+        oficina:
+          type: string
+          description: 'Condicional. Numero de oficina'
+          maxLength: 8
         emisor:
           type: string
           description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
