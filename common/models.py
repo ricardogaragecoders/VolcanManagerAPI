@@ -1,6 +1,13 @@
+import logging
+import uuid
+
 from django.db import models
 from django.forms import model_to_dict
 from django.utils.text import slugify
+
+from common.managers import SoftDeletionManager
+
+logger = logging.getLogger(__name__)
 
 
 class NameStrMixin:
@@ -12,6 +19,30 @@ class BaseModel(models.Model, NameStrMixin):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     status = models.ForeignKey('common.Status', on_delete=models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        abstract = True
+
+
+class BaseModelExtra(models.Model, NameStrMixin):
+    """
+        Abstract base model that provides common fields for all models.
+
+        Fields:
+        - id: Unique identifier for the model (UUIDField).
+        - created_at: Date and time when the model was created (DateTimeField).
+        - modified_at: Date and time when the model was last modified (DateTimeField).
+        - is_deleted: Boolean indicating whether the model is deleted or not (BooleanField).
+    """
+    id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    objects = SoftDeletionManager()
+
+    all_objects = models.Manager()
 
     class Meta:
         abstract = True
@@ -135,7 +166,7 @@ class MonitorCollection(MongoConnection):
             collection = self.collection.with_options(codec_options=CodecOptions(tz_aware=True, tzinfo=time_zone))
             data = collection.find(filters).limit(per_page).skip(per_page * page).sort(sort, direction)
         except Exception as e:
-            print(e.args.__str__())
+            logger.error(e.args.__str__())
             data = {}
         return data
 
@@ -147,7 +178,7 @@ class MonitorCollection(MongoConnection):
             collection = self.collection.with_options(codec_options=CodecOptions(tz_aware=True, tzinfo=time_zone))
             data = collection.find(filters).sort(sort, direction)
         except Exception as e:
-            print(e.args.__str__())
+            logger.error(e.args.__str__())
             data = {}
         return data
 
@@ -159,10 +190,10 @@ class MonitorCollection(MongoConnection):
         import pytz
         time_zone = pytz.timezone('America/Mexico_City')
         collection = self.collection.with_options(codec_options=CodecOptions(tz_aware=True, tzinfo=time_zone))
-        return collection.find(filters).count()
+        return collection.count_documents(filters)
 
     def update_one(self, filters, data):
-        if self.collection.find(filters).count():
+        if self.collection.count_documents(filters):
             return self.collection.update_one(filters, data)
         return False
 

@@ -1,3 +1,5 @@
+import logging
+
 from rest_framework.exceptions import ParseError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -11,6 +13,8 @@ from thalesapi.utils import is_card_bin_valid, get_access_token_paycard, get_cre
     get_url_thales_register_customer_with_cards, get_card_bin_config, get_or_create_card_client, \
     get_card_client
 from users.permissions import IsVerified, IsOperator, IsSupervisor
+
+logger = logging.getLogger(__name__)
 
 
 class CardBinConfigApiView(CustomViewSet):
@@ -62,14 +66,10 @@ class ThalesApiView(CustomViewSet):
         try:
             response_data, response_status = control_function(request, *args, **kwargs)
         except ParseError as e:
-            import logging
-            logger = logging.getLogger(__name__)
             logger.exception(e)
             response_data = {'error': "%s" % e}
             response_status = 400
         except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
             logger.exception(e)
             response_data = {'error': f"Error en aplicación: {e.args.__str__()}"}
             response_status = 500
@@ -82,8 +82,8 @@ class ThalesApiView(CustomViewSet):
             request_data = request.data.copy()
         else:
             request_data = kwargs['request_data'].copy()
-        print('Verify Card')
-        print(request_data)
+        logger.info('Verify Card')
+        logger.info(request_data)
 
         if 'cardBin' in request_data and is_card_bin_valid(request_data['cardBin']):
             # aqui revisamos si es credito o prepago
@@ -126,7 +126,7 @@ class ThalesApiView(CustomViewSet):
                         client = get_or_create_card_client(card_name=card_name, card_detail=card_detail)
                     response_data['consumerId'] = client.consumer_id
                 except AssertionError as e:
-                    print(f"Error al crear el cliente: {e.args.__str__()}")
+                    logger.info(f"Error al crear el cliente: {e.args.__str__()}")
                     client = Client.objects.create(consumer_id=response_data['consumerId'],
                                                    card_name=card_name, type_identification='TT',
                                                    document_identification=response_data['cardId'])
@@ -138,7 +138,7 @@ class ThalesApiView(CustomViewSet):
         else:
             response_data, response_status = {'error': 'Datos incompletos'}, 400
 
-        print(f"Response Verify Card: {response_data}")
+        logger.info(f"Response Verify Card: {response_data}")
         return Response(data=response_data, status=response_status)
 
     def get_consumer_information(self, request, *args, **kwargs):
@@ -146,8 +146,8 @@ class ThalesApiView(CustomViewSet):
         card_id = request.query_params.get('cardId', None)
         issuer_id = kwargs.get('issuer_id', '')
         card_detail = None
-        print("Get Consumer Info")
-        print(request.get_full_path())
+        logger.info("Get Consumer Info")
+        logger.info(request.get_full_path())
         # buscar el cliente primero
         if card_id:
             card_detail = CardDetail.objects.select_related('client').filter(
@@ -181,7 +181,7 @@ class ThalesApiView(CustomViewSet):
         else:
             response_data, response_status = {'error': f'Registro no encontrado'}, 404
 
-        print(f"Response Consumer info: {response_data}")
+        logger.info(f"Response Consumer info: {response_data}")
         return Response(data=response_data, status=response_status)
 
     def get_card_credentials(self, request, *args, **kwargs):
@@ -204,15 +204,15 @@ class ThalesApiView(CustomViewSet):
                     del response_data['error']
         else:
             response_data, response_status = {'error': f'Registro no encontrado'}, 404
-        print(f"Response Card Credentials: {response_data}")
+        logger.info(f"Response Card Credentials: {response_data}")
         return Response(data=response_data, status=response_status)
 
     def post_deliver_otp(self, request, *args, **kwargs):
         consumer_id = kwargs.get('consumer_id', '')
         card_id = request.query_params.get('cardId', None)
         issuer_id = kwargs.get('issuer_id', '')
-        print("Deliver OTP")
-        print(request.get_full_path())
+        logger.info("Deliver OTP")
+        logger.info(request.get_full_path())
 
         if card_id:
             card_detail = CardDetail.objects.filter(card_id=card_id, issuer_id=issuer_id).first()
@@ -235,7 +235,7 @@ class ThalesApiView(CustomViewSet):
         else:
             response_data, response_status = {'error': f'Registro no encontrado'}, 404
 
-        print(f"Response Deliver OTP: {response_data}")
+        logger.info(f"Response Deliver OTP: {response_data}")
         if response_status in [201, 200, 204]:
             return Response(status=204)
         else:
@@ -245,9 +245,9 @@ class ThalesApiView(CustomViewSet):
         # from thalesapi.utils import get_card_credentials_credit_testing
         try:
             data = request.data.copy()
-            print(f"Request Notify Card: {data}")
+            logger.info(f"Request Notify Card: {data}")
         except Exception as e:
-            print(f"Error Notify Card: {e.args.__str__()}")
+            logger.info(f"Error Notify Card: {e.args.__str__()}")
         return Response(status=204)
 
     def get_card_credentials_testing(self, request, *args, **kwargs):
@@ -329,7 +329,7 @@ class ThalesApiViewPrivate(ThalesApiView):
         else:
             resp_msg, response_data, response_status = get_response_data_errors(serializer.errors)
             # response_data, response_status = {}, 400
-        print(f"Response Card Data Tokenizacion: {response_data}")
+        logger.info(f"Response Card Data Tokenizacion: {response_data}")
         return self.get_response(message=resp_msg, data=response_data, status=response_status, lower_response=False)
 
     def get_card_data_tokenization_paycard(self, request, *args, **kwargs):
@@ -410,7 +410,7 @@ class ThalesApiViewPrivate(ThalesApiView):
         else:
             resp_msg, response_data, response_status = get_response_data_errors(serializer.errors)
             # response_data, response_status = {}, 400
-        print(f"Response Card Data Tokenizacion: {response_data}")
+        logger.info(f"Response Card Data Tokenizacion: {response_data}")
         return self.get_response(message=resp_msg, data=response_data, status=response_status, lower_response=False)
 
     def get_authorization_token(self, folio=None, issuer_id=None):
@@ -430,9 +430,9 @@ class ThalesApiViewPrivate(ThalesApiView):
             "aud": f"https://{settings.THALES_API_AUD}"
         }
         if settings.DEBUG:
-            print(f'Data to Auth: {auth_data}')
+            logger.debug(f'Data to Auth: {auth_data}')
         else:
-            print(f"AUD https://{settings.THALES_API_AUD}")
+            logger.info(f"AUD https://{settings.THALES_API_AUD}")
 
         with open(settings.PRIV_KEY_AUTH_ISSUER_SERVER_TO_D1_SERVER_PEM, "rb") as pem_file:
             private_key = pem_file.read()
@@ -450,9 +450,9 @@ class ThalesApiViewPrivate(ThalesApiView):
             decoded = jwt.decode(jwt=jwt_token, key=public_key, algorithms=["ES256"],
                                  audience=f"https://{settings.THALES_API_AUD}", issuer=issuer_id)
             if settings.DEBUG:
-                print(f"Descifrar: {decoded}")
+                logger.debug(f"Descifrar: {decoded}")
             else:
-                print(f"Descifrar: Ok")
+                logger.info(f"Descifrar: Ok")
 
         if jwt_token:
             payload = {
@@ -496,21 +496,21 @@ class ThalesApiViewPrivate(ThalesApiView):
             client = get_card_client(identification=identification)
 
         if settings.DEBUG:
-            print(f"Register Consumer Data: {kwargs}")
+            logger.debug(f"Register Consumer Data: {kwargs}")
         else:
-            print(f'Register Consumer Data: {{"tarjeta": "{tarjeta}", "folio": "{folio}"}}')
+            logger.info(f'Register Consumer Data: {{"tarjeta": "{tarjeta}", "folio": "{folio}"}}')
 
         card_real = get_card_triple_des_process(tarjeta, is_descript=True)
         if not card_real:
-            print(f'Tarjeta: {kwargs.get("tarjeta", "")} no pudo ser desincriptada')
+            logger.warning(f'Tarjeta: {kwargs.get("tarjeta", "")} no pudo ser desincriptada')
             return None
         if find_card_bin_configuration:
             card_bin_config = CardBinConfig.objects.filter(card_bin=str(card_real[0:8])).first()
             if card_bin_config:
                 if settings.DEBUG:
-                    print(f"CardBinConfig --> {card_bin_config}")
+                    logger.debug(f"CardBinConfig --> {card_bin_config}")
                 else:
-                    print(
+                    logger.info(
                         f"CardBinConfig --> {str(card_bin_config.id)} {card_bin_config.card_type} {card_bin_config.emisor}")
                 issuer_id = card_bin_config.issuer_id
                 card_product_id = card_bin_config.card_product_id
@@ -522,9 +522,9 @@ class ThalesApiViewPrivate(ThalesApiView):
         }
         encrypted_data = json.dumps(encrypted_data)
         if settings.DEBUG:
-            print(f'EncryptedData: {encrypted_data}')
+            logger.debug(f'EncryptedData: {encrypted_data}')
         else:
-            print(f'EncryptedData: {{"pan": "{mask_card(card_real)}", "exp": "{card_exp}"}}')
+            logger.info(f'EncryptedData: {{"pan": "{mask_card(card_real)}", "exp": "{card_exp}"}}')
 
         access_token = self.get_authorization_token(folio=folio, issuer_id=issuer_id)
         # return {'access_token': access_token}, 200
@@ -587,8 +587,8 @@ class ThalesApiViewPrivate(ThalesApiView):
                         card_detail.client = client
                         card_detail.save()
                 except Exception as e:
-                    print("Error al registrar card_detail")
-                    print(e.args.__str__())
+                    logger.error("Error al registrar card_detail")
+                    logger.error(e.args.__str__())
                 return resp_data, 200
             else:
                 return resp_data, resp_status

@@ -22,4 +22,8 @@ urlpatterns = [
     path('Notificaciones/Reenviar/Emisor/',
          NotificationTransactionApiView.as_view({'patch': 'resend'})),
 
+    path('Transacciones/Error/',
+         TransactionErrorApiView.as_view({'get': 'list'})),
+    path('Transacciones/Error/<str:transaction_error_id>/Detalle/',
+         TransactionErrorApiView.as_view({'get': 'retrieve'})),
 ]

@@ -7,11 +7,19 @@ from django.conf import settings
 from django.core.cache import cache
 from django.utils import timezone
 
-from common.utils import get_response_data_errors, model_code_generator
+from common.utils import get_response_data_errors, model_code_generator, sanitize_log_headers
 from control.utils import mask_card
 from thalesapi.models import ISOCountry, DeliverOtpCollection, CardDetail, CardBinConfig, CardType, Client
 
 logger = logging.getLogger(__name__)
+
+
+def print_error(response_data=None, e=None):
+    if e:
+        error_string = e.args.__str__()
+        logger.error(error_string)
+    if response_data:
+        logger.error(response_data)
 
 
 def get_str_from_date_az7(s_date):
@@ -100,7 +108,7 @@ def get_thales_api_headers(request=None):
 
     return {
         'x-correlation-id': x_correlation_id,
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json; charset=utf-8',
         'Accept': 'application/json'
     }
 
@@ -130,9 +138,7 @@ def get_card_triple_des_process(card_data, is_descript=False):
             enc_buf = ''.join(["%02X" % x for x in enc_bytes]).strip()
             return str(enc_buf)
     except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.exception(e)
+        print_error(e=e)
         return None
 
 @newrelic.agent.background_task()
@@ -140,9 +146,9 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
     response_data = dict()
     response_status = 500
     headers = get_thales_api_headers(request)
-    print(f"Request: {url}")
-    print(f"Headers: {headers}")
-    print(f"Request json: {data}")
+    logger.info(f"Request: {url}")
+    logger.info(f"Headers: {sanitize_log_headers(headers=headers)}")
+    logger.info(f"Request json: {data}")
     try:
         if http_verb == 'POST':
             r = requests.post(url=url, data=data, headers=headers)
@@ -153,8 +159,11 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
             if 'application/json' in r.headers['Content-Type']:
                 response_data = r.json() if response_status != 204 else {}
             else:
+                logger.info(f"Response headers: {r.headers}")
                 response_data = r.content
-        print(f"Response {str(response_status)}: {response_data}")
+        logger.info(f"Response {str(response_status)}: {response_data}")
+        logger.info(f"Response encoding: {r.encoding}")
+
         if 200 <= response_status <= 299:
             if len(response_data) == 0:
                 # print(f"Response: {str(response_status)} empty")
@@ -167,31 +176,30 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
             # if len(response_data) > 0:
             #     print(f"Response:{str(response_status)} {response_data}")
             response_data = {'error': 'Recurso no disponible'}
-            print(f"Response: 404 Recurso no disponible")
+            logger.info(f"Response: 404 Recurso no disponible")
         else:
             response_data = {'error': 'Error desconocido'}
             # print(f"Response: {str(response_status)} Error desconocido")
             # print(f"Data server: {str(r.text)}")
     except requests.exceptions.Timeout:
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (Timeout)'}, 408
-        print(response_data)
+        print_error(response_data=response_data)
     except requests.exceptions.TooManyRedirects:
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (TooManyRedirects)'}, 429
-        print(response_data)
+        print_error(response_data=response_data)
     except requests.exceptions.RequestException as e:
-        print(e.args.__str__())
         response_data, response_status = {'error': 'Error de conexion con servidor VOLCAN (RequestException)'}, 400
-        print(response_data)
+        print_error(response_data=response_data, e=e)
     except Exception as e:
         response_data, response_status = {'error': e.args.__str__()}, 500
-        print(response_data)
+        print_error(response_data=response_data, e=e)
     finally:
         newrelic.agent.add_custom_attributes(
             [
-                ("request_url", url),
-                ("emisor", data['EMISOR'] if 'EMISOR' in data else ''),
-                ("response_code", response_status),
-                ("response_json", response_data),
+                ("request.url", url),
+                ("request.emisor", data['EMISOR'] if 'EMISOR' in data else ''),
+                ("response.code", response_status),
+                # ("response_json", response_data),
             ]
         )
         return response_data, response_status
@@ -206,9 +214,9 @@ def process_volcan_api_request(data, url, request=None, headers=None, method='PO
         data_json = json.dumps(data)
     else:
         data_json = data
-    print(f"Request: {url}")
-    print(f"Headers: {headers}")
-    print(f"Request json: {data_json}")
+    logger.info(f"Request: {url}")
+    logger.info(f"Headers: {sanitize_log_headers(headers=headers)}")
+    logger.info(f"Request json: {data_json}")
     r = None
     try:
         r = requests.request(method=method, url=url, headers=headers, data=data_json, cert=cert)
@@ -217,8 +225,11 @@ def process_volcan_api_request(data, url, request=None, headers=None, method='PO
             if 'application/json' in r.headers['Content-Type']:
                 response_data = r.json() if response_status != 204 else {}
             else:
+                logger.info(f"Response headers: {r.headers}")
                 response_data = r.content
-        print(f"Response {str(response_status)}: {response_data}")
+        logger.info(f"Response {str(response_status)}: {response_data}")
+        logger.info(f"Response encoding: {r.encoding}")
+
         if 200 <= response_status <= 299:
             if len(response_data) == 0:
                 # print(f"Response: {str(response_status)} empty")
@@ -231,35 +242,34 @@ def process_volcan_api_request(data, url, request=None, headers=None, method='PO
             # if len(response_data) > 0:
             #     print(f"Response:{str(response_status)} {response_data}")
             response_data = {'error': 'Recurso no disponible'}
-            print(f"Response: 404 Recurso no disponible")
+            logger.info(f"Response: 404 Recurso no disponible")
         else:
             response_data = {'error': 'Error desconocido'}
             # print(f"Response: {str(response_status)} Error desconocido")
             # print(f"Data server: {str(r.text)}")
     except requests.exceptions.Timeout:
         response_data, response_status = {'error': 'Error de conexion con servidor (Timeout)'}, 408
-        print(response_data)
+        print_error(response_data=response_data)
     except requests.exceptions.TooManyRedirects:
         response_data, response_status = {'error': 'Error de conexion con servidor (TooManyRedirects)'}, 429
-        print(response_data)
+        print_error(response_data=response_data)
     except requests.exceptions.RequestException as e:
-        print(e.args.__str__())
         if r:
-            print(r.raise_for_status())
+            logger.info(r.raise_for_status())
         response_data, response_status = {'error': 'Error de conexion con servidor (RequestException)'}, 400
-        print(response_data)
+        print_error(response_data=response_data, e=e)
     except Exception as e:
         if r:
-            print(r.raise_for_status())
+            logger.info(r.raise_for_status())
         response_data, response_status = {'error': e.args.__str__()}, 500
-        print(response_data)
+        print_error(response_data=response_data, e=e)
     finally:
         newrelic.agent.add_custom_attributes(
             [
-                ("request_url", url),
-                ("emisor", data['EMISOR'] if 'EMISOR' in data else ''),
-                ("response_code", response_status),
-                ("response_json", response_data),
+                ("request.url", url),
+                ("request.emisor", data['EMISOR'] if 'EMISOR' in data else ''),
+                ("response.code", response_status),
+                # ("response_json", response_data),
             ]
         )
         return response_data, response_status
@@ -488,9 +498,9 @@ def get_card_credentials_credit(request, *args, **kwargs):
                     payload['exp'] = card_exp
                     payload = json.dumps(payload)
                     if settings.DEBUG:
-                        print(f'Payload: {payload}')
+                        logger.info(f'Payload: {payload}')
                     else:
-                        print(f'Payload: {{"pan": "{mask_card(card_real)}", "exp": "{card_exp}"}}')
+                        logger.info(f'Payload: {{"pan": "{mask_card(card_real)}", "exp": "{card_exp}"}}')
                     public_key = None
                     with open(settings.PUB_KEY_ISSUER_SERVER_TO_D1_SERVER_PEM, "rb") as pemfile:
                         public_key = jwk.JWK.from_pem(pemfile.read())
@@ -529,7 +539,7 @@ def get_card_credentials_credit_testing(request, *args, **kwargs):
     if card_real:
         payload['pan'] = card_real
         payload = json.dumps(payload)
-        print(payload)
+        logger.info(payload)
         public_key = None
         with open(settings.PUB_KEY_D1_SERVER_TO_ISSUER_SERVER_PEM, "rb") as pemfile:
             public_key = jwk.JWK.from_pem(pemfile.read())

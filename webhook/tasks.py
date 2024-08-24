@@ -34,7 +34,7 @@ class BodyDigestSignature(object):
 
 def get_volcan_headers(webhook: Webhook):
     return {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json; charset=utf-8',
         f'{webhook.header_webhook}': f'{webhook.key_webhook}'
     }
 

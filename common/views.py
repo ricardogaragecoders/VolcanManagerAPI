@@ -1,8 +1,14 @@
+import json
 from collections import OrderedDict
+from datetime import datetime
 from typing import Union
 
+import newrelic.agent
+import pymongo
 from django.core import exceptions
+from django.http import HttpResponse
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from rest_framework import viewsets
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from rest_framework.pagination import LimitOffsetPagination
@@ -10,11 +16,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
+from common.export_excel import WriteToExcel
+from common.export_pdf import WriteToPdf
 from common.middleware import get_request
-from common.models import Status
+from common.models import Status, MonitorCollection
 from common.serializers import StatusSerializer
-from common.utils import get_response_data_errors, handler_exception_general, handler_exception_404
-from users.permissions import IsVerified, IsChangePassword
+from common.utils import get_response_data_errors, handler_exception_general, handler_exception_404, \
+    get_date_from_querystring, make_day_start, make_day_end
+from users.permissions import IsVerified, IsChangePassword, IsAdministrator
 
 
 class LimitOffsetSetPagination(LimitOffsetPagination):
@@ -37,6 +46,7 @@ class CustomViewSet(viewsets.GenericViewSet):
     lookup_field = 'id'
     pk = None
 
+    @newrelic.agent.background_task()
     def get_response(self, message: str = '', data: Union[dict, list] = {}, status: int = 200, lower_response=True):
         request = get_request()
         if len(self.resp) > 0:
@@ -120,6 +130,16 @@ class CustomViewSet(viewsets.GenericViewSet):
                     response_data_2[k] = v
         if status == 422 or status == 400 or status == 403:
             status = 200
+
+        keys = list(response_data_2.keys())
+        len_keys = 3 if len(keys) >= 3 else len(keys)
+        response_data_string = {keys[i]: response_data_2[keys[i]] for i in range(len_keys)}
+        newrelic.agent.add_custom_attributes(
+            [
+                ("response.json", json.dumps(response_data_string)),
+            ]
+        )
+
         return Response(response_data_2, status=status)
 
     def get_queryset_filters(self, *args, **kwargs):
@@ -273,11 +293,15 @@ class CustomViewSet(viewsets.GenericViewSet):
             register.status = Status.objects.get(slug='deleted')
             if hasattr(register, 'deleted_at'):
                 register.deleted_at = timezone.now()
+            if hasattr(register, 'is_deleted'):
+                register.is_deleted = True
             register.save()
-        elif hasattr(register, 'active'):
-            register.active = False
+        elif hasattr(register, 'is_active'):
+            register.is_active = False
             if hasattr(register, 'deleted_at'):
                 register.deleted_at = timezone.now()
+            if hasattr(register, 'is_deleted'):
+                register.is_deleted = True
             register.save()
         self.make_response_success('Registro borrado', {}, 204)
 
@@ -425,3 +449,220 @@ class StatusApiView(CustomViewSet):
     http_method_names = ['get', 'options', 'head']
 
 
+class MonitorCollectionApiView(CustomViewSetWithPagination):
+    """
+    get:
+        Return all monitor systems from mongodb.
+    retrieve:
+        Return one monitor system from mongodb.
+    """
+    serializer_class = None
+    model_class = None
+    field_pk = 'monitor_system_id'
+    permission_classes = (IsAuthenticated, IsVerified, IsAdministrator)
+    http_method_names = ['get', 'options', 'head']
+
+    def get_results(self, *args, **kwargs):
+        username = self.request.query_params.get('username', '')
+        issuer = self.request.query_params.get('issuer', '')
+        status_code = int(self.request.query_params.get('status_code', '0'))
+        rsp_success = self.request.query_params.get('rsp_success', 'all')
+        self._limit = int(self.request.query_params.get('limit', 20))
+        self._offset = int(self.request.query_params.get('offset', 0))
+        self._page = int(self._offset / self._limit) if self._offset > 0 else 0
+        self._order_by = self.request.query_params.get('orderBy', 'action')
+        order_by_desc = self.request.query_params.get('orderByDesc', 'false')
+        q = self.request.query_params.get('q', None)
+        export = self.request.query_params.get('export', None)
+
+        filters = dict()
+        sort = self._order_by
+        direction = pymongo.ASCENDING if order_by_desc == 'false' else pymongo.DESCENDING
+
+        s_from_date = self.request.query_params.get('from_date', None)
+        s_to_date = self.request.query_params.get('to_date', None)
+        from_date = get_date_from_querystring(self.request, 'from_date', timezone.localtime(timezone.now()))
+        to_date = get_date_from_querystring(self.request, 'to_date', timezone.localtime(timezone.now()))
+        from_date = make_day_start(from_date)
+        to_date = make_day_end(to_date)
+        if s_from_date and s_to_date:
+            filters['created_at'] = {
+                "$gte": from_date,
+                "$lt": to_date
+            }
+        elif s_from_date:
+            filters['created_at'] = {
+                "$gte": from_date
+            }
+        elif s_to_date:
+            filters['created_at'] = {
+                "$lt": to_date
+            }
+
+        if status_code > 0:
+            filters['status_code'] = status_code
+
+        if rsp_success != "all":
+            filters['response_data.rsp_success'] = rsp_success == "true"
+
+        if len(username) > 0:
+            filters['user.username'] = username
+
+        if len(issuer) > 0:
+            filters['user.emisor'] = issuer
+
+        if q:
+            filters['$or'] = [
+                {'url': {'$regex': q, '$options': 'i'}},
+                {'method': {'$regex': q, '$options': 'i'}},
+                {'user.username': {'$regex': q, '$options': 'i'}},
+                {'user.emisor': {'$regex': q, '$options': 'i'}},
+                {'headers.X-Correlation-Id': {'$regex': q, '$options': 'i'}}
+            ]
+
+        db = MonitorCollection()
+        self._total = db.count_all(filters)
+
+        if not export:
+            return db.find(filters, sort, direction, self._limit, self._page)
+        else:
+            return db.find(filters, sort, direction, self._total, self._page)
+
+    def get_response_from_export(self, export):
+        response_data = []
+        for item in self.results:
+            rsp_success = True
+            rsp_codigo = 200
+            rsp_descripcion = 'ok'
+            x_correlation_id = ''
+            if 'response_data' in item:
+                if 'rsp_success' in item['response_data']:
+                    rsp_success = item['response_data']['rsp_success']
+                if 'rsp_codigo' in item['response_data']:
+                    rsp_codigo = item['response_data']['rsp_codigo']
+                if 'rsp_descripcion' in item['response_data']:
+                    rsp_descripcion = item['response_data']['rsp_descripcion']
+
+            if 'headers' in item:
+                if 'X-Correlation-Id' in item['headers']:
+                    x_correlation_id = item['headers']['X-Correlation-Id']
+
+            data = {
+                'ID': item['id'],
+                _('fecha'): timezone.localtime(item['created_at']).strftime("%d/%m/%Y %H:%M"),
+                _('username'): item['user.username'],
+                _('emisor'): item['user.emisor'],
+                _('status_code'): item['status_code'],
+                _('method'): item['method'],
+                _('url'): item['url'],
+                _('X-Correlaction-Id'): x_correlation_id,
+                _('success'): rsp_success,
+                _('code'): rsp_codigo,
+                _('descripiton'): rsp_descripcion,
+            }
+            response_data.append(data)
+        fields = ['ID', _('fecha'), _('username'), _('emisor'), _('status_code'), _('method'), _('url'),
+                  _('X-Correlaction-Id'), _('success'), _('code'), _('descripiton')]
+        title = _(u'Bitacora')
+        if export == 'excel':
+            xlsx_data = WriteToExcel(response_data, title=title, fields=fields)
+            response = HttpResponse(content_type='application/vnd.ms-excel')
+            response['Content-Disposition'] = 'attachment; filename=Bitacora.xlsx'
+            response.write(xlsx_data)
+        else:
+            pdf_data = WriteToPdf(response_data, title=title, fields=fields)
+            response = HttpResponse(content_type='application/pdf')
+            response['Content-Disposition'] = 'attachement; filename=Bitacora.pdf'
+            response['Content-Transfer-Encoding'] = 'binary'
+            response.write(pdf_data)
+        return response
+
+    def get(self, request, *args, **kwargs):
+        response = None
+        try:
+            from bson.json_util import dumps
+            # import pytz
+            query = self.get_results()
+            results = []
+            # local_tz = pytz.timezone('America/Mexico_City')
+            for item in query:
+                if isinstance(item['created_at'], datetime):
+                    created_at = timezone.localtime(item['created_at']).isoformat()
+                else:
+                    created_at = item['created_at']
+                results.append({
+                    'id': '{}'.format(str(item['_id'])),
+                    'user': item['user'],
+                    'endpoint': f"{item['method']}: {item['url']}",
+                    'request_data': item['request_data'] if 'request_data' in item else '',
+                    'response_data': item['response_data'] if 'response_data' in item else '',
+                    'status_code': item['status_code'] if 'status_code' in item else '',
+                    'created_at': created_at
+                })
+            export = request.query_params.get('export', None)
+            if not export:
+                pages = int(self._total / self._limit)
+                current_page = self._offset / self._limit
+                response_data = {
+                    'pages': pages,
+                    'current_page': current_page,
+                    'limit': self._limit,
+                    'offset': self._offset,
+                    'count': self._total,
+                    'results': results
+                }
+                self.make_response_success(data=response_data)
+            else:
+                self.results = results
+                response = self.get_response_from_export(export=export)
+        except Exception as e:
+            from common.utils import handler_exception_general
+            self.resp = handler_exception_general(__name__, e)
+        finally:
+            if not response:
+                return self.get_response()
+            return response
+
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            from common.models import MonitorCollection
+            db = MonitorCollection()
+            pk = kwargs.pop(self.field_pk)
+            query = None
+            if len(pk) > 10:
+                from bson.objectid import ObjectId
+                query = db.find({'_id': ObjectId(pk)})
+            else:
+                query = db.find({'_id': int(pk)})
+
+            if query:
+                # import pytz
+                results = []
+                # local_tz = pytz.timezone('America/Mexico_City')
+                for item in query:
+                    if isinstance(item['created_at'], datetime):
+                        created_at = timezone.localtime(item['created_at']).isoformat()
+                    else:
+                        created_at = item['created_at']
+
+                    results.append({
+                        'id': '{}'.format(str(item['_id'])),
+                        'user': item['user'],
+                        'method': item['method'],
+                        'url':  item['url'],
+                        'headers': item['headers'],
+                        'request_data': item['request_data'] if 'request_data' in item else '',
+                        'response_data': item['response_data'] if 'response_data' in item else '',
+                        'status_code': item['status_code'] if 'status_code' in item else '',
+                        'time_seconds': item['time_seconds'],
+                        'created_at': created_at
+                    })
+                response_data = results[0] if len(results) > 0 else []
+                self.make_response_success(data=response_data)
+            else:
+                self.make_response_not_found()
+        except Exception as e:
+            from common.utils import handler_exception_general
+            self.resp = handler_exception_general(__name__, e)
+        finally:
+            return self.get_response()
