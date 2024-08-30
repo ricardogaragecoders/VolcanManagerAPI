@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from rest_framework import serializers
 
@@ -5,6 +7,8 @@ from common.exceptions import CustomValidationError
 from common.utils import code_generator
 from thalesapi.models import CardBinConfig, CardDetail
 from thalesapi.utils import get_or_create_card_client
+
+logger = logging.getLogger(__name__)
 
 
 class VerifyCardCreditSerializer(serializers.Serializer):
@@ -46,13 +50,11 @@ class VerifyCardCreditSerializer(serializers.Serializer):
                 if len(data['FECHA_EXP']) == 4:
                     data['FECHA_EXP'] = data['FECHA_EXP'][2:4] + data['FECHA_EXP'][0:2]
         except jwe.InvalidJWEData as e:
-            print(f"Error en desifrado de datos: {e.args.__str__()}")
+            logger.warning(f"Error en desifrado de datos: {e.args.__str__()}")
             raise CustomValidationError(detail=f'Error en descifrado de datos', code='400')
         except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
             logger.exception(e)
-            print(f"Error en desifrado de datos: {e.args.__str__()}")
+            logger.error(f"Error en desifrado de datos: {e.args.__str__()}")
             raise CustomValidationError(detail=f'Error en descifrado de datos', code='400')
 
         from thalesapi.utils import get_card_triple_des_process
@@ -157,7 +159,7 @@ class GetDataTokenizationSerializer(serializers.Serializer):
         if len(name) <= 3:
             raise CustomValidationError(detail=u'NOMBRE es requerido', code='400')
 
-        if not profile.isSuperadmin():
+        if not profile.is_superadmin():
             if profile.first_name != issuer:
                 raise CustomValidationError(detail=u'EMISOR desconocido', code='400')
 
@@ -212,7 +214,7 @@ class GetDataTokenizationPaycardSerializer(serializers.Serializer):
 
         exp_date = exp_date[2:4] + exp_date[0:2]
 
-        if not profile.isSuperadmin():
+        if not profile.is_superadmin():
             if profile.first_name != issuer:
                 raise CustomValidationError(detail=u'EMISOR desconocido', code='400')
 
@@ -276,7 +278,7 @@ class GetVerifyCardSerializer(serializers.Serializer):
 
         exp_date = exp_date[2:4] + exp_date[0:2]
 
-        if not profile.isSuperadmin():
+        if not profile.is_superadmin():
             if profile.first_name != issuer:
                 raise CustomValidationError(detail=u'EMISOR desconocido', code='400')
 

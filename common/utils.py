@@ -1,3 +1,4 @@
+import logging
 import random
 import string
 from datetime import datetime, time
@@ -13,6 +14,8 @@ from rest_framework.response import Response
 from rest_framework.views import exception_handler
 
 from common.middleware import get_request
+
+logger_general = logging.getLogger(__name__)
 
 
 def get_letter_from_number(number):
@@ -99,7 +102,6 @@ def custom_exception_handler(exception, context):
 
 
 def handler_exception_general(name, e):
-    import logging
     logger = logging.getLogger(name)
     logger.exception(e)
     response_message = u"Error en applicación"
@@ -112,7 +114,6 @@ def handler_exception_404(name, lookup_field, pk, e):
         response_message = 'El valor {} no es valido'.format(pk)
         response_status = 404
     else:
-        import logging
         logger = logging.getLogger(name)
         logger.exception(e)
         response_message = u"Registro no encontrado"
@@ -287,8 +288,8 @@ def send_email_new(from_email, to_emails, subject, template_name, context, *args
         else:
             return False
     except Exception as ex:
-        print("Exception sending email, please check it")
-        print(ex.args.__str__())
+        logger_general.error("Exception sending email, please check it")
+        logger_general.exception(ex)
     return False
 
 
@@ -322,9 +323,9 @@ def send_email(from_email, to_emails, subject, template_name, context, *args, **
         else:
             sent = 'Error sin emails para ser enviados'
     except Exception as ex:
-        print("Exception sending email, please check it")
-        print(str(msg))
-        print(ex.args.__str__())
+        logger_general.error("Exception sending email, please check it")
+        logger_general.error(str(msg))
+        logger_general.exception(ex)
     return sent
 
 
@@ -412,3 +413,14 @@ def is_float(number: str):
         return True
     else:
         return False
+
+
+def sanitize_log_headers(headers: dict) -> dict:
+    headers_copy = headers.copy()
+    if 'X-Api-Key' in headers_copy:
+        headers_copy['X-Api-Key'] = f"{headers_copy['X-Api-Key'][:6]}..."
+    if 'Authorization' in headers_copy:
+        headers_copy['Authorization'] = f"...{headers_copy['Authorization'][-4:]}"
+    if 'Credenciales' in headers_copy:
+        headers_copy['Credenciales'] = f"...{headers_copy['Credenciales'][-4:]}"
+    return headers_copy

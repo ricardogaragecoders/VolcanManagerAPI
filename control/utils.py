@@ -15,6 +15,14 @@ from control.serializers import ConsultaCuentaSerializer, ConsultaTarjetaSeriali
 logger = logging.getLogger(__name__)
 
 
+def print_error_control(response_data=None, e=None):
+    if e:
+        error_string = e.args.__str__()
+        logger.error(error_string)
+    if response_data:
+        logger.error(response_data)
+
+
 def get_float_from_numeric_str(value: str) -> str:
     from decimal import Decimal
     try:
@@ -65,8 +73,9 @@ def mask_card(card):
 
 def get_volcan_api_headers():
     return {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json; charset=utf-8',
     }
+
 
 @newrelic.agent.background_task()
 def process_volcan_api_request(data, url, request, headers=None, times=0):
@@ -76,8 +85,8 @@ def process_volcan_api_request(data, url, request, headers=None, times=0):
     if not headers:
         headers = get_volcan_api_headers()
     data_json = json.dumps(data)
-    print(f"Request: {url}")
-    print(f"Request json: {data_json}")
+    logger.info(f"Request: {url}")
+    logger.info(f"Request json: {data_json}")
     try:
         r = requests.post(url=url, data=data_json, headers=headers)
         response_status = r.status_code
@@ -85,54 +94,52 @@ def process_volcan_api_request(data, url, request, headers=None, times=0):
             if 'application/json' in r.headers['Content-Type']:
                 response_data = r.json() if response_status != 204 else {}
             else:
+                logger.info(f"Response headers: {r.headers}")
                 response_data = r.content
-        print(f"Response {str(response_status)}: {response_data}")
+        logger.info(f"Response {str(response_status)}: {response_data}")
+        logger.info(f"Response encoding: {r.encoding}")
+
         if 200 <= response_status <= 299:
             if len(response_data) == 0:
-                print(f"Response: empty")
+                logger.info(f"Response: empty")
                 response_data = {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}
-            # else:
-            #     print(f"Response: {response_data}")
         elif response_status == 404:
             response_data = {'RSP_CODIGO': '404', 'RSP_DESCRIPCION': 'Recurso no disponible'}
-            print(f"Response: 404 Recurso no disponible")
+            logger.info(f"Response: 404 Recurso no disponible")
         else:
             response_data = {'RSP_CODIGO': str(response_status), 'RSP_DESCRIPCION': 'Error desconocido'}
-            # print(f"Response: {str(response_status)} Error desconocido")
-            # print(f"Data server: {str(r.text)}")
         response_message = ''
     except requests.exceptions.Timeout:
         response_data = {'RSP_CODIGO': "408",
                          'RSP_DESCRIPCION': 'Error de conexion con servidor VOLCAN (Timeout)'}
         response_status = 408
         response_message = 'Error de conexion con servidor VOLCAN (Timeout)'
-        print(response_message)
+        print_error_control(response_data=response_data)
     except requests.exceptions.TooManyRedirects:
         response_data = {'RSP_CODIGO': "429",
                          'RSP_DESCRIPCION': 'Error de conexion con servidor VOLCAN (TooManyRedirects)'}
         response_status = 429
         response_message = 'Error de conexion con servidor VOLCAN (TooManyRedirects)'
-        print(response_message)
+        print_error_control(response_data=response_data)
     except requests.exceptions.RequestException as e:
-        print(e.args.__str__())
         response_data = {'RSP_CODIGO': "400",
                          'RSP_DESCRIPCION': 'Error de conexion con servidor VOLCAN (RequestException)'}
         response_status = 400
         response_message = 'Error de conexion con servidor VOLCAN (RequestException)'
-        print(response_message)
+        print_error_control(response_data=response_data, e=e)
     except Exception as e:
         print("Error peticion")
-        print(e.args.__str__())
         response_status = 500
         response_message = 'error'
         response_data = {'RSP_CODIGO': '500', 'RSP_DESCRIPCION': e.args.__str__()}
+        print_error_control(response_data=response_data, e=e)
     finally:
         newrelic.agent.add_custom_attributes(
             [
-                ("request_url", url),
-                ("emisor", data['EMISOR'] if 'EMISOR' in data else ''),
-                ("response_code", response_status),
-                ("response_json", response_data),
+                ("request.url", url),
+                ("request.emisor", data['EMISOR'] if 'EMISOR' in data else ''),
+                ("response.code", response_status),
+                # ("response.json", response_data),
             ]
         )
         return response_message, response_data, response_status
@@ -608,7 +615,6 @@ def consulta_ente(request, **kwargs):
     return resp
 
 
-
 def consulta_movimientos(request, **kwargs):
     times = kwargs.get('times', 0)
     if 'request_data' not in kwargs:
@@ -894,7 +900,6 @@ def consulta_transaciones_x_fecha(request, **kwargs):
     else:
         resp = get_response_data_errors(serializer.errors)
     return resp
-
 
 
 def consulta_cvv2(request, **kwargs):

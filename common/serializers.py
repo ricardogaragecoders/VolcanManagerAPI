@@ -22,3 +22,4 @@ class StatusSerializer(CreatedAndUpdatedReadOnlyMixin, serializers.ModelSerializ
     class Meta:
         model = Status
         fields = ('id', 'name')
+

@@ -1,4 +1,6 @@
-from django.conf import settings
+import base64
+
+from django.core.cache import cache
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status, exceptions
@@ -27,30 +29,39 @@ class CustomTokenObtainPairView(CustomViewSet, TokenObtainPairView):
             Send code 2factor verification
         """
         try:
-            self.serializer = self.serializer_class(data=request.data)
-            if self.serializer.is_valid():
-                response_data = self.serializer.validated_data
-                if 'user' in response_data:
-                    user = response_data.pop('user')
-                    if settings.ENABLE_SEND_EMAIL and settings.ENABLE_2FACTOR_AUTHENTICATION:
-                        serializer = ResendCodeSerializer(data={'email': user.email, 'code': 'verification_2factor'})
-                        serializer.is_valid()
-                        verification = serializer.save()
-                        self.resp = send_verification_2factor(verification)
+            username = request.data.get('username', 'hola')
+            password = request.data.get('password', '-----')
+            message_bytes = bytes(f"{username}:{password}", 'latin1')
+            key_cache = base64.b64encode(message_bytes).decode('latin1')
+
+            if key_cache not in cache:
+                self.serializer = self.serializer_class(data=request.data)
+                if self.serializer.is_valid():
+                    response_data = self.serializer.validated_data
+                    if 'user' in response_data:
+                        user = response_data.pop('user')
+                        if settings.ENABLE_SEND_EMAIL and settings.ENABLE_2FACTOR_AUTHENTICATION:
+                            serializer = ResendCodeSerializer(data={'email': user.email, 'code': 'verification_2factor'})
+                            serializer.is_valid()
+                            verification = serializer.save()
+                            self.resp = send_verification_2factor(verification)
+                        else:
+                            from rest_framework_simplejwt.tokens import RefreshToken
+                            self.resp[1]['send_email'] = False
+                            self.resp[1] = get_role_and_data(user, self.resp[1])
+                            refresh = RefreshToken.for_user(user)
+                            self.resp[1]['refresh'] = str(refresh)
+                            self.resp[1]['access'] = str(refresh.access_token)
                     else:
-                        from rest_framework_simplejwt.tokens import RefreshToken
-                        self.resp[1]['send_email'] = False
-                        self.resp[1] = get_role_and_data(user, self.resp[1])
-                        refresh = RefreshToken.for_user(user)
-                        self.resp[1]['refresh'] = str(refresh)
-                        self.resp[1]['access'] = str(refresh.access_token)
+                        response_data['RSP_CODIGO'] = '0000000000'
+                        response_data['RSP_DESCRIPCION'] = 'Auth login success'
+                        response_data['RSP_ERROR'] = 'OK'
+                        cache.set(key_cache, response_data, 60 * 60 * 2)
+                        self.make_response_success(data=response_data)
                 else:
-                    response_data['RSP_CODIGO'] = '0000000000'
-                    response_data['RSP_DESCRIPCION'] = 'Auth login success'
-                    response_data['RSP_ERROR'] = 'OK'
-                    self.make_response_success(data=response_data)
+                    self.resp = get_response_data_errors(self.serializer.errors)
             else:
-                self.resp = get_response_data_errors(self.serializer.errors)
+                self.make_response_success(data=cache.get(key_cache))
         except exceptions.AuthenticationFailed as e:
             self.resp = ['Usuario no activo o no encontrado', {'code': 'no_active_account'}, 400]
         except Exception as e:
@@ -105,11 +116,11 @@ class RegisterAdminAPIView(CustomViewSet):
         try:
             verification = ProfileVerification.objects.get(profile=profile,
                                                            data_verification=profile.user.email,
-                                                           type_verification=ProfileVerification.VERIFICATION_EMAIL)
+                                                           type_verification=VerificationType.VERIFICATION_EMAIL)
         except ProfileVerification.DoesNotExist:
             data = {
                 'profile': profile,
-                'type_verification': ProfileVerification.VERIFICATION_EMAIL,
+                'type_verification': VerificationType.VERIFICATION_EMAIL,
                 'data_verification': profile.user.email
             }
             verification = ProfileVerification.objects.create(**data)
@@ -149,12 +160,12 @@ class VerificationCodeAPIView(CustomViewSet):
     def perform_create(self, request, *args, **kwargs):
         verification = self.serializer.save()
         profile = verification.profile
-        if verification.type_verification == ProfileVerification.VERIFICATION_2FACTOR:
+        if verification.type_verification == VerificationType.VERIFICATION_2FACTOR:
             response_data = get_role_and_data(profile.user, {})
             refresh = RefreshToken.for_user(profile.user)
             response_data['refresh'] = str(refresh)
             response_data['access'] = str(refresh.access_token)
-        elif verification.type_verification == ProfileVerification.RECOVER_PASSWORD_EMAIL:
+        elif verification.type_verification == VerificationType.RECOVER_PASSWORD_EMAIL:
             profile.change_password = True
             profile.verification_email = True
             if profile.has_changed:
@@ -164,7 +175,7 @@ class VerificationCodeAPIView(CustomViewSet):
             user.set_password(new_password)
             user.save()
             response_data = {'password': new_password, 'code': 'change-password', 'message': u'Cambiar contraseña'}
-        elif verification.type_verification == ProfileVerification.VERIFICATION_EMAIL:
+        elif verification.type_verification == VerificationType.VERIFICATION_EMAIL:
             profile.verification_email = True
             if profile.has_changed:
                 profile.save()
@@ -188,12 +199,12 @@ class ResendCodeAPIView(CustomViewSet):
                 verification = self.serializer.save()
                 if settings.ENABLE_SEND_EMAIL:
                     type_verification = verification.type_verification
-                    if type_verification == ProfileVerification.RECOVER_PASSWORD_EMAIL:
+                    if type_verification == VerificationType.RECOVER_PASSWORD_EMAIL:
                         self.resp = send_recover_password(verification, security=True)
-                    elif type_verification == ProfileVerification.VERIFICATION_2FACTOR \
+                    elif type_verification == VerificationType.VERIFICATION_2FACTOR \
                             and settings.ENABLE_2FACTOR_AUTHENTICATION:
                         self.resp = send_verification_2factor(verification)
-                    elif type_verification == ProfileVerification.VERIFICATION_EMAIL:
+                    elif type_verification == VerificationType.VERIFICATION_EMAIL:
                         self.resp = send_verification_2factor(verification)
                     else:
                         self.resp = ['La solicitud no pudo ser procesada', {'code': 'unknown'}, 400]

@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'control',
     'thalesapi',
     'webhook',
+    'estrato'
 ]
 
 MIDDLEWARE = [
@@ -68,6 +69,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'common.middleware.RequestMiddleware',
+    'common.middleware.RequestLoggingMiddleware',
 ]
 
 APPEND_SLASH = False
@@ -281,11 +283,11 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
-        'standard': {
+        'complete': {
             'format': '[%(asctime)s][%(threadName)s:%(thread)d][task_id:%(name)s][%(filename)s:%(lineno)d]'
                       '[%(levelname)s][%(message)s]'
         },
-        'simple': {
+        'standard': {
             'format': '[%(levelname)s][%(asctime)s][%(filename)s:%(lineno)d]%(message)s'
         },
         'collect': {
@@ -298,49 +300,72 @@ LOGGING = {
         },
     },
     'handlers': {
-        'console': {
+        'console_debug': {
             'level': 'DEBUG',
-            'filters': ['require_debug_true'],
+            # 'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
-            'formatter': 'simple'
+            'formatter': 'collect'
+        },
+        'console_error': {
+            'level': 'ERROR',
+            'class': 'logging.StreamHandler',
+            'formatter': 'standard'
         },
         'logfile': {
-            'level': 'DEBUG',
-            'class': 'logging.handlers.RotatingFileHandler',
+            'level': 'ERROR',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
             'filename': os.path.join(BASE_DIR, "logfile.log"),
-            'maxBytes': 1024 * 1024 * 50,  # 5OMB
-            'backupCount': 3,
-            'formatter': 'standard',
+            'when': 'midnight',  # rotar a medianoche
+            'interval': 1,
+            'backupCount': 30,  # mantener 30 días de backups
+            'formatter': 'complete',
             'encoding': 'utf-8',
         },
     },
     'loggers': {
-        'control': {
-            'handlers': ['console', 'logfile'],
+        '': {
+            'handlers': ['console_debug', 'console_error', 'logfile'],
             'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
-        },
-        'thalesapi': {
-            'handlers': ['console', 'logfile'],
-            'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
-        },
-        'users': {
-            'handlers': ['console', 'logfile'],
-            'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
-        },
-        'common': {
-            'handlers': ['console', 'logfile'],
-            'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
+            'propagate': True,
         },
         'django': {
-            'handlers': ['console'],
-            'level': 'INFO',
-        }
+            'handlers': ['console_debug', 'console_error', 'logfile'],
+            'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console_debug', 'console_error', 'logfile'],
+            'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
+            'propagate': False,
+        },
+        'django.server': {
+            'handlers': ['console_debug', 'console_error', 'logfile'],
+            'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
+            'propagate': False,
+        },
+        'django.db.backends': {
+            'handlers': ['console_debug', 'console_error', 'logfile'],
+            'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
+            'propagate': False,
+        },
+        'django.template': {
+            'handlers': ['console_debug', 'console_error', 'logfile'],
+            'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
+            'propagate': False,
+        },
+        # 'common.middleware.RequestLoggingMiddleware': {
+        #     'handlers': ['console_debug', 'console_error', 'logfile'],
+        #     'level': env.str('DJANGO_LOG_LEVEL', 'DEBUG'),
+        #     'propagate': False,
+        # },
     },
 }
 
 # URLs
 URL_BACKEND = env.str('URL_BACKEND', 'http://localhost:8000')
 EMAIL_CONTACT = env.str('EMAIL_CONTACT', 'info@volcangroup.io')
+DEFAULT_PASSWORD = env.str('DEFAULT_PASSWORD', '')
+
 SERVER_VOLCAN_AZ7_URL = env.str('SERVER_VOLCAN_AZ7_URL', 'http://10.23.102.10:21005')
 SERVER_VOLCAN_PAYCARD_URL = env.str('SERVER_VOLCAN_PAYCARD_URL', 'http://10.23.106.33/wsParabiliumVolcan')
 
@@ -385,6 +410,13 @@ PASSWORD_DEFAULT = env.str('PASSWORD_DEFAULT', '')
 VERIFICATION_ADMINISTRATOR_DEFAULT = env.bool('VERIFICATION_ADMINISTRATOR_DEFAULT', True)
 PATH_IMAGE_LOGO = env.str('PATH_IMAGE_LOGO')
 PATH_ISO_COUNTRIES_CSV = env.str('PATH_ISO_COUNTRIES_CSV', '')
+
+# API KEY
+APIKEY_ESTRATO_VOLCAN_API_ENABLED = env.bool('APIKEY_ESTRATO_VOLCAN_API_ENABLED', False)
+API_KEY_FID = env.str('API_KEY_FID', '')
+SERVER_ESTRATO_VOLCAN_URL = env.str('SERVER_ESTRATO_VOLCAN_URL', '')
+ESTRATO_LIMIT_QUERY = env.int('ESTRATO_LIMIT_QUERY', 5)
+
 
 from corsheaders.defaults import default_headers, default_methods
 
@@ -431,6 +463,7 @@ URL_AZ7_CONSULTA_ESTADO_CUENTA = env.str('URL_AZ7_CONSULTA_ESTADO_CUENTA',
 
 # obtenerDatosTokenizacionPrepago
 URL_AZ7_LOGIN = env.str('URL_AZ7_LOGIN', '/wsParabiliumVolcan/api/Login')
-URL_AZ7_CONSULTA_TOKEN_TARJETA = env.str('URL_AZ7_CONSULTA_TOKEN_TARJETA', '/wsParabiliumVolcan/api/ConsultarTokenTarjeta')
-PARAM_AZ7_PAYCARD_USUARIO = env.str('PARAM_AZ7_PAYCARD_USUARIO', 'Prueba')
-PARAM_AZ7_PAYCARD_PASSWORD = env.str('PARAM_AZ7_PAYCARD_PASSWORD', 'Prueba')
+URL_AZ7_CONSULTA_TOKEN_TARJETA = env.str('URL_AZ7_CONSULTA_TOKEN_TARJETA',
+                                         '/wsParabiliumVolcan/api/ConsultarTokenTarjeta')
+PARAM_AZ7_PAYCARD_USUARIO = env.str('PARAM_AZ7_PAYCARD_USUARIO', '')
+PARAM_AZ7_PAYCARD_PASSWORD = env.str('PARAM_AZ7_PAYCARD_PASSWORD', '')

@@ -1,8 +1,170 @@
 from rest_framework.exceptions import ParseError
 from rest_framework.permissions import IsAuthenticated
+from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
+from django.http import HttpResponse
+from common.export_excel import WriteToExcel
+from common.export_pdf import WriteToPdf
+from common.utils import is_valid_uuid
+from common.views import CustomViewSet, CustomViewSetWithPagination
+from control.models import Company, Operator
+from control.serializers import CompanySerializer, OperatorSerializer
+from users.permissions import IsVerified, IsOperator, IsAdministrator
 
-from common.views import CustomViewSet
-from users.permissions import IsVerified, IsOperator
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+class CompanyApiView(CustomViewSetWithPagination):
+    """
+    get:
+        Return all companies
+    """
+    serializer_class = CompanySerializer
+    model_class = Company
+    permission_classes = (IsAuthenticated, IsVerified, IsAdministrator)
+    field_pk = 'issuer_id'
+
+    def initial(self, request, *args, **kwargs):
+        if self.request.method == "GET":
+            self.permission_classes = (IsAuthenticated, IsVerified, IsOperator)
+        else:
+            self.permission_classes = (IsAuthenticated, IsVerified, IsAdministrator)
+        return super().initial(request, *args, **kwargs)
+
+    def get_queryset(self):
+        status = self.request.query_params.get('st', 'all')
+        company_id = int(self.request.query_params.get('cId', 0))
+        q = self.request.query_params.get('q', None)
+        order_by = self.request.query_params.get('orderBy', 'name')
+        order_by_desc = self.request.query_params.get('orderByDesc', 'false')
+        filters = dict()
+        queryset = self.model_class.objects.all()
+
+        if company_id > 0:
+            filters['id__in'] = [company_id, ]
+
+        if status != 'all':
+            filters['is_active'] = status == 'true'
+
+        if len(filters) > 0:
+            queryset = queryset.filter(**filters).distinct()
+
+        if q:
+            queryset = queryset.filter(
+                Q(name__icontains=q) |
+                Q(issuer_id__icontains=q) |
+                Q(thales_issuer_id__icontains=q) |
+                Q(slug__icontains=q)
+            ).distinct()
+
+        order_by_filter = '{0}'.format(order_by if order_by_desc == 'false' else "-%s" % order_by)
+
+        return queryset.order_by(order_by_filter)
+
+    def get_response_from_export(self, export):
+        response_data = []
+        for item in self.queryset:
+            data = {
+                'ID': item.id,
+                _('nombre'): item.name,
+                _('issuer_id'): item.issuer_id,
+                _('thales_issuer_id'): item.thales_issuer_id,
+                _('status'): 'Activo' if item.is_active else 'Inactivo',
+            }
+            response_data.append(data)
+        fields = ['ID', _('nombre'), _('issuer_id'), _('thales_issuer_id'), _('estatus'), ]
+        title = _(u'Empresas')
+        if export == 'excel':
+            xlsx_data = WriteToExcel(response_data, title=title, fields=fields)
+            response = HttpResponse(content_type='application/vnd.ms-excel')
+            response['Content-Disposition'] = 'attachment; filename=Empresas.xlsx'
+            response.write(xlsx_data)
+        else:
+            pdf_data = WriteToPdf(response_data, title=title, fields=fields)
+            response = HttpResponse(content_type='application/pdf')
+            response['Content-Disposition'] = 'attachement; filename=Empresas.pdf'
+            response['Content-Transfer-Encoding'] = 'binary'
+            response.write(pdf_data)
+        return response
+
+
+class OperatorApiView(CustomViewSetWithPagination):
+    """
+    get:
+        Return all operators
+    """
+    serializer_class = OperatorSerializer
+    model_class = Operator
+    permission_classes = (IsAuthenticated, IsVerified, IsOperator)
+    field_pk = 'operator_id'
+
+    def initial(self, request, *args, **kwargs):
+        if self.request.method == "GET":
+            self.permission_classes = (IsAuthenticated, IsVerified, IsOperator)
+        else:
+            self.permission_classes = (IsAuthenticated, IsVerified, IsAdministrator)
+        return super().initial(request, *args, **kwargs)
+
+    def get_queryset(self):
+        status = self.request.query_params.get('st', 'all')
+        company_id = self.request.query_params.get('cId', '')
+        operator_id = self.request.query_params.get('oId', '')
+        q = self.request.query_params.get('q', None)
+        order_by = self.request.query_params.get('orderBy', 'id')
+        order_by_desc = self.request.query_params.get('orderByDesc', 'false')
+        filters = dict()
+        queryset = self.model_class.objects.all()
+
+        if is_valid_uuid(operator_id):
+            filters['id'] = operator_id
+
+        if is_valid_uuid(company_id):
+            filters['company_id'] = company_id
+
+        if status != 'all':
+            filters['active'] = status == 'true'
+
+        if len(filters) > 0:
+            queryset = queryset.filter(**filters).distinct()
+
+        if q:
+            queryset = queryset.filter(
+                Q(operator_name__icontains=q) |
+                Q(profile__email__icontains=q)
+            ).distinct()
+
+        order_by_filter = '{0}'.format(order_by if order_by_desc == 'false' else "-%s" % order_by)
+
+        return queryset.order_by(order_by_filter)
+
+    def get_response_from_export(self, export):
+        response_data = []
+        for item in self.queryset:
+            data = {
+                'ID': item.id,
+                _('nombre'): item.profile.get_full_name() if item.profile and item.profile.user else 'Sin profile',
+                _('email'): item.profile.email if item.profile and item.profile.user else '',
+                _('empresa'): item.company.name if item.company else 'Sin empresa',
+                _('estatus'): 'Activo' if item.active else 'Inactivo',
+                _('role'): ' '.join(item.profile.role),
+            }
+            response_data.append(data)
+        fields = ['ID', _('nombre'), _('email'), _('empresa'), _('estatus'), _('roles'), ]
+        title = _(u'Operadores')
+        if export == 'excel':
+            xlsx_data = WriteToExcel(response_data, title=title, fields=fields)
+            response = HttpResponse(content_type='application/vnd.ms-excel')
+            response['Content-Disposition'] = 'attachment; filename=Operadores.xlsx'
+            response.write(xlsx_data)
+        else:
+            pdf_data = WriteToPdf(response_data, title=title, fields=fields)
+            response = HttpResponse(content_type='application/pdf')
+            response['Content-Disposition'] = 'attachement; filename=Operadores.pdf'
+            response['Content-Transfer-Encoding'] = 'binary'
+            response.write(pdf_data)
+        return response
 
 
 class ControlApiView(CustomViewSet):
@@ -18,25 +180,16 @@ class ControlApiView(CustomViewSet):
             if 'RSP_CODIGO' in response_data:
                 if (response_data['RSP_CODIGO'].isnumeric() and int(response_data['RSP_CODIGO']) == 0) \
                         or response_data['RSP_CODIGO'] == '':
-                    import logging
-                    logger = logging.getLogger(__name__)
-                    logger.info(request.user.profile.get_full_name())
-                    logger.info(response_data)
+                    pass
             else:
-                import logging
-                logger = logging.getLogger(__name__)
                 logger.error(request.user.profile.get_full_name())
                 logger.error(response_data)
         except ParseError as e:
-            import logging
-            logger = logging.getLogger(__name__)
             logger.exception(e)
             response_data = {'RSP_CODIGO': '-1', 'RSP_DESCRIPCION': "%s" % e}
             response_message = "%s" % e
             response_status = 400
         except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
             logger.exception(e)
             response_message = u"Error en applicación"
             response_status = 500
