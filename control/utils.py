@@ -1110,3 +1110,19 @@ def consulta_poliza(request, **kwargs):
     else:
         resp = get_response_data_errors(serializer.errors)
     return resp
+
+
+def corresponsalia(request, **kwargs):
+    times = kwargs.get('times', 0)
+    if 'request_data' not in kwargs:
+        request_data = request.data.copy()
+    else:
+        request_data = kwargs['request_data'].copy()
+    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    api_url = f'{url_server}{settings.URL_AZ7_CORRESPONSALIA}'
+    serializer = ConsultaPolizaSerializer(data=request_data)
+    if serializer.is_valid():
+        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+    else:
+        resp = get_response_data_errors(serializer.errors)
+    return resp

@@ -310,3 +310,8 @@ class ControlApiView(CustomViewSet):
         from control.utils import consulta_poliza
         return self.control_action(request=request, control_function=consulta_poliza,
                                    name_control_function="consulta_poliza")
+
+    def corresponsalia(self, request, *args, **kwargs):
+        from control.utils import corresponsalia
+        return self.control_action(request=request, control_function=corresponsalia,
+                                   name_control_function="consulta_poliza")
