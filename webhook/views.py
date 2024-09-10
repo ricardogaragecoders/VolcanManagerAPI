@@ -148,10 +148,12 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
         filters = dict()
         profile = self.request.user.profile
         delivered = self.request.query_params.get('delivered', 'all')
-        if profile.is_superadmin():
+        if profile.is_superadmin() or profile.is_admin():
             issuer = self.request.query_params.get('emisor', '')
         elif profile.is_operator(equal=True):
-            issuer = profile.user.first_name
+            from control.models import Operator
+            operator = Operator.objects.filter(profile__user_id=profile.user.id).values('company__volcan_issuer_id').first()
+            issuer = operator['company__volcan_issuer_id'] if operator else profile.user.first_name
         else:
             issuer = 'sin_emision'
 
