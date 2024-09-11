@@ -96,6 +96,7 @@ class OperatorApiView(CustomViewSetWithPagination):
         Return all operators
     """
     serializer_class = OperatorSerializer
+    create_serializer_class = OperatorSerializer
     model_class = Operator
     permission_classes = (IsAuthenticated, IsVerified, IsOperator)
     field_pk = 'operator_id'

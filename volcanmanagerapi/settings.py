@@ -57,7 +57,8 @@ INSTALLED_APPS = [
     'control',
     'thalesapi',
     'webhook',
-    'estrato'
+    'estrato',
+    'reports'
 ]
 
 MIDDLEWARE = [
@@ -365,6 +366,7 @@ LOGGING = {
 URL_BACKEND = env.str('URL_BACKEND', 'http://localhost:8000')
 EMAIL_CONTACT = env.str('EMAIL_CONTACT', 'info@volcangroup.io')
 DEFAULT_PASSWORD = env.str('DEFAULT_PASSWORD', '')
+DEFAULT_TIMEZONE = env.str('DEFAULT_TIMEZONE', 'America/Mexico_City')
 
 SERVER_VOLCAN_AZ7_URL = env.str('SERVER_VOLCAN_AZ7_URL', 'http://10.23.102.10:21005')
 SERVER_VOLCAN_PAYCARD_URL = env.str('SERVER_VOLCAN_PAYCARD_URL', 'http://10.23.106.33/wsParabiliumVolcan')
