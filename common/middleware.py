@@ -52,7 +52,9 @@ class RequestLoggingMiddleware(MiddlewareMixin):
     skip_logging_keywords = [
         "volcan/api/issuers", "volcan/api/operators", "volcan/api/Webhooks", "volcan/api/Notificaciones",
         "volcan/api/Transacciones", "thales/api/bin/configurations", "volcan/api/ApiKeys",
-        "volcan/api/commons/monitor/systems"
+        "volcan/api/commons/monitor/systems", "volcan/api/reports",
+        "media/report", "media/account-statements", "static/swagger-ui",
+        "favicon.ico"
     ]
 
     def process_request(self, request):
@@ -87,8 +89,8 @@ class RequestLoggingMiddleware(MiddlewareMixin):
         url = request.build_absolute_uri()
 
         # Extract and format headers
-        relevant_headers = ["X-Correlation-Id", "Content-Type", "Host", "Accept", "Accept-Language", "Accept-Encoding",
-                            "Origin", "Authorization"]
+        relevant_headers = ["X-Correlation-Id", "Content-Type", "Host", "Accept",
+                            "Accept-Language", "Accept-Encoding", "Origin", "Authorization"]
         headers = {key: (value if key.lower() != 'authorization' else 'Bearer ***') for key, value in
                    request.headers.items() if key in relevant_headers}
         if "Content-Type" in headers and headers["Content-Type"] == "application/x-www-form-urlencoded":
