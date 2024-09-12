@@ -1790,6 +1790,213 @@ paths:
       tags:
         - VolcanManager::Acciones
     parameters: []
+  /volcan/api/ConsultaIntraExtraEsquema/:
+    post:
+      operationId: api_control_consulta_intra_extra_esquema
+      description: 'Consulta Intra Extra Esquema'
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ConsultaIntraExtraEsquema"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsultaIntraExtraEsquema"
+        required: true
+      summary: 'Consulta Intra Extra Esquema'
+      responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
+        '200':
+          description: 'Consulta Intra Extra Esquema'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_pagina": "",
+                "rsp_folio": "",
+                "rsp_cuenta": "",
+                "rsp_tarjeta": "",
+                "rsp_esquema": "",
+                "rsp_importe": "",
+                "rsp_moneda": "",
+                "rsp_tasa": "",
+                "rsp_doc_finan": "",
+                "rsp_fec_registro": "",
+                "rsp_tipo_finan": "",
+                "rsp_estado": "",
+                "rsp_plazo": "",
+                "rsp_cuota_act": "",
+                "rsp_capital_pag": "",
+                "rsp_interes_pag": "",
+                "rsp_ncuota_pag": "",
+                "rsp_sld_capital": "",
+                "rsp_cuota_pend": ""
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error"
+              }
+      tags:
+        - VolcanManager::Acciones
+    parameters: []
+  /volcan/api/ConsultaEsquemasFinanciamiento/:
+    post:
+      operationId: api_control_consulta_esquemas_financiamiento
+      description: 'Consulta Esquemas Financiamiento'
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ConsultaEsquemasFinanciamiento"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsultaEsquemasFinanciamiento"
+        required: true
+      summary: 'Intra/Extra Especial'
+      responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
+        '200':
+          description: 'Consulta Esquemas Financiamiento'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_pagina": "",
+                "rsp_folio": "",
+                "rsp_esquema": "",
+                "rsp_nombre": "",
+                "rsp_tipo_finan": "",
+                "rsp_moneda": "",
+                "rsp_tasa": "",
+                "rsp_plazo_minimo": "",
+                "rsp_plazo_maximo": "",
+                "rsp_tasa_promo": "",
+                "rsp_plazo_promo": "",
+                "rsp_desembolso": "",
+                "rsp_pago_anticipado": "",
+                "rsp_cuota_seguro": "",
+                "rsp_periodo_gracia": "",
+                "rsp_limite_pago_ven": ""
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error"
+              }
+      tags:
+        - VolcanManager::Acciones
+    parameters: []
+  /volcan/api/Refinanciamiento/:
+    post:
+      operationId: api_control_refinanciamiento
+      description: 'Refinanciamiento'
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/Refinanciamiento"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Refinanciamiento"
+        required: true
+      summary: 'Refinanciamiento'
+      responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
+        '200':
+          description: 'Refinanciamiento'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_tarjeta": "",
+                "rsp_cuenta": "",
+                "rsp_esquema": "",
+                "rsp_des_esq": "",
+                "rsp_tipo_finan": "",
+                "rsp_importe": "",
+                "rsp_moneda": "",
+                "rsp_tasa": "",
+                "rsp_plazo": "",
+                "rsp_tasa_pro": "",
+                "rsp_plazo_pro": "",
+                "rsp_cuota": "",
+                "rsp_fec_pago": "",
+                "rsp_desembolso_por": "",
+                "rsp_desembolso_imp": "",
+                "rsp_pen_pagcap_por": "",
+                "rsp_pen_pagcap_imp": "",
+                "rsp_forpag_cuo": "",
+                "rsp_forpag_cap": "",
+                "rsp_cuo_ven": "",
+                "rsp_referencia": "",
+                "rsp_autoriz": "",
+                "rsp_documento": "",
+                "rsp_cod_mov": "",
+                "rsp_cod_org": "",
+                "rsp_iban": "",
+                "rsp_nombre_th": "",
+                "rsp_vendedor": ""
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error"
+              }
+      tags:
+        - VolcanManager::Acciones
+    parameters: []
   /volcan/api/IntraExtras/:
     post:
       operationId: api_control_intra_extras_mock
@@ -3824,6 +4031,126 @@ components:
         - esquema
         - moneda
         - importe
+        - plazo
+        - oficina
+        - vendedor
+        - emisor
+    ConsultaIntraExtraEsquema:
+      type: object
+      properties:
+        tarjeta:
+          type: string
+          description: 'Condicional. Número tarjeta cifrada con la llave compartida con Volcán.'
+          maxLength: 16
+        cif:
+          type: string
+          description: 'Condicional. Número de cliente único.'
+          maxLength: 15
+        id_owner:
+          type: string
+          description: 'Condicional. Identificador unico de EveryCard para relacionar Cliente/tarjeta/Cuenta.'
+          maxLength: 15
+        tipo_identificacion:
+          type: string
+          description: 'Condicional. Indica el tipo de documento de identificación, tomado de catalogo.'
+          maxLength: 2
+        doc_identificacion:
+          type: string
+          description: 'Condicional. Número de documento de identificación oficial del TH.'
+          maxLength: 20
+        doc_finan:
+          type: string
+          description: 'Opcional. Número de documento de financiamiento de la compra.'
+          maxLength: 10
+        tipo_finan:
+          type: string
+          description: 'Opcional. Tipo CEF = Extra/CIF = Intra Financiamiento.'
+          maxLength: 3
+        pagina:
+          type: string
+          description: 'Opcional. Se utiliza para la descargar bloqueo de siguiente página o bloqueo de página anterior.'
+          maxLength: 31
+        direccion:
+          type: string
+          description: 'Opcional. S=Siguiente Pagina o bloque de datos/R=Retroceso de página o bloque de datos.'
+          enum: ['S', 'R']
+          maxLength: 1
+        emisor:
+          type: string
+          description: 'Mandatorio. Código de Identificación del emisor esto lo Asigna Volcán, se utiliza para el ruteo de la trama administrativa por cliente.'
+          maxLength: 3
+      required:
+        - emisor
+    ConsultaEsquemasFinanciamiento:
+      type: object
+      properties:
+        tarjeta:
+          type: string
+          description: 'Condicional. Número tarjeta cifrada con la llave compartida con Volcán.'
+          maxLength: 16
+        esquema:
+          type: string
+          description: 'Condicional. Código (plan) de esquema que identifica las condiciones para crear Extra/Intra Financiamiento especiales.'
+          maxLength: 5
+        pagina:
+          type: string
+          description: 'Opcional. Se utiliza para la descargar bloqueo de siguiente página o bloqueo de página anterior, final se envia END.'
+          maxLength: 31
+        emisor:
+          type: string
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán.'
+          maxLength: 3
+      required:
+        - emisor
+    Refinanciamiento:
+      type: object
+      properties:
+        tarjeta:
+          type: string
+          description: 'Mandatorio. Número de tarjeta cifrada con la llave compartida con Empresa.'
+          maxLength: 16
+        esquema:
+          type: string
+          description: 'Mandatorio. Código de esquema de financiamiento especial, con los parámetros plazos y tasas.'
+          maxLength: 5
+        documento:
+          type: string
+          description: 'Mandatorio. Número de documento de la compra o Avance de efectivo para convertir a Intra/Extra Financiamiento.'
+          maxLength: 10
+        cod_mov:
+          type: string
+          description: 'Mandatorio. Código de movimiento de la compra=COM/ADE=Avance de Efectivo.'
+          maxLength: 3
+        cod_ori:
+          type: string
+          description: 'Mandatorio. Código de Movimiento Origen del Estado de Cuenta de la Compra o Avance de Efectivo.'
+          maxLength: 3
+        plazo:
+          type: string
+          description: 'Mandatorio. Se envía el plazo de pago expresado en meses, el cual se validara con el minimo y maximo asignado al esquema de financiamiento solicitado.'
+          maxLength: 2
+        referencia:
+          type: string
+          description: 'Opcional. Campo de folio de control de conciliación, se no se envia el sistema lo genera y lo registra en la aplicación del Mov.'
+          maxLength: 12
+        oficina:
+          type: string
+          description: 'Mandatorio. Localidad de origen de la transacción, se utilizara para la generación de asientos contables.'
+          maxLength: 8
+        vendedor:
+          type: string
+          description: 'Mandatorio. Se debe de enviar su contenido en 10 posiciones.'
+          maxLength: 10
+        emisor:
+          type: string
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+          maxLength: 3
+      required:
+        - tarjeta
+        - esquema
+        - documento
+        - cod_mov
+        - cod_ori
         - plazo
         - oficina
         - vendedor

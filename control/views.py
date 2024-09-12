@@ -316,3 +316,18 @@ class ControlApiView(CustomViewSet):
         from control.utils import intra_extra_especial
         return self.control_action(request=request, control_function=intra_extra_especial,
                                    name_control_function="intra_extra_especial")
+
+    def consulta_intra_extra_esquema(self, request, *args, **kwargs):
+        from control.utils import consulta_intra_extra_esquema
+        return self.control_action(request=request, control_function=consulta_intra_extra_esquema,
+                                   name_control_function="consulta_intra_extra_esquema")
+
+    def consulta_esquemas_financiamiento(self, request, *args, **kwargs):
+        from control.utils import consulta_esquemas_financiamiento
+        return self.control_action(request=request, control_function=consulta_esquemas_financiamiento,
+                                   name_control_function="consulta_esquemas_financiamiento")
+
+    def refinanciamiento(self, request, *args, **kwargs):
+        from control.utils import refinanciamiento
+        return self.control_action(request=request, control_function=refinanciamiento,
+                                   name_control_function="refinanciamiento")

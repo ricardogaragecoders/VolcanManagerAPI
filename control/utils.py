@@ -1112,7 +1112,6 @@ def consulta_poliza(request, **kwargs):
     return resp
 
 
-
 def intra_extra_especial(request, **kwargs):
     times = kwargs.get('times', 0)
     if 'request_data' not in kwargs:
@@ -1145,4 +1144,181 @@ def intra_extra_especial(request, **kwargs):
                 return resp[0], resp_copy, resp[2]
     else:
         resp = get_response_data_errors(serializer.errors)
+    return resp
+
+
+def consulta_intra_extra_esquema(request, **kwargs):
+    times = kwargs.get('times', 0)
+    if 'request_data' not in kwargs:
+        request_data = request.data.copy()
+    else:
+        request_data = kwargs['request_data'].copy()
+    request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
+    request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
+    data = {k.upper(): v for k, v in request_data.items()}
+    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    api_url = f'{url_server}{settings.URL_AZ7_INTRAS_EXTRAS}'
+    # serializer = IntraExtrasSerializer(data=data)
+    if data:
+        resp = ['', {}, 200]
+        resp[1] = {
+            "RSP_ERROR": "OK",
+            "RSP_CODIGO": "0000000000",
+            "RSP_DESCRIPCION": "APROBADO",
+            "RSP_PAGINA": "",
+            "RSP_FOLIO": "",
+            "RSP_CUENTA": "",
+            "RSP_TARJETA": "",
+            "RSP_ESQUEMA": "",
+            "RSP_IMPORTE": "",
+            "RSP_MONEDA": "",
+            "RSP_TASA": "",
+            "RSP_DOC_FINAN": "",
+            "RSP_FEC_REGISTRO": "",
+            "RSP_TIPO_FINAN": "",
+            "RSP_ESTADO": "",
+            "RSP_IMPORTE": "",
+            "RSP_MONEDA": "",
+            "RSP_TASA": "",
+            "RSP_PLAZO": "",
+            "RSP_CUOTA_ACT": "",
+            "RSP_CAPITAL_PAG": "",
+            "RSP_INTERES_PAG": "",
+            "RSP_NCUOTA_PAG": "",
+            "RSP_SLD_CAPITAL": "",
+            "RSP_CUOTA_PEND": "",
+        }
+
+        if 'RSP_ERROR' in resp[1]:
+            if resp[1]['RSP_ERROR'].upper() == 'OK' or (
+                    resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
+                resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
+            elif resp[1]['RSP_ERROR'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
+            elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Transaccion erronea'}, resp[2]
+            else:
+                resp_copy = resp[1].copy()
+                for k in resp[1].keys():
+                    if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
+                        del resp_copy[k]
+                return resp[0], resp_copy, resp[2]
+    return resp
+
+
+def consulta_esquemas_financiamiento(request, **kwargs):
+    times = kwargs.get('times', 0)
+    if 'request_data' not in kwargs:
+        request_data = request.data.copy()
+    else:
+        request_data = kwargs['request_data'].copy()
+    request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
+    request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
+    data = {k.upper(): v for k, v in request_data.items()}
+    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    api_url = f'{url_server}{settings.URL_AZ7_INTRAS_EXTRAS}'
+    # serializer = IntraExtrasSerializer(data=data)
+    if data:
+        resp = ['', {}, 200]
+        resp[1] = {
+            "RSP_ERROR": "OK",
+            "RSP_CODIGO": "0000000000",
+            "RSP_DESCRIPCION": "APROBADO",
+            "RSP_PAGINA": "",
+            "RSP_FOLIO": "",
+            "RSP_ESQUEMA": "",
+            "RSP_NOMBRE": "",
+            "RSP_TIPO_FINAN": "",
+            "RSP_MONEDA": "",
+            "RSP_TASA": "",
+            "RSP_PLAZO_MINIMO": "",
+            "RSP_PLAZO_MAXIMO": "",
+            "RSP_TASA_PROMO": "",
+            "RSP_PLAZO_PROMO": "",
+            "RSP_DESEMBOLSO": "",
+            "RSP_PAGO_ANTICIPADO": "",
+            "RSP_CUOTA_SEGURO": "",
+            "RSP_PERIODO_GRACIA": "",
+            "RSP_LIMITE_PAGO_VEN": "",
+        }
+
+        if 'RSP_ERROR' in resp[1]:
+            if resp[1]['RSP_ERROR'].upper() == 'OK' or (
+                    resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
+                resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
+            elif resp[1]['RSP_ERROR'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
+            elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Transaccion erronea'}, resp[2]
+            else:
+                resp_copy = resp[1].copy()
+                for k in resp[1].keys():
+                    if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
+                        del resp_copy[k]
+                return resp[0], resp_copy, resp[2]
+    return resp
+
+
+def refinanciamiento(request, **kwargs):
+    times = kwargs.get('times', 0)
+    if 'request_data' not in kwargs:
+        request_data = request.data.copy()
+    else:
+        request_data = kwargs['request_data'].copy()
+    request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
+    request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
+    data = {k.upper(): v for k, v in request_data.items()}
+    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    api_url = f'{url_server}{settings.URL_AZ7_INTRAS_EXTRAS}'
+    # serializer = IntraExtrasSerializer(data=data)
+    if data:
+        resp = ['', {}, 200]
+        resp[1] = {
+            "RSP_ERROR": "OK",
+            "RSP_CODIGO": "0000000000",
+            "RSP_DESCRIPCION": "APROBADO",
+            "RSP_TARJETA":"",
+            "RSP_CUENTA":"",
+            "RSP_ESQUEMA":"",
+            "RSP_DES_ESQ":"",
+            "RSP_TIPO_FINAN":"",
+            "RSP_IMPORTE":"",
+            "RSP_MONEDA":"",
+            "RSP_TASA":"",
+            "RSP_PLAZO":"",
+            "RSP_TASA_PRO":"",
+            "RSP_PLAZO_PRO":"",
+            "RSP_CUOTA":"",
+            "RSP_FEC_PAGO":"",
+            "RSP_DESEMBOLSO_POR":"",
+            "RSP_DESEMBOLSO_IMP":"",
+            "RSP_PEN_PAGCAP_POR":"",
+            "RSP_PEN_PAGCAP_IMP":"",
+            "RSP_FORPAG_CUO":"",
+            "RSP_FORPAG_CAP":"",
+            "RSP_CUO_VEN":"",
+            "RSP_REFERENCIA":"",
+            "RSP_AUTORIZ":"",
+            "RSP_DOCUMENTO":"",
+            "RSP_COD_MOV":"",
+            "RSP_COD_ORG":"",
+            "RSP_IBAN":"",
+            "RSP_NOMBRE_TH":"",
+            "RSP_VENDEDOR":"",
+        }
+
+        if 'RSP_ERROR' in resp[1]:
+            if resp[1]['RSP_ERROR'].upper() == 'OK' or (
+                    resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
+                resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
+            elif resp[1]['RSP_ERROR'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
+            elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':
+                return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Transaccion erronea'}, resp[2]
+            else:
+                resp_copy = resp[1].copy()
+                for k in resp[1].keys():
+                    if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
+                        del resp_copy[k]
+                return resp[0], resp_copy, resp[2]
     return resp
