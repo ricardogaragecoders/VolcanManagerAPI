@@ -1160,9 +1160,6 @@ class AltaPolizaSerializer(serializers.Serializer):
         funcion_param = data.get('FUNCION', "").strip()
         issuer = data.get('EMISOR', '').upper().strip()
         code_polize = data.get('CODIGO_POL', '').upper().strip()
-        nom_beneficiario = data.get('NOM_BEN_1', "").strip()
-        iden_beneficiario = data.get('IDEN_BEN_1', '').upper().strip()
-        por_beneficiario = data.get('POR_BEN_1', '').upper().strip()
 
         data['TARJETA'] = card
         data['FUNCION'] = funcion_param
@@ -1176,15 +1173,6 @@ class AltaPolizaSerializer(serializers.Serializer):
 
         if len(funcion_param) == 0:
             raise CustomValidationError(detail=u'Funcion es requerida', code='400')
-
-        if len(nom_beneficiario) == 0:
-            raise CustomValidationError(detail=u'Nombre de beneficiario 1 es requerida', code='400')
-
-        if len(iden_beneficiario) == 0:
-            raise CustomValidationError(detail=u'Identificacion de beneficiario 1 es requerida', code='400')
-
-        if len(por_beneficiario) == 0:
-            raise CustomValidationError(detail=u'Porcentaje de beneficiario 1 es requerida', code='400')
 
         if len(issuer) == 0:
             raise CustomValidationError(detail=u'Emisor es requerido', code='400')
