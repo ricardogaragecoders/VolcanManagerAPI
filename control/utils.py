@@ -11,7 +11,8 @@ from control.serializers import ConsultaCuentaSerializer, ConsultaTarjetaSeriali
     IntraExtrasSerializer, ConsultaPuntosSerializer, AltaCuentaTarjetaSerializer, ConsultaIntraExtraF1Serializer, \
     ConsultaTransaccionesXFechaSerializer, ConsultaCVV2Serializer, CreacionEnteSectorizacionSerializer, \
     ConsultaEnteSerializer, ConsultaEstadoCuentaSerializer, ConsultaCobranzaSerializer, AltaPolizaSerializer, \
-    ConsultaPolizaSerializer, IntraExtraEspecialSerializer, ConsultaIntraExtraEsquemaSerializer
+    ConsultaPolizaSerializer, IntraExtraEspecialSerializer, ConsultaIntraExtraEsquemaSerializer, \
+    ConsultaEsquemasFinanciamientoSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -1201,36 +1202,25 @@ def consulta_esquemas_financiamiento(request, **kwargs):
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}{settings.URL_AZ7_INTRAS_EXTRAS}'
-    # serializer = IntraExtrasSerializer(data=data)
-    if data:
-        resp = ['', {}, 200]
-        resp[1] = {
-            "RSP_ERROR": "OK",
-            "RSP_CODIGO": "0000000000",
-            "RSP_DESCRIPCION": "APROBADO",
-            "RSP_PAGINA": "",
-            "RSP_FOLIO": "",
-            "RSP_ESQUEMA": "",
-            "RSP_NOMBRE": "",
-            "RSP_TIPO_FINAN": "",
-            "RSP_MONEDA": "",
-            "RSP_TASA": "",
-            "RSP_PLAZO_MINIMO": "",
-            "RSP_PLAZO_MAXIMO": "",
-            "RSP_TASA_PROMO": "",
-            "RSP_PLAZO_PROMO": "",
-            "RSP_DESEMBOLSO": "",
-            "RSP_PAGO_ANTICIPADO": "",
-            "RSP_CUOTA_SEGURO": "",
-            "RSP_PERIODO_GRACIA": "",
-            "RSP_LIMITE_PAGO_VEN": "",
-        }
-
+    api_url = f'{url_server}{settings.URL_AZ7_CONSULTA_ESQUEMAS_FINANCIAMIENTO}'
+    serializer = ConsultaEsquemasFinanciamientoSerializer(data=data)
+    if serializer.is_valid():
+        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
-            if resp[1]['RSP_ERROR'].upper() == 'OK' or (
-                    resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
+            if resp[1]['RSP_ERROR'].upper() == 'OK':
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
+                for k1, v1 in resp[1].items():
+                    if '.' in v1 and len(v1) == 21:
+                        resp[1][k1] = get_float_from_numeric_str(v1)
+                if 'RSP_INTRACON' in resp[1]:
+                    movements = []
+                    for movement in resp[1]['RSP_INTRACON']:
+                        for k2, v2 in movement.items():
+                            if '.' in v2 and len(v2) == 21:
+                                movement[k2] = get_float_from_numeric_str(v2)
+                        if 'RSP_TARJETA' in movement and len(movement['RSP_TARJETA']) > 0:
+                            movements.append({k.lower(): v for k, v in movement.items()})
+                    resp[1]['RSP_INTRACON'] = movements
             elif resp[1]['RSP_ERROR'] == '':
                 return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
             elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':
@@ -1241,6 +1231,8 @@ def consulta_esquemas_financiamiento(request, **kwargs):
                     if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
                         del resp_copy[k]
                 return resp[0], resp_copy, resp[2]
+    else:
+        resp = get_response_data_errors(serializer.errors)
     return resp
 
 

@@ -1875,7 +1875,7 @@ paths:
   /volcan/api/ConsultaEsquemasFinanciamiento/:
     post:
       operationId: api_control_consulta_esquemas_financiamiento
-      description: 'Consulta Esquemas Financiamiento'
+      description: 'Consulta esquemas financiamiento'
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1885,7 +1885,7 @@ paths:
             schema:
               $ref: "#/components/schemas/ConsultaEsquemasFinanciamiento"
         required: true
-      summary: 'Intra/Extra Especial'
+      summary: 'Consulta esquemas financiamiento'
       responses:
         '401':
           description: 'No autentificado o Token invalido'
@@ -1903,7 +1903,7 @@ paths:
                 "rsp_descripcion": "Given token not valid for any token type"
               }
         '200':
-          description: 'Consulta Esquemas Financiamiento'
+          description: 'Consulta esquemas financiamiento'
           examples:
             exitosa:
               {
@@ -1912,20 +1912,30 @@ paths:
                 "rsp_descripcion": "Transacción aprobada",
                 "rsp_pagina": "",
                 "rsp_folio": "",
-                "rsp_esquema": "",
-                "rsp_nombre": "",
-                "rsp_tipo_finan": "",
-                "rsp_moneda": "",
-                "rsp_tasa": "",
-                "rsp_plazo_minimo": "",
-                "rsp_plazo_maximo": "",
-                "rsp_tasa_promo": "",
-                "rsp_plazo_promo": "",
-                "rsp_desembolso": "",
-                "rsp_pago_anticipado": "",
-                "rsp_cuota_seguro": "",
-                "rsp_periodo_gracia": "",
-                "rsp_limite_pago_ven": ""
+                "rsp_intracon": [
+                  {
+                    "rsp_tarjeta": "",
+                    "rsp_cuenta": "",
+                    "rsp_plan": "",
+                    "rsp_plan_desc": "",
+                    "rsp_esquema": "",
+                    "rsp_des_esq": "",
+                    "rsp_tipo_finan": "",
+                    "rsp_moneda": "",
+                    "rsp_tasa": "",
+                    "rsp_plazo_min": "",
+                    "rsp_plazo_max": "",
+                    "rsp_tasa_pro": "",
+                    "rsp_plazo_pro": "",
+                    "rsp_desembolso_por": "",
+                    "rsp_desembolso_imp": "",
+                    "rsp_pen_pagcap_por": "",
+                    "rsp_pen_pagcap_imp": "",
+                    "rsp_forpag_cuo": "",
+                    "rsp_forpag_cap": "",
+                    "rsp_cuo_ven": ""
+                  }
+                ]
               }
             no_exitosa:
               {
@@ -4103,10 +4113,10 @@ components:
           type: string
           description: 'Condicional. Número tarjeta cifrada con la llave compartida con Volcán.'
           maxLength: 16
-        esquema:
+        plan:
           type: string
-          description: 'Condicional. Código (plan) de esquema que identifica las condiciones para crear Extra/Intra Financiamiento especiales.'
-          maxLength: 5
+          description: 'Plan'
+          maxLength: 10
         pagina:
           type: string
           description: 'Opcional. Se utiliza para la descargar bloqueo de siguiente página o bloqueo de página anterior, final se envia END.'

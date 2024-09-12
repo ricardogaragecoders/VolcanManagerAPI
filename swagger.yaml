@@ -2096,6 +2096,79 @@ paths:
       tags:
         - VolcanManager::Acciones
     parameters: []
+  /volcan/api/ConsultaEsquemasFinanciamiento/:
+    post:
+      operationId: api_control_consulta_esquemas_financiamiento
+      description: 'Consulta esquemas financiamiento'
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ConsultaEsquemasFinanciamiento"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsultaEsquemasFinanciamiento"
+        required: true
+      summary: 'Consulta esquemas financiamiento'
+      responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
+        '200':
+          description: 'Consulta esquemas financiamiento'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_pagina": "",
+                "rsp_folio": "",
+                "rsp_intracon": [
+                  {
+                    "rsp_tarjeta": "",
+                    "rsp_cuenta": "",
+                    "rsp_plan": "",
+                    "rsp_plan_desc": "",
+                    "rsp_esquema": "",
+                    "rsp_des_esq": "",
+                    "rsp_tipo_finan": "",
+                    "rsp_moneda": "",
+                    "rsp_tasa": "",
+                    "rsp_plazo_min": "",
+                    "rsp_plazo_max": "",
+                    "rsp_tasa_pro": "",
+                    "rsp_plazo_pro": "",
+                    "rsp_desembolso_por": "",
+                    "rsp_desembolso_imp": "",
+                    "rsp_pen_pagcap_por": "",
+                    "rsp_pen_pagcap_imp": "",
+                    "rsp_forpag_cuo": "",
+                    "rsp_forpag_cap": "",
+                    "rsp_cuo_ven": ""
+                  }
+                ]
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error"
+              }
+      tags:
+        - VolcanManager::Acciones
   /volcan/api/IntraExtras/:
     post:
       operationId: api_control_intra_extras_mock
@@ -4830,6 +4903,27 @@ components:
         emisor:
           type: string
           description: 'Mandatorio. Código de Identificación del emisor esto lo Asigna Volcán, se utiliza para el ruteo de la trama administrativa por cliente.'
+          maxLength: 3
+      required:
+        - emisor
+    ConsultaEsquemasFinanciamiento:
+      type: object
+      properties:
+        tarjeta:
+          type: string
+          description: 'Condicional. Número tarjeta cifrada con la llave compartida con Volcán.'
+          maxLength: 16
+        plan:
+          type: string
+          description: 'Plan'
+          maxLength: 10
+        pagina:
+          type: string
+          description: 'Opcional. Se utiliza para la descargar bloqueo de siguiente página o bloqueo de página anterior, final se envia END.'
+          maxLength: 31
+        emisor:
+          type: string
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán.'
           maxLength: 3
       required:
         - emisor

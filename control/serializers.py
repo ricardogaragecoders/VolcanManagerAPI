@@ -1227,6 +1227,7 @@ class IntraExtraEspecialSerializer(serializers.Serializer):
         issuer = data.get('EMISOR', '').upper().strip()
 
         data['TARJETA'] = card
+        data['EMISOR'] = issuer
 
         if len(card) == 0:
             raise CustomValidationError(detail=u'Tarjeta es requerida', code='400')
@@ -1254,23 +1255,48 @@ class ConsultaIntraExtraEsquemaSerializer(serializers.Serializer):
 
     def validate(self, data):
         data = super(ConsultaIntraExtraEsquemaSerializer, self).validate(data)
-        tarjeta = data.get('TARJETA', "").strip()
+        card = data.get('TARJETA', "").strip()
         cif = data.get('CIF', "").strip()
         owner = data.get('OWNER', "").strip()
         tipo_identificacion = data.get('TIPO_IDENTIFICACION', "").strip()
         doc_identificacion = data.get('DOC_IDENTIFICACION', "").strip()
         issuer = data.get('EMISOR', '').upper().strip()
 
-        data['TARJETA'] = tarjeta
+        data['TARJETA'] = card
         data['CIF'] = cif
         data['OWNER'] = owner
         data['TIPO_IDENTIFICACION'] = tipo_identificacion
         data['DOC_IDENTIFICACION'] = doc_identificacion
+        data['EMISOR'] = issuer
 
-        if len(tarjeta) == 0 and len(cif) == 0 and len(owner) == 0 and len(tipo_identificacion) == 0 and len(
+        if len(card) == 0 and len(cif) == 0 and len(owner) == 0 and len(tipo_identificacion) == 0 and len(
                 doc_identificacion) == 0:
             raise CustomValidationError(detail=u'No fue proporcionado ningun filtro para hacer la busqueda',
                                         code='400')
+        if len(issuer) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
+        return data
+
+
+class ConsultaEsquemasFinanciamientoSerializer(serializers.Serializer):
+    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    PLAN = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    PAGINA = serializers.CharField(max_length=31, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('TARJETA',  'PLAN', 'PAGINA', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+
+    def validate(self, data):
+        data = super(ConsultaEsquemasFinanciamientoSerializer, self).validate(data)
+        card = data.get('TARJETA', "").strip()
+        issuer = data.get('EMISOR', '').upper().strip()
+
+        data['TARJETA'] = card
+        data['EMISOR'] = issuer
+
         if len(issuer) == 0:
             raise CustomValidationError(detail=u'Emisor es requerido', code='400')
         return data
