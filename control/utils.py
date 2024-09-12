@@ -12,7 +12,7 @@ from control.serializers import ConsultaCuentaSerializer, ConsultaTarjetaSeriali
     ConsultaTransaccionesXFechaSerializer, ConsultaCVV2Serializer, CreacionEnteSectorizacionSerializer, \
     ConsultaEnteSerializer, ConsultaEstadoCuentaSerializer, ConsultaCobranzaSerializer, AltaPolizaSerializer, \
     ConsultaPolizaSerializer, IntraExtraEspecialSerializer, ConsultaIntraExtraEsquemaSerializer, \
-    ConsultaEsquemasFinanciamientoSerializer
+    ConsultaEsquemasFinanciamientoSerializer, RefinanciamientoSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -1246,48 +1246,16 @@ def refinanciamiento(request, **kwargs):
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
     url_server = settings.SERVER_VOLCAN_AZ7_URL
-    api_url = f'{url_server}{settings.URL_AZ7_INTRAS_EXTRAS}'
-    # serializer = IntraExtrasSerializer(data=data)
-    if data:
-        resp = ['', {}, 200]
-        resp[1] = {
-            "RSP_ERROR": "OK",
-            "RSP_CODIGO": "0000000000",
-            "RSP_DESCRIPCION": "APROBADO",
-            "RSP_TARJETA":"",
-            "RSP_CUENTA":"",
-            "RSP_ESQUEMA":"",
-            "RSP_DES_ESQ":"",
-            "RSP_TIPO_FINAN":"",
-            "RSP_IMPORTE":"",
-            "RSP_MONEDA":"",
-            "RSP_TASA":"",
-            "RSP_PLAZO":"",
-            "RSP_TASA_PRO":"",
-            "RSP_PLAZO_PRO":"",
-            "RSP_CUOTA":"",
-            "RSP_FEC_PAGO":"",
-            "RSP_DESEMBOLSO_POR":"",
-            "RSP_DESEMBOLSO_IMP":"",
-            "RSP_PEN_PAGCAP_POR":"",
-            "RSP_PEN_PAGCAP_IMP":"",
-            "RSP_FORPAG_CUO":"",
-            "RSP_FORPAG_CAP":"",
-            "RSP_CUO_VEN":"",
-            "RSP_REFERENCIA":"",
-            "RSP_AUTORIZ":"",
-            "RSP_DOCUMENTO":"",
-            "RSP_COD_MOV":"",
-            "RSP_COD_ORG":"",
-            "RSP_IBAN":"",
-            "RSP_NOMBRE_TH":"",
-            "RSP_VENDEDOR":"",
-        }
-
+    api_url = f'{url_server}{settings.URL_AZ7_REFINANCIAMIENTO}'
+    serializer = RefinanciamientoSerializer(data=data)
+    if serializer.is_valid():
+        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
-            if resp[1]['RSP_ERROR'].upper() == 'OK' or (
-                    resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
+            if resp[1]['RSP_ERROR'].upper() == 'OK':
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
+                for k1, v1 in resp[1].items():
+                    if '.' in v1 and len(v1) == 21:
+                        resp[1][k1] = get_float_from_numeric_str(v1)
             elif resp[1]['RSP_ERROR'] == '':
                 return resp[0], {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}, resp[2]
             elif len(resp[1]['RSP_ERROR']) > 0 and resp[1]['RSP_CODIGO'] == '':
@@ -1298,4 +1266,6 @@ def refinanciamiento(request, **kwargs):
                     if k not in ['RSP_ERROR', 'RSP_CODIGO', 'RSP_DESCRIPCION']:
                         del resp_copy[k]
                 return resp[0], resp_copy, resp[2]
+    else:
+        resp = get_response_data_errors(serializer.errors)
     return resp

@@ -1875,7 +1875,7 @@ paths:
   /volcan/api/ConsultaEsquemasFinanciamiento/:
     post:
       operationId: api_control_consulta_esquemas_financiamiento
-      description: 'Consulta esquemas financiamiento'
+      description: 'Consulta Esquemas Financiamiento'
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -1885,7 +1885,7 @@ paths:
             schema:
               $ref: "#/components/schemas/ConsultaEsquemasFinanciamiento"
         required: true
-      summary: 'Consulta esquemas financiamiento'
+      summary: 'Consulta Esquemas Financiamiento'
       responses:
         '401':
           description: 'No autentificado o Token invalido'
@@ -1903,7 +1903,7 @@ paths:
                 "rsp_descripcion": "Given token not valid for any token type"
               }
         '200':
-          description: 'Consulta esquemas financiamiento'
+          description: 'Consulta Esquemas Financiamiento'
           examples:
             exitosa:
               {
