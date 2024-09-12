@@ -4014,6 +4014,10 @@ components:
           type: string
           description: 'Opcional. Campo de folio de control de conciliación, se no se envia el sistema lo genera y lo registra en la aplicación del Mov.'
           maxLength: 5
+        comercio:
+          type: string
+          description: 'Comercio'
+          maxLength: 40
         oficina:
           type: string
           description: 'Mandatorio. Localidad de origen de la transacción, se utilizara para la generación de asientos contables.'

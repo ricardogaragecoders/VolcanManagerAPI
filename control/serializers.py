@@ -1222,6 +1222,7 @@ class IntraExtraEspecialSerializer(serializers.Serializer):
     IMPORTE = serializers.CharField(max_length=19, required=False, default="", allow_blank=True)
     PLAZO = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
     REFERENCIA = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
+    COMERCIO = serializers.CharField(max_length=40, required=False, default="", allow_blank=True)
     OFICINA = serializers.CharField(max_length=8, required=False, default="", allow_blank=True)
     VENDEDOR = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
     EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
@@ -1229,9 +1230,8 @@ class IntraExtraEspecialSerializer(serializers.Serializer):
     ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
 
     class Meta:
-        fields = ('TARJETA',  'ESQUEMA', 'MONEDA', 'IMPORTE',
-                  'PLAZO', 'REFERENCIA', 'OFICINA', 'VENDEDOR',
-                  'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+        fields = ('TARJETA',  'ESQUEMA', 'MONEDA', 'IMPORTE', 'PLAZO', 'REFERENCIA',
+                  'COMERCIO', 'OFICINA', 'VENDEDOR', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
 
     def validate(self, data):
         data = super(IntraExtraEspecialSerializer, self).validate(data)
