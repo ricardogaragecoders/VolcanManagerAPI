@@ -468,7 +468,8 @@ URL_AZ7_CONSULTA_POLIZA = env.str('URL_AZ7_CONSULTA_POLIZA',
 
 URL_AZ7_INTRA_EXTRA_ESPECIAL = env.str('URL_AZ7_INTRA_EXTRA_ESPECIAL',
                                        '/web/services/Volcan_Financiamientos_Especiales_1')
-
+URL_AZ7_CONSULTA_INTRA_EXTRA_ESQUEMA = env.str('URL_AZ7_CONSULTA_INTRA_EXTRA_ESQUEMA',
+                                               '/web/services/Volcan_Consulta_Financiamiento_Esp_1')
 
 # obtenerDatosTokenizacionPrepago
 URL_AZ7_LOGIN = env.str('URL_AZ7_LOGIN', '/wsParabiliumVolcan/api/Login')

@@ -1830,23 +1830,38 @@ paths:
                 "rsp_descripcion": "Transacción aprobada",
                 "rsp_pagina": "",
                 "rsp_folio": "",
-                "rsp_cuenta": "",
-                "rsp_tarjeta": "",
-                "rsp_esquema": "",
-                "rsp_importe": "",
-                "rsp_moneda": "",
-                "rsp_tasa": "",
-                "rsp_doc_finan": "",
-                "rsp_fec_registro": "",
-                "rsp_tipo_finan": "",
-                "rsp_estado": "",
-                "rsp_plazo": "",
-                "rsp_cuota_act": "",
-                "rsp_capital_pag": "",
-                "rsp_interes_pag": "",
-                "rsp_ncuota_pag": "",
-                "rsp_sld_capital": "",
-                "rsp_cuota_pend": ""
+                "rsp_intracon": [
+                  {
+                    "rsp_tarjeta": "",
+                    "rsp_cuenta": "",
+                    "rsp_esquema": "",
+                    "rsp_des_esq": "",
+                    "rsp_tipo_finan": "",
+                    "rsp_importe": "",
+                    "rsp_moneda": "",
+                    "rsp_tasa": "",
+                    "rsp_plazo": "",
+                    "rsp_tasa_pro": "",
+                    "rsp_plazo_pro": "",
+                    "rsp_cuota": "",
+                    "rsp_fec_pago": "",
+                    "rsp_desembolso_por": "",
+                    "rsp_desembolso_imp": "",
+                    "rsp_pen_pagcap_por": "",
+                    "rsp_pen_pagcap_imp": "",
+                    "rsp_forpag_cuo": "",
+                    "rsp_forpag_cap": "",
+                    "rsp_cuo_ven": "",
+                    "rsp_referencia": "",
+                    "rsp_autoriz": "",
+                    "rsp_documento": "",
+                    "rsp_cod_mov": "",
+                    "rsp_cod_org": "",
+                    "rsp_iban": "",
+                    "rsp_nombre_th": "",
+                    "rsp_vendedor": ""
+                  }
+                ]
               }
             no_exitosa:
               {
@@ -4050,7 +4065,7 @@ components:
           type: string
           description: 'Condicional. Número de cliente único.'
           maxLength: 15
-        id_owner:
+        owner:
           type: string
           description: 'Condicional. Identificador unico de EveryCard para relacionar Cliente/tarjeta/Cuenta.'
           maxLength: 15
@@ -4062,14 +4077,10 @@ components:
           type: string
           description: 'Condicional. Número de documento de identificación oficial del TH.'
           maxLength: 20
-        doc_finan:
+        esquema:
           type: string
-          description: 'Opcional. Número de documento de financiamiento de la compra.'
-          maxLength: 10
-        tipo_finan:
-          type: string
-          description: 'Opcional. Tipo CEF = Extra/CIF = Intra Financiamiento.'
-          maxLength: 3
+          description: 'Esquema'
+          maxLength: 5
         pagina:
           type: string
           description: 'Opcional. Se utiliza para la descargar bloqueo de siguiente página o bloqueo de página anterior.'

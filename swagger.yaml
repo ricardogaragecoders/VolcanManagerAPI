@@ -2014,6 +2014,88 @@ paths:
       tags:
         - VolcanManager::Acciones
     parameters: []
+  /volcan/api/ConsultaIntraExtraEsquema/:
+    post:
+      operationId: api_control_consulta_intra_extra_esquema
+      description: 'Consulta Intra Extra Esquema'
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ConsultaIntraExtraEsquema"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsultaIntraExtraEsquema"
+        required: true
+      summary: 'Consulta Intra Extra Esquema'
+      responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
+        '200':
+          description: 'Consulta Intra Extra Esquema'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_pagina": "",
+                "rsp_folio": "",
+                "rsp_intracon": [
+                  {
+                    "rsp_tarjeta": "",
+                    "rsp_cuenta": "",
+                    "rsp_esquema": "",
+                    "rsp_des_esq": "",
+                    "rsp_tipo_finan": "",
+                    "rsp_importe": "",
+                    "rsp_moneda": "",
+                    "rsp_tasa": "",
+                    "rsp_plazo": "",
+                    "rsp_tasa_pro": "",
+                    "rsp_plazo_pro": "",
+                    "rsp_cuota": "",
+                    "rsp_fec_pago": "",
+                    "rsp_desembolso_por": "",
+                    "rsp_desembolso_imp": "",
+                    "rsp_pen_pagcap_por": "",
+                    "rsp_pen_pagcap_imp": "",
+                    "rsp_forpag_cuo": "",
+                    "rsp_forpag_cap": "",
+                    "rsp_cuo_ven": "",
+                    "rsp_referencia": "",
+                    "rsp_autoriz": "",
+                    "rsp_documento": "",
+                    "rsp_cod_mov": "",
+                    "rsp_cod_org": "",
+                    "rsp_iban": "",
+                    "rsp_nombre_th": "",
+                    "rsp_vendedor": ""
+                  }
+                ]
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error"
+              }
+      tags:
+        - VolcanManager::Acciones
+    parameters: []
   /volcan/api/IntraExtras/:
     post:
       operationId: api_control_intra_extras_mock
@@ -4708,6 +4790,48 @@ components:
         - plazo
         - oficina
         - vendedor
+        - emisor
+    ConsultaIntraExtraEsquema:
+      type: object
+      properties:
+        tarjeta:
+          type: string
+          description: 'Condicional. Número tarjeta cifrada con la llave compartida con Volcán.'
+          maxLength: 16
+        cif:
+          type: string
+          description: 'Condicional. Número de cliente único.'
+          maxLength: 15
+        owner:
+          type: string
+          description: 'Condicional. Identificador unico de EveryCard para relacionar Cliente/tarjeta/Cuenta.'
+          maxLength: 15
+        tipo_identificacion:
+          type: string
+          description: 'Condicional. Indica el tipo de documento de identificación, tomado de catalogo.'
+          maxLength: 2
+        doc_identificacion:
+          type: string
+          description: 'Condicional. Número de documento de identificación oficial del TH.'
+          maxLength: 20
+        esquema:
+          type: string
+          description: 'Esquema'
+          maxLength: 5
+        pagina:
+          type: string
+          description: 'Opcional. Se utiliza para la descargar bloqueo de siguiente página o bloqueo de página anterior.'
+          maxLength: 31
+        direccion:
+          type: string
+          description: 'Opcional. S=Siguiente Pagina o bloque de datos/R=Retroceso de página o bloque de datos.'
+          enum: ['S', 'R']
+          maxLength: 1
+        emisor:
+          type: string
+          description: 'Mandatorio. Código de Identificación del emisor esto lo Asigna Volcán, se utiliza para el ruteo de la trama administrativa por cliente.'
+          maxLength: 3
+      required:
         - emisor
     EstadosCuenta:
       type: object

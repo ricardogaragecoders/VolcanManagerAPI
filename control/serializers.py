@@ -1234,3 +1234,43 @@ class IntraExtraEspecialSerializer(serializers.Serializer):
         if len(issuer) == 0:
             raise CustomValidationError(detail=u'Emisor es requerido', code='400')
         return data
+
+
+class ConsultaIntraExtraEsquemaSerializer(serializers.Serializer):
+    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    CIF = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    OWNER = serializers.CharField(max_length=15, required=False, default="", allow_blank=True)
+    TIPO_IDENTIFICACION = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
+    DOC_IDENTIFICACION = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    ESQUEMA = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
+    PAGINA = serializers.CharField(max_length=40, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('TARJETA',  'CIF', 'OWNER', 'TIPO_IDENTIFICACION', 'DOC_IDENTIFICACION',
+                  'ESQUEMA', 'PAGINA', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+
+    def validate(self, data):
+        data = super(ConsultaIntraExtraEsquemaSerializer, self).validate(data)
+        tarjeta = data.get('TARJETA', "").strip()
+        cif = data.get('CIF', "").strip()
+        owner = data.get('OWNER', "").strip()
+        tipo_identificacion = data.get('TIPO_IDENTIFICACION', "").strip()
+        doc_identificacion = data.get('DOC_IDENTIFICACION', "").strip()
+        issuer = data.get('EMISOR', '').upper().strip()
+
+        data['TARJETA'] = tarjeta
+        data['CIF'] = cif
+        data['OWNER'] = owner
+        data['TIPO_IDENTIFICACION'] = tipo_identificacion
+        data['DOC_IDENTIFICACION'] = doc_identificacion
+
+        if len(tarjeta) == 0 and len(cif) == 0 and len(owner) == 0 and len(tipo_identificacion) == 0 and len(
+                doc_identificacion) == 0:
+            raise CustomValidationError(detail=u'No fue proporcionado ningun filtro para hacer la busqueda',
+                                        code='400')
+        if len(issuer) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
+        return data
