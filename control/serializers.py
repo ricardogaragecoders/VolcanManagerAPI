@@ -1213,3 +1213,36 @@ class ConsultaPolizaSerializer(serializers.Serializer):
         if len(issuer) == 0:
             raise CustomValidationError(detail=u'Emisor es requerido', code='400')
         return data
+
+
+class IntraExtraEspecialSerializer(serializers.Serializer):
+    TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
+    ESQUEMA = serializers.CharField(max_length=5, required=False, default="", allow_blank=True)
+    MONEDA = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    IMPORTE = serializers.CharField(max_length=19, required=False, default="", allow_blank=True)
+    PLAZO = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
+    REFERENCIA = serializers.CharField(max_length=12, required=False, default="", allow_blank=True)
+    OFICINA = serializers.CharField(max_length=8, required=False, default="", allow_blank=True)
+    VENDEDOR = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+
+    class Meta:
+        fields = ('TARJETA',  'ESQUEMA', 'MONEDA', 'IMPORTE',
+                  'PLAZO', 'REFERENCIA', 'OFICINA', 'VENDEDOR',
+                  'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
+
+    def validate(self, data):
+        data = super(IntraExtraEspecialSerializer, self).validate(data)
+        card = data.get('TARJETA', "").strip()
+        issuer = data.get('EMISOR', '').upper().strip()
+
+        data['TARJETA'] = card
+
+        if len(card) == 0:
+            raise CustomValidationError(detail=u'Tarjeta es requerida', code='400')
+
+        if len(issuer) == 0:
+            raise CustomValidationError(detail=u'Emisor es requerido', code='400')
+        return data

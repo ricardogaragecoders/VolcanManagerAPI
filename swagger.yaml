@@ -1938,6 +1938,82 @@ paths:
       tags:
         - VolcanManager::Acciones
     parameters: []
+  /volcan/api/IntraExtraEspeciales/:
+    post:
+      operationId: api_control_intra_extra_especial
+      description: 'Intra/Extra Especial'
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/IntraExtraEspecial"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IntraExtraEspecial"
+        required: true
+      summary: 'Intra/Extra Especial'
+      responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
+        '200':
+          description: 'Intra/Extra Especial'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_tarjeta": "",
+                "rsp_cuenta": "",
+                "rsp_esquema": "",
+                "rsp_des_esq": "",
+                "rsp_tipo_finan": "",
+                "rsp_importe": "",
+                "rsp_moneda": "",
+                "rsp_tasa": "",
+                "rsp_plazo": "",
+                "rsp_tasa_pro": "",
+                "rsp_plazo_pro": "",
+                "rsp_cuota": "",
+                "rsp_fec_pago": "",
+                "rsp_desembolso_por": "",
+                "rsp_desembolso_imp": "",
+                "rsp_pen_pagcap_por": "",
+                "rsp_pen_pagcap_imp": "",
+                "rsp_forpag_cuo": "",
+                "rsp_forpag_cap": "",
+                "rsp_cuo_ven": "",
+                "rsp_referencia": "",
+                "rsp_autoriz": "",
+                "rsp_documento": "",
+                "rsp_cod_mov": "",
+                "rsp_cod_org": "",
+                "rsp_iban": "",
+                "rsp_nombre_th": "",
+                "rsp_vendedor": ""
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error extrafinanciamiento especial"
+              }
+      tags:
+        - VolcanManager::Acciones
+    parameters: []
   /volcan/api/IntraExtras/:
     post:
       operationId: api_control_intra_extras_mock
@@ -4580,6 +4656,54 @@ components:
           maxLength: 3
       required:
         - tarjeta
+        - emisor
+    IntraExtraEspecial:
+      type: object
+      properties:
+        tarjeta:
+          type: string
+          description: 'Mandatorio. Consulta por número de Tarjeta Cifrada con la llame de Emisor'
+          maxLength: 16
+        esquema:
+          type: string
+          description: 'Mandatorio. Código de esquema de financiamiento especial, con los parámetros plazos y tasas'
+          maxLength: 5
+        moneda:
+          type: string
+          description: 'Mandatorio. Moneda relacionada a la cuenta'
+          maxLength: 3
+        importe:
+          type: string
+          description: 'Mandatorio. Importe del intrafinanciamiento con punto decimal ejemplo 2100.00'
+          maxLength: 19
+        plazo:
+          type: string
+          description: 'Mandatorio. Se envía el plazo de pago expresado en meses, el cual se validara con el minimo y maximo asignado al esquema de financiamiento solicitado'
+          maxLength: 2
+        referencia:
+          type: string
+          description: 'Opcional. Campo de folio de control de conciliación, se no se envia el sistema lo genera y lo registra en la aplicación del Mov.'
+          maxLength: 5
+        oficina:
+          type: string
+          description: 'Mandatorio. Localidad de origen de la transacción, se utilizara para la generación de asientos contables.'
+          maxLength: 8
+        vendedor:
+          type: string
+          description: 'Mandatorio. Se debe de enviar su contenido en 10 posiciones.'
+          maxLength: 10
+        emisor:
+          type: string
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+          maxLength: 3
+      required:
+        - tarjeta
+        - esquema
+        - moneda
+        - importe
+        - plazo
+        - oficina
+        - vendedor
         - emisor
     EstadosCuenta:
       type: object

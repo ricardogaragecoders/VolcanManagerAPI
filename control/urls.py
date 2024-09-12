@@ -26,6 +26,7 @@ urlpatterns = [
     path('ConsultaCobranza/', ControlApiView.as_view({'post': 'consulta_cobranza'})),
     path('AltaPoliza/', ControlApiView.as_view({'post': 'alta_poliza'})),
     path('ConsultaPoliza/', ControlApiView.as_view({'post': 'consulta_poliza'})),
+    path('IntraExtraEspeciales/', ControlApiView.as_view({'post': 'intra_extra_especial'})),
 
 
     path('issuers/',
