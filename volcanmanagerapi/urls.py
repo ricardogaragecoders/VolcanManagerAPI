@@ -38,6 +38,8 @@ urlpatterns = [
 
     path('volcan/api/', include('estrato.urls')),
 
+    path('volcan/api/', include('reports.urls')),
+
     path('', include('thalesapi.urls')),
 
 ]

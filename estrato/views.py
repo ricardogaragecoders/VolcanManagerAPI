@@ -1,4 +1,5 @@
 import json
+import time
 
 from django.core.cache import cache
 from django.utils import timezone
@@ -45,13 +46,25 @@ class EstratoEstadosCuentaApiView(CustomViewSet, MixinEstratoVolcanApi):
     serializer_class = EstadosCuentaSerializer
     http_method_names = ['post', 'options', 'head']
 
+    def make_response_success_from_data(self, response_data, response_time=None):
+        print(f"Response time: {response_time}")
+        results = response_data['data']['results']
+        server_host = self.request.get_host()
+        server_host = f"http{'s' if self.request.is_secure() else ''}://{server_host}"
+        for index, item in enumerate(results):
+            if 'PDF' in item and item['PDF']:
+                item['PDF'] = item['PDF'].replace(settings.SERVER_ESTRATO_VOLCAN_URL, server_host)
+                results[index] = item
+        response_data['data']['results'] = results
+        return response_data['data']
+
     def perform_create(self, request, *args, **kwargs):
         """
             Create users clients
         """
         response_data = dict()
         # profile = request.user.profile
-
+        start_time = time.time()
         if settings.APIKEY_ESTRATO_VOLCAN_API_ENABLED:
             validated_data = self.serializer.validated_data.copy()
             response_data, status_code = self.call_volcan_manager_api(
@@ -59,7 +72,12 @@ class EstratoEstadosCuentaApiView(CustomViewSet, MixinEstratoVolcanApi):
                 url='/api/statements/account/statements/', method='GET'
             )
             if status_code in [200, 201]:
-                self.make_response_success(data=response_data['data'], message=response_data['message'],
+                self.make_response_success(data=self.make_response_success_from_data(
+                    response_data,
+                    response_time=time.time() - start_time),
+                    status=status_code)
+                self.make_response_success(data=response_data['data'],
+                                           message=response_data['message'],
                                            status=status_code)
             elif 'error' in response_data:
                 self.make_response_success(data={}, message=response_data['error'], status=status_code)

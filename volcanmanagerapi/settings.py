@@ -57,7 +57,8 @@ INSTALLED_APPS = [
     'control',
     'thalesapi',
     'webhook',
-    'estrato'
+    'estrato',
+    'reports'
 ]
 
 MIDDLEWARE = [
@@ -365,6 +366,7 @@ LOGGING = {
 URL_BACKEND = env.str('URL_BACKEND', 'http://localhost:8000')
 EMAIL_CONTACT = env.str('EMAIL_CONTACT', 'info@volcangroup.io')
 DEFAULT_PASSWORD = env.str('DEFAULT_PASSWORD', '')
+DEFAULT_TIMEZONE = env.str('DEFAULT_TIMEZONE', 'America/Mexico_City')
 
 SERVER_VOLCAN_AZ7_URL = env.str('SERVER_VOLCAN_AZ7_URL', 'http://10.23.102.10:21005')
 SERVER_VOLCAN_PAYCARD_URL = env.str('SERVER_VOLCAN_PAYCARD_URL', 'http://10.23.106.33/wsParabiliumVolcan')
@@ -463,6 +465,15 @@ URL_AZ7_ALTA_POLIZA = env.str('URL_AZ7_ALTA_POLIZA',
                               '/web/services/Volcan_Alta_Poliza_1')
 URL_AZ7_CONSULTA_POLIZA = env.str('URL_AZ7_CONSULTA_POLIZA',
                                   '/web/services/Volcan_Consulta_Poliza_1')
+
+URL_AZ7_INTRA_EXTRA_ESPECIAL = env.str('URL_AZ7_INTRA_EXTRA_ESPECIAL',
+                                       '/web/services/Volcan_Financiamientos_Especiales_1')
+URL_AZ7_CONSULTA_INTRA_EXTRA_ESQUEMA = env.str('URL_AZ7_CONSULTA_INTRA_EXTRA_ESQUEMA',
+                                               '/web/services/Volcan_Consulta_Financiamiento_Esp_1')
+URL_AZ7_CONSULTA_ESQUEMAS_FINANCIAMIENTO = env.str('URL_AZ7_CONSULTA_ESQUEMAS_FINANCIAMIENTO',
+                                                   '/web/services/Volcan_Consulta_Esquemas_Finan_1')
+URL_AZ7_REFINANCIAMIENTO = env.str('URL_AZ7_REFINANCIAMIENTO',
+                                   '/web/services/Volcan_Traslado_Financiamientos_1')
 
 # obtenerDatosTokenizacionPrepago
 URL_AZ7_LOGIN = env.str('URL_AZ7_LOGIN', '/wsParabiliumVolcan/api/Login')
