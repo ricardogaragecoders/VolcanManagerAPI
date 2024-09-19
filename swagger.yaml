@@ -2245,6 +2245,115 @@ paths:
       tags:
         - VolcanManager::Acciones
     parameters: []
+  /volcan/api/Corresponsalias/:
+    get:
+      operationId: api_corresponsalias_configuration_read
+      description: Return all corresponsalias.
+      summary: Return all corresponsalias
+      parameters:
+        - name: limit
+          in: query
+          description: Number of results to return per page.
+          required: false
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          description: The initial index from which to return the results.
+          required: false
+          schema:
+            type: integer
+        - name: q
+          description: Find by description, country, city, branch and user_payload
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: orderBy
+          description: Order By field
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ['country', 'city', 'branch', 'user_payload', 'company']
+            default: branch
+        - name: orderByDesc
+          description: Order desc
+          in: query
+          schema:
+            type: boolean
+            enum: [true, false]
+            default: false
+      responses:
+        '200':
+          description: 'Return all corresponsalias'
+      tags:
+        - VolcanManager::Corresponsalias::Configuracion
+    post:
+      operationId: api_corresponsalia_configuration_create
+      description: Create correponsalia configuration.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/Corresponsalia"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Corresponsalia"
+        required: true
+      summary: Create corresponsalia
+      responses:
+        '200':
+          description: 'Create correponsalia configuration'
+      tags:
+        - VolcanManager::Corresponsalias::Configuracion
+    parameters: []
+  /volcan/api/Corresponsalias/{correponsalia_id}/:
+    get:
+      operationId: api_corresponsalia_configuration_read
+      description: Return a corresponsalia.
+      summary: Return a corresponsalia.
+      parameters: []
+      responses:
+        '200':
+          description: 'Returns a corresponsalia.'
+      tags:
+        - VolcanManager::Corresponsalias::Configuracion
+    patch:
+      operationId: api_corresponsalia_configuration_update
+      description: Update a corresponsalia.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/Corresponsalia"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Corresponsalia"
+        required: true
+      summary: Update a corresponalia.
+      responses:
+        '200':
+          description: 'Update a corresponsalia.'
+      tags:
+        - VolcanManager::Corresponsalias::Configuracion
+    delete:
+      operationId: api_corresponsalia_configuration_delete
+      description: Delete a corresponsalia.
+      summary: Delete a corresponsalia.
+      parameters: []
+      responses:
+        '200':
+          description: 'Delete a corresponsalias.'
+      tags:
+        - VolcanManager::Corresponsalias::Configuracion
+    parameters:
+      - name: correponsalia_id
+        in: path
+        required: true
+        description: Corresponsalia ID
+        schema:
+          type: string
   /volcan/api/IntraExtras/:
     post:
       operationId: api_control_intra_extras_mock
@@ -3105,26 +3214,6 @@ paths:
           description: 'Get account statements'
       tags:
         - Estrato::EstadosCuenta
-    parameters: []
-  /volcan/api/Corresponsalia/:
-    post:
-      operationId: api_control_corresponsalia_create
-      description: Post control corresponsalia.
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: "#/components/schemas/Corresponsalia"
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Corresponsalia"
-        required: true
-      summary: Post control corresponsalia
-      responses:
-        '200':
-          description: 'Post control corresponsalia'
-      tags:
-        - VolcanManager::Acciones
     parameters: []
   /volcan/api/ApiKeys/:
     get:
@@ -5123,29 +5212,48 @@ components:
     Corresponsalia:
       type: object
       properties:
-        id_corresponsalia:
+        pais:
           type: string
-          maxLength: 22
-        bin:
+          description: 'Mandatorio. Pais de la Corresponsalia'
+          maxLength: 50
+        ciudad:
           type: string
-          maxLength: 20
-        producto:
+          description: 'Mandatorio. Ciudad de la Corresponsalia'
+          maxLength: 50
+        sucursal:
           type: string
-          maxLength: 20
+          description: 'Mandatorio. Sucursal de la Corresponsalia'
+          maxLength: 50
+        productos:
+          type: array
+          description: 'Condicional. si existe este dato no es necesario los bines'
+          items:
+            type: string
+            enum: ['CREDITO', 'PREPAGO', 'DEBITO']
+            default: 'CREDITO'
+          uniqueItems: true
+          minItems: 1
+        bines:
+          type: array
+          description: 'Condicional. Si existe este dato no es necesario los productos'
+          items:
+            type: string
+          uniqueItems: true
         monedas:
-          type: object
-          properties:
-            moneda_1:
-              type: string
-              maxLength: 20
-            moneda_2:
-              type: string
-              maxLength: 20
+          type: array
+          description: 'Mandatorio. Los tipos de moenda que puede manejar la Corresponsalia'
+          items:
+            type: string
+            default: '188'
+          uniqueItems: true
+          minItems: 1
         usuario_paycard:
           type: string
+          description: 'Condicional. Es requerido si elige un tipo de producto PREPAGO'
           maxLength: 20
         codigos_movimiento:
           type: array
+          description: 'Condicional. Es requerido si elige un tipo de producto PREPAGO'
           items:
             type: object
             properties:
@@ -5155,23 +5263,20 @@ components:
               descripcion:
                 type: string
                 maxLength: 20
-        pais:
-          type: string
-          maxLength: 20
-        ciudad:
-          type: string
-          maxLength: 20
-        sucursal:
-          type: string
-          maxLength: 20
-        emisor:
-          type: string
-          maxLength: 20
         autorizacion:
           type: string
-          maxLength: 20
+          description: 'Autorizacion'
+          maxLength: 50
+        emisor:
+          type: string
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+          maxLength: 3
       required:
-        - id_corresponsalia
+        - description
+        - pais
+        - ciudad
+        - sucursal
+        - monedas
         - emisor
     Intra_Extras:
       type: object

@@ -1338,32 +1338,3 @@ class RefinanciamientoSerializer(serializers.Serializer):
 class MonedaSerializer(serializers.Serializer):
     moneda_1 = serializers.CharField(max_length=3)
     moneda_2 = serializers.CharField(max_length=3)
-
-
-class CodigoMovimientoSerializer(serializers.Serializer):
-    codigo = serializers.CharField(max_length=10)
-    descripcion = serializers.CharField(max_length=255)
-
-
-class CorresponsaliaSerializer(serializers.Serializer):
-    id_corresponsalia = serializers.CharField(max_length=50)
-    bin = serializers.CharField(max_length=6)
-    producto = serializers.CharField(max_length=50)
-    monedas = MonedaSerializer(many=True)
-    usuario_paycard = serializers.CharField(max_length=50)
-    codigos_movimiento = CodigoMovimientoSerializer(many=True)
-    pais = serializers.CharField(max_length=50)
-    ciudad = serializers.CharField(max_length=50)
-    sucursal = serializers.CharField(max_length=50)
-    emisor = serializers.CharField(max_length=50)
-    autorizacion = serializers.CharField(max_length=50)
-
-    class Meta:
-        fields = ('id_corresponsalia', 'bin', 'producto', 'monedas',
-                  'usuario_paycard', 'codigos_movimiento',  'pais',
-                  'ciudad', 'sucursal', 'emisor', 'autorizacion')
-
-    def validate(self, data):
-        data = super(CorresponsaliaSerializer, self).validate(data)
-
-        return data
