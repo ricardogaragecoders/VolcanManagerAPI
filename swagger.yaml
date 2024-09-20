@@ -4966,16 +4966,16 @@ components:
         esquema:
           type: string
           description: 'Esquema'
-          maxLength: 5
+          maxLength: 10
         pagina:
           type: string
           description: 'Opcional. Se utiliza para la descargar bloqueo de siguiente página o bloqueo de página anterior.'
           maxLength: 31
-        direccion:
-          type: string
-          description: 'Opcional. S=Siguiente Pagina o bloque de datos/R=Retroceso de página o bloque de datos.'
-          enum: ['S', 'R']
-          maxLength: 1
+#        direccion:
+#          type: string
+#          description: 'Opcional. S=Siguiente Pagina o bloque de datos/R=Retroceso de página o bloque de datos.'
+#          enum: ['S', 'R']
+#          maxLength: 1
         emisor:
           type: string
           description: 'Mandatorio. Código de Identificación del emisor esto lo Asigna Volcán, se utiliza para el ruteo de la trama administrativa por cliente.'
