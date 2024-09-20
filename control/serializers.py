@@ -1303,7 +1303,7 @@ class ConsultaEsquemasFinanciamientoSerializer(serializers.Serializer):
 
 class RefinanciamientoSerializer(serializers.Serializer):
     TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
-    ESQUEMA = serializers.CharField(max_length=5, required=False, default="", allow_blank=True)
+    ESQUEMA = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
     DOCUMENTO = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
     COD_MOV = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
     COD_ORI = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
@@ -1313,7 +1313,7 @@ class RefinanciamientoSerializer(serializers.Serializer):
     VENDEDOR = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
     EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
     USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
-    ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
 
     class Meta:
         fields = ('TARJETA', 'ESQUEMA', 'DOCUMENTO', 'COD_MOV', 'COD_ORI', 'PLAZO', 'REFERENCIA',

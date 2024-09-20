@@ -5013,7 +5013,7 @@ components:
         esquema:
           type: string
           description: 'Mandatorio. Código de esquema de financiamiento especial, con los parámetros plazos y tasas.'
-          maxLength: 5
+          maxLength: 10
         documento:
           type: string
           description: 'Mandatorio. Número de documento de la compra o Avance de efectivo para convertir a Intra/Extra Financiamiento.'
