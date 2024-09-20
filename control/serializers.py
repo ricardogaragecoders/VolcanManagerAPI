@@ -1247,7 +1247,7 @@ class ConsultaIntraExtraEsquemaSerializer(serializers.Serializer):
     PAGINA = serializers.CharField(max_length=31, required=False, default="", allow_blank=True)
     EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
     USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
-    ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
 
     class Meta:
         fields = ('TARJETA',  'CIF', 'OWNER', 'TIPO_IDENTIFICACION', 'DOC_IDENTIFICACION',
@@ -1284,7 +1284,7 @@ class ConsultaEsquemasFinanciamientoSerializer(serializers.Serializer):
     PAGINA = serializers.CharField(max_length=31, required=False, default="", allow_blank=True)
     EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
     USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
-    ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
 
     class Meta:
         fields = ('TARJETA',  'PLAN', 'PAGINA', 'EMISOR', 'USUARIO_ATZ', 'ACCESO_ATZ')
