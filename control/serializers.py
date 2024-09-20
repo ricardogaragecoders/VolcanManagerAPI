@@ -1205,7 +1205,7 @@ class ConsultaPolizaSerializer(serializers.Serializer):
 
 class IntraExtraEspecialSerializer(serializers.Serializer):
     TARJETA = serializers.CharField(max_length=16, required=False, default="", allow_blank=True)
-    ESQUEMA = serializers.CharField(max_length=5, required=False, default="", allow_blank=True)
+    ESQUEMA = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
     MONEDA = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
     IMPORTE = serializers.CharField(max_length=19, required=False, default="", allow_blank=True)
     PLAZO = serializers.CharField(max_length=2, required=False, default="", allow_blank=True)
@@ -1215,7 +1215,7 @@ class IntraExtraEspecialSerializer(serializers.Serializer):
     VENDEDOR = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
     EMISOR = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
     USUARIO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
-    ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
+    ACCESO_ATZ = serializers.CharField(max_length=10, required=False, default="", allow_blank=True)
 
     class Meta:
         fields = ('TARJETA',  'ESQUEMA', 'MONEDA', 'IMPORTE', 'PLAZO', 'REFERENCIA',

@@ -1976,7 +1976,7 @@ paths:
                 "rsp_success": true,
                 "rsp_codigo": "00",
                 "rsp_descripcion": "Transacción aprobada",
-                "rsp_tarjeta": "",
+                "rsp_tarjeta": "XXXXXXXXXXXXX",
                 "rsp_cuenta": "",
                 "rsp_esquema": "",
                 "rsp_des_esq": "",
@@ -4898,7 +4898,7 @@ components:
         esquema:
           type: string
           description: 'Mandatorio. Código de esquema de financiamiento especial, con los parámetros plazos y tasas'
-          maxLength: 5
+          maxLength: 10
         moneda:
           type: string
           description: 'Mandatorio. Moneda relacionada a la cuenta'

@@ -457,8 +457,10 @@ URL_AZ7_CONSULTA_INTRA_EXTRA = env.str('URL_AZ7_CONSULTA_INTRA_EXTRA', '/web/ser
 URL_AZ7_CONSULTA_TRANSACCION_X_FECHA = env.str('URL_AZ7_CONSULTA_TRANSACCION_X_FECHA',
                                                '/web/services/Volcan_ConsultaTxnXFecha1')
 URL_AZ7_CONSULTA_CVV2 = env.str('URL_AZ7_CONSULTA_CVV2', '/web/services/Volcan_CVV2_1')
+
 URL_AZ7_CONSULTA_ESTADO_CUENTA = env.str('URL_AZ7_CONSULTA_ESTADO_CUENTA',
                                          '/web/services/Volcan_ConsultaEstadoCta_1')
+
 URL_AZ7_CONSULTA_COBRANZA = env.str('URL_AZ7_CONSULTA_COBRANZA',
                                     '/web/services/Volcan_Consulta_cobranza_1')
 URL_AZ7_ALTA_POLIZA = env.str('URL_AZ7_ALTA_POLIZA',
