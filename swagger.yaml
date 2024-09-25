@@ -357,6 +357,115 @@ paths:
         description: ID Issuer
         schema:
           type: string
+  /volcan/api/currencies/:
+    get:
+      operationId: api_control_currencies_read
+      description: Return all currencies.
+      summary: Return all currencies
+      parameters:
+        - name: limit
+          in: query
+          description: Number of results to return per page.
+          required: false
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          description: The initial index from which to return the results.
+          required: false
+          schema:
+            type: integer
+        - name: q
+          description: Find by issuer name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: orderBy
+          description: Order By field
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ 'name', 'abr_code', 'number_code' ]
+            default: name
+        - name: orderByDesc
+          description: Order desc
+          in: query
+          schema:
+            type: boolean
+            enum: [true, false]
+            default: false
+      responses:
+        '200':
+          description: 'Return all currencies'
+      tags:
+        - VolcanManager::Control::Currencies
+    post:
+      operationId: api_control_currencies_create
+      description: Create currency.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/Currency"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Currency"
+        required: true
+      summary: Create currency
+      responses:
+        '200':
+          description: 'Create currency'
+      tags:
+        - VolcanManager::Control::Currencies
+    parameters: []
+  /volcan/api/currencies/{currency_id}/:
+    get:
+      operationId: api_control_currency_read
+      description: Return a currency.
+      summary: Return a currency.
+      parameters: []
+      responses:
+        '200':
+          description: 'Returns a currency.'
+      tags:
+        - VolcanManager::Control::Currencies
+    patch:
+      operationId: api_control_currency_update
+      description: Update a currency.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/Currency"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Currency"
+        required: true
+      summary: Update a currency.
+      responses:
+        '200':
+          description: 'Update a currency.'
+      tags:
+        - VolcanManager::Control::Currencies
+    delete:
+      operationId: api_control_currency_delete
+      description: Delete a currency.
+      summary: Delete a currency.
+      parameters: []
+      responses:
+        '200':
+          description: 'Delete a currencies.'
+      tags:
+        - VolcanManager::Control::Currencies
+    parameters:
+      - name: currency_id
+        in: path
+        required: true
+        description: Currency ID
+        schema:
+          type: string
   /volcan/api/CreacionEnte/:
     post:
       operationId: api_control_creacion_ente
@@ -2245,7 +2354,7 @@ paths:
       tags:
         - VolcanManager::Acciones
     parameters: []
-  /volcan/api/Corresponsalias/:
+  /volcan/api/Corresponsalias/Configuracion/:
     get:
       operationId: api_corresponsalias_configuration_read
       description: Return all corresponsalias.
@@ -2308,7 +2417,7 @@ paths:
       tags:
         - VolcanManager::Corresponsalias::Configuracion
     parameters: []
-  /volcan/api/Corresponsalias/{correponsalia_id}/:
+  /volcan/api/Corresponsalias/Configuracion/{correponsalia_id}/:
     get:
       operationId: api_corresponsalia_configuration_read
       description: Return a corresponsalia.
@@ -2352,6 +2461,131 @@ paths:
         in: path
         required: true
         description: Corresponsalia ID
+        schema:
+          type: string
+  /volcan/api/Corresponsalias/Transacciones/:
+    get:
+      operationId: api_corresponsalias_transacciones_read
+      description: Return all corresponsalias transacciones.
+      summary: Return all corresponsalias transacciones
+      parameters:
+        - name: limit
+          in: query
+          description: Number of results to return per page.
+          required: false
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          description: The initial index from which to return the results.
+          required: false
+          schema:
+            type: integer
+        - name: from_date
+          description: Date from register
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+            pattern: '^\d{4}-\d{2}-\d{2}$'
+        - name: to_date
+          description: Date to register.
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+            pattern: '^\d{4}-\d{2}-\d{2}$'
+        - name: q
+          description: Find by referencia, numero de tarjeta
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: orderBy
+          description: Order By field
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ['tarjeta', 'referencia']
+            default: branch
+        - name: orderByDesc
+          description: Order desc
+          in: query
+          schema:
+            type: boolean
+            enum: [true, false]
+            default: false
+      responses:
+        '200':
+          description: 'Return all corresponsalias transacciones'
+      tags:
+        - VolcanManager::Corresponsalias::Transacciones
+    post:
+      operationId: api_corresponsalia_transaccion_create
+      description: Create correponsalia transaccion.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/CorresponsaliaTransaccion"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CorresponsaliaTransaccion"
+        required: true
+      summary: Create corresponsalia transaccion
+      responses:
+        '200':
+          description: 'Create correponsalia transaccion'
+      tags:
+        - VolcanManager::Corresponsalias::Transacciones
+    parameters: []
+  /volcan/api/Corresponsalias/Transacciones/{transaccion_id}/:
+    get:
+      operationId: api_corresponsalia_transaccion_read
+      description: Return a corresponsalia transaccion.
+      summary: Return a corresponsalia transaccion.
+      parameters: []
+      responses:
+        '200':
+          description: 'Returns a corresponsalia transaccion.'
+      tags:
+        - VolcanManager::Corresponsalias::Transacciones
+    patch:
+      operationId: api_corresponsalia_transaccion_update
+      description: Update a corresponsalia transaccion.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/CorresponsaliaTransaccion"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CorresponsaliaTransaccion"
+        required: true
+      summary: Update a corresponalia transaccion.
+      responses:
+        '200':
+          description: 'Update a corresponsalia transaccion.'
+      tags:
+        - VolcanManager::Corresponsalias::Transacciones
+    delete:
+      operationId: api_corresponsalia_transaccion_delete
+      description: Delete a corresponsalia transaccion.
+      summary: Delete a corresponsalia transaccion.
+      parameters: []
+      responses:
+        '200':
+          description: 'Delete a corresponsalia transaccion.'
+      tags:
+        - VolcanManager::Corresponsalias::Transacciones
+    parameters:
+      - name: transaccion_id
+        in: path
+        required: true
+        description: Transsaccion ID
         schema:
           type: string
   /volcan/api/IntraExtras/:
@@ -3669,6 +3903,31 @@ components:
       required:
         - first_name
         - last_name
+    Currency:
+      type: object
+      properties:
+        name:
+          type: string
+          description: 'Nombre de la moneda'
+        abr_code:
+          type: string
+          description: 'Codigo de la moneda'
+        number_code:
+          type: string
+          description: 'Numero de la moneda'
+        decimals:
+          type: integer
+          description: 'Numero de digitos de la moneda'
+          default: 2
+        is_active:
+          type: boolean
+          enum: [true, false]
+          default: true
+      required:
+        - name
+        - abr_code
+        - number_code
+        - decimals
     Report:
       type: object
       properties:
@@ -5278,6 +5537,39 @@ components:
         - sucursal
         - monedas
         - emisor
+    CorresponsaliaTransaccion:
+      type: object
+      properties:
+        id_corresponsalia:
+          type: string
+          description: 'Mandatorio. Corresponsalia ID'
+          maxLength: 50
+        tarjeta:
+          type: string
+          description: 'Mandatorio. Tarjeta'
+          maxLength: 16
+        importe:
+          type: string
+          description: 'Mandatorio. En formato con decimal ej. 1.00'
+          maxLength: 19
+        moneda:
+          type: string
+          description: 'Mandatorio. Codigo ISO de moneda ej. 188'
+          maxLength: 3
+        codigo_movimiento:
+          type: string
+          description: 'Mandatorio. Codigo de movimiento autorizado'
+          maxLength: 4
+        referencia_numerica:
+          type: string
+          description: 'Referencia numerica'
+          maxLength: 50
+      required:
+        - id_corresponsalia
+        - tarjeta
+        - importe
+        - moneda
+        - codigo_movimiento
     Intra_Extras:
       type: object
       properties:

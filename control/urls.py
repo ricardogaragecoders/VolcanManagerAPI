@@ -43,4 +43,9 @@ urlpatterns = [
          OperatorApiView.as_view({'get': 'list', 'post': 'create'})),
     path('operators/<str:operator_id>/',
          OperatorApiView.as_view({'get': 'retrieve', 'patch': 'update', 'delete': 'destroy'})),
+
+    path('currencies/',
+         CurrencyApiView.as_view({'get': 'list', 'post': 'create'})),
+    path('currencies/<str:currency_id>/',
+         CurrencyApiView.as_view({'get': 'retrieve', 'patch': 'update', 'delete': 'destroy'})),
 ]

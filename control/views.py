@@ -7,8 +7,8 @@ from common.export_excel import WriteToExcel
 from common.export_pdf import WriteToPdf
 from common.utils import is_valid_uuid
 from common.views import CustomViewSet, CustomViewSetWithPagination
-from control.models import Company, Operator
-from control.serializers import CompanySerializer, OperatorSerializer
+from control.models import Company, Operator, Currency
+from control.serializers import CompanySerializer, OperatorSerializer, CurrencySerializer
 from users.permissions import IsVerified, IsOperator, IsAdministrator
 
 import logging
@@ -67,7 +67,7 @@ class CompanyApiView(CustomViewSetWithPagination):
         response_data = []
         for item in self.queryset:
             data = {
-                'ID': item.id,
+                'ID': str(item.id),
                 _('nombre'): item.name,
                 _('issuer_id'): item.issuer_id,
                 _('thales_issuer_id'): item.thales_issuer_id,
@@ -144,7 +144,7 @@ class OperatorApiView(CustomViewSetWithPagination):
         response_data = []
         for item in self.queryset:
             data = {
-                'ID': item.id,
+                'ID': str(item.id),
                 _('nombre'): item.profile.get_full_name() if item.profile and item.profile.user else 'Sin profile',
                 _('email'): item.profile.email if item.profile and item.profile.user else '',
                 _('empresa'): item.company.name if item.company else 'Sin empresa',
@@ -163,6 +163,76 @@ class OperatorApiView(CustomViewSetWithPagination):
             pdf_data = WriteToPdf(response_data, title=title, fields=fields)
             response = HttpResponse(content_type='application/pdf')
             response['Content-Disposition'] = 'attachement; filename=Operadores.pdf'
+            response['Content-Transfer-Encoding'] = 'binary'
+            response.write(pdf_data)
+        return response
+
+
+
+class CurrencyApiView(CustomViewSetWithPagination):
+    """
+    get:
+        Return all currencies
+    """
+    serializer_class = CurrencySerializer
+    model_class = Currency
+    permission_classes = (IsAuthenticated, IsVerified, IsAdministrator)
+    field_pk = 'currency_id'
+
+    def initial(self, request, *args, **kwargs):
+        if self.request.method == "GET":
+            self.permission_classes = (IsAuthenticated, IsVerified, IsOperator)
+        else:
+            self.permission_classes = (IsAuthenticated, IsVerified, IsAdministrator)
+        return super().initial(request, *args, **kwargs)
+
+    def get_queryset(self):
+        status = self.request.query_params.get('st', 'all')
+        q = self.request.query_params.get('q', None)
+        order_by = self.request.query_params.get('orderBy', 'name')
+        order_by_desc = self.request.query_params.get('orderByDesc', 'false')
+        filters = dict()
+        queryset = self.model_class.objects.all()
+
+        if status != 'all':
+            filters['is_active'] = status == 'true'
+
+        if len(filters) > 0:
+            queryset = queryset.filter(**filters).distinct()
+
+        if q:
+            queryset = queryset.filter(
+                Q(name__icontains=q) |
+                Q(abr_code__icontains=q) |
+                Q(number_code__icontains=q)
+            ).distinct()
+
+        order_by_filter = '{0}'.format(order_by if order_by_desc == 'false' else "-%s" % order_by)
+
+        return queryset.order_by(order_by_filter)
+
+    def get_response_from_export(self, export):
+        response_data = []
+        for item in self.queryset:
+            data = {
+                'ID': str(item.id),
+                _('nombre'): item.name,
+                _('codigo'): item.abr_code,
+                _('numero'): item.numvber_code,
+                _('status'): 'Activo' if item.is_active else 'Inactivo',
+            }
+            response_data.append(data)
+        fields = ['ID', _('nombre'), _('abr'), _('codigo'), _('estatus'), ]
+        title = _(u'Monedas')
+        if export == 'excel':
+            xlsx_data = WriteToExcel(response_data, title=title, fields=fields)
+            response = HttpResponse(content_type='application/vnd.ms-excel')
+            response['Content-Disposition'] = 'attachment; filename=Monedas.xlsx'
+            response.write(xlsx_data)
+        else:
+            pdf_data = WriteToPdf(response_data, title=title, fields=fields)
+            response = HttpResponse(content_type='application/pdf')
+            response['Content-Disposition'] = 'attachement; filename=Monedas.pdf'
             response['Content-Transfer-Encoding'] = 'binary'
             response.write(pdf_data)
         return response

@@ -1,11 +1,16 @@
+import logging
+from decimal import Decimal
+
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from common.exceptions import CustomValidationError
-from control.models import Company
-from corresponsalia.models import Corresponsalia
+from control.models import Company, Currency
+from corresponsalia.models import Corresponsalia, TransaccionCorresponsalia
 from thalesapi.models import CardBinConfig, CardType
+from thalesapi.utils import get_card_triple_des_process
 
+logger = logging.getLogger(__name__)
 
 class CodigoMovimientoSerializer(serializers.Serializer):
     codigo = serializers.CharField(max_length=10)
@@ -136,4 +141,154 @@ class CorresponsaliaSerializer(serializers.ModelSerializer):
         fields = ('id_corresponsalia', 'bines', 'productos', 'monedas',
                   'usuario_paycard', 'codigos_movimiento', 'pais',
                   'ciudad', 'sucursal', 'emisor', 'autorizacion')
+        read_only_fields = fields
+
+
+class TransaccionCorresponsaliaSerializer(serializers.ModelSerializer):
+    id_transaccion = serializers.UUIDField(source='id')
+    corresponsalia = serializers.SerializerMethodField(read_only=True)
+    tarjeta = serializers.CharField(source='card_number', required=False, allow_blank=True, allow_null=True, default='')
+    moneda = serializers.SerializerMethodField(read_only=True)
+    codigo_movimiento = serializers.CharField(source='movement_code', required=False, allow_blank=True, allow_null=True, default='')
+    importe = serializers.CharField(source='amount', required=False, allow_blank=True, allow_null=True, default='')
+    referencia_numerica = serializers.CharField(source='reference', required=False, allow_blank=True, allow_null=True, default='')
+    card_bin = serializers.SerializerMethodField(read_only=True)
+    transcciones = serializers.SerializerMethodField(read_only=True)
+    estatus = serializers.CharField(source='status')
+    fecha_creacion = serializers.DateTimeField(source='created_at')
+
+    class Meta:
+        model = TransaccionCorresponsalia
+        fields = ('id_transaccion', 'id_corresponsalia',
+                  'tarjeta', 'moneda', 'codigo_movimiento', 'importe',
+                  'referencia_numerica', 'card_bin', 'transcciones',
+                  'estatus', 'fecha_creacion')
+        read_only_fields = fields
+
+    def get_corresponsalia(self, instance):
+        corresponsalia = instance.corresponsalia
+        if corresponsalia:
+            return {
+                'id': str(corresponsalia.id),
+                'pais': corresponsalia.country,
+                'ciudad': corresponsalia.city,
+                'sucursal': corresponsalia.branch
+            }
+        return None
+
+    def get_moneda(self, instance):
+        currency = instance.currency
+        if currency:
+            return {
+                'code': currency.abr_code,
+                'number': currency.number_code,
+                'name': currency.name
+            }
+        return None
+
+    def get_card_bin(self, instance):
+        card_bin_config = instance.card_bin_config
+        if card_bin_config:
+            return {
+                'BIN': card_bin_config.card_bin,
+                'tipo': card_bin_config.get_card_type_display(),
+                'emisor': card_bin_config.issuer_id
+            }
+        return None
+
+    def get_transacciones(self, instance):
+        return {}
+
+
+class CreateTransaccionCorresponsaliaSerializer(serializers.ModelSerializer):
+    id_corresponsalia = serializers.UUIDField(source='corresponsalia_id', allow_null=True)
+    tarjeta = serializers.CharField(source='card_number', required=False, allow_blank=True, allow_null=True, default='')
+    moneda = serializers.CharField(source='currency_str', required=False, allow_blank=True, allow_null=True, default='')
+    codigo_movimiento = serializers.CharField(source='movement_code', required=False, allow_blank=True, allow_null=True,
+                                              default='')
+    importe = serializers.CharField(source='amount', required=False, allow_blank=True, allow_null=True, default='')
+    referencia_numerica = serializers.CharField(source='reference', required=False, allow_blank=True, allow_null=True,
+                                                default='')
+
+    class Meta:
+        model = TransaccionCorresponsalia
+        fields = ('id_corresponsalia', 'tarjeta', 'moneda', 'codigo_movimiento',
+                  'importe', 'referencia_numerica')
+
+
+    def validate(self, data):
+        data = super(CreateTransaccionCorresponsaliaSerializer, self).validate(data)
+        request = self.context['request']
+        corresponsalia_id = data.pop('corresponsalia_id', None)
+        card_number = data.get('card_number', None)
+        currency_str = data.pop('currency_str', None)
+        # movement_code = data.get('movement_code', None)
+        amount = data.get('amount', None)
+        # reference = data.get('reference', None)
+        user = request.user
+
+        try:
+            corresponsalia = Corresponsalia.objects.get(id=corresponsalia_id)
+        except Corresponsalia.DoesNotExist:
+            raise CustomValidationError(detail={'id_corresponsalia': _('Corresponsalia no encontrada.')},
+                                        code='corresponsalia_not_found')
+
+        if isinstance(card_number, str) and card_number.isnumeric() and len(card_number) == 16:
+            card_number = get_card_triple_des_process(card_number, is_descript=False)
+
+        card_real = get_card_triple_des_process(card_number, is_descript=True)
+
+        try:
+            card_bin_config = CardBinConfig.objects.get(card_bin=card_real[0:8])
+        except CardBinConfig.DoesNotExist:
+            logger.info(f"card_bin={card_real[0:8]}")
+            raise CustomValidationError(detail={'tarjeta': _('BIN no encontrado.')},
+                                        code='card_bin_config_not_found')
+
+        if isinstance(currency_str, str) and currency_str.isnumeric() and len(currency_str) == 3:
+            currency = Currency.objects.filter(number_code=currency_str).first()
+        else:
+            currency = Currency.objects.filter(abr_code=currency_str).first()
+
+        if card_bin_config.card_bin not in corresponsalia.params['bines']:
+            raise CustomValidationError(detail={'tarjeta': _('Corresponsalia no esta configurada con el BIN.')},
+                                        code='card_bin_config_not_found')
+
+        if currency.number_code not in corresponsalia.params['currencies']:
+            raise CustomValidationError(detail={'moneda': _('Corresponsalia no esta configurada con la moneda.')},
+                                        code='currency_not_found')
+
+        data['corresponsalia'] = corresponsalia
+        data['currency'] = currency
+        data['card_real'] = card_real
+        data['card_bin_config'] = card_bin_config
+
+        if '.' in amount:
+            data['amount'] = Decimal(amount)
+        elif currency.decimals > 0 and len(amount) >= (currency.decimals + 1):
+            length = len(amount)
+            value_s = "%s.%s" % (amount[0:length - currency.decimals], amount[length - currency.decimals:length])
+            data['amount'] = Decimal(value_s)
+        else:
+            data['amount'] = amount
+
+        return data
+
+
+
+class TransaccionCorresponsaSimpleliaSerializer(serializers.ModelSerializer):
+    id_transaccion = serializers.UUIDField(source='id')
+    id_corresponsalia = serializers.UUIDField(source='corresponsalia_id')
+    tarjeta = serializers.CharField(source='card_number')
+    moneda = serializers.CharField(source='currency.number_code')
+    codigo_movimiento = serializers.CharField(source='movement_code')
+    importe = serializers.CharField(source='amount')
+    referencia_numerica = serializers.CharField(source='reference')
+    estatus = serializers.CharField(source='status')
+    fecha_creacion = serializers.DateTimeField(source='created_at')
+
+    class Meta:
+        model = TransaccionCorresponsalia
+        fields = ('id_transaccion', 'id_corresponsalia', 'tarjeta', 'moneda', 'codigo_movimiento',
+                  'importe', 'referencia_numerica', 'estatus', 'fecha_creacion')
         read_only_fields = fields

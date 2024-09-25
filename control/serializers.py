@@ -4,7 +4,7 @@ from rest_framework import serializers
 from django.db import transaction
 from common.exceptions import CustomValidationError
 from common.utils import is_valid_uuid
-from control.models import Company, Operator
+from control.models import Company, Operator, Currency
 from django.utils.translation import gettext_lazy as _
 
 from users.models import RoleType, Profile
@@ -241,6 +241,27 @@ class OperatorSerializer(serializers.ModelSerializer):
             },
             'is_active': instance.is_active
         }
+
+
+class CurrencySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Currency
+        fields = ('id', 'name', 'abr_code', 'number_code', 'decimals', 'is_active')
+
+    def validate(self, data):
+        data = super(CurrencySerializer, self).validate(data)
+        abr_code = data.get('abr_code', None if not self.instance else self.instance.abr_code)
+        number_code = data.get('number_code', None if not self.instance else self.instance.number_code)
+
+        if not self.instance:
+            if Currency.objects.filter(abr_code=abr_code, number_code=number_code).exists():
+                raise CustomValidationError(detail={'abr_code': _('Codigo existe.')},
+                                            code='number_code_exists')
+        elif abr_code and number_code and Currency.objects.filter(abr_code=abr_code, number_code=number_code).exclude(id=self.instance.id).exists():
+            raise CustomValidationError(detail={'abr_code': _('Existe un codigo similar.')},
+                                        code='number_code_exists')
+        return data
+
 
 
 class CreacionEnteSerializer(serializers.Serializer):
