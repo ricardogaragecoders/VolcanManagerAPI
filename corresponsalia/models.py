@@ -5,13 +5,15 @@ from corresponsalia.managers import CorresponsaliaManager, TransaccionCorrespons
 from django.utils.translation import gettext as _
 
 class Corresponsalia(BaseModelExtra):
+    description = models.CharField(max_length=50, default='', null=True, blank=True)
     country = models.CharField(max_length=50, default='', null=True, blank=True)
     city = models.CharField(max_length=50, default='', null=True, blank=True)
     branch = models.CharField(max_length=50, default='', null=True, blank=True)
     company = models.ForeignKey('control.Company', on_delete=models.DO_NOTHING,
                                 related_name='corresponsalias', null=True, blank=True)
     user_paycard = models.CharField(max_length=50, default='', null=True, blank=True)
-    authorization = models.CharField(max_length=50, default='', null=True, blank=True)
+    pass_paycard = models.CharField(max_length=50, default='', null=True, blank=True)
+    access_token_paycard = models.TextField(blank=True, null=True)
     params = models.JSONField(default=dict)
     is_active = models.BooleanField(default=True)
 
@@ -53,6 +55,7 @@ class TransaccionCorresponsalia(BaseModel):
     currency = models.ForeignKey('control.Currency', on_delete=models.DO_NOTHING,
                                         related_name='transactions', null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    authorization = models.CharField(max_length=150, null=True, blank=True)
     status = models.CharField(max_length=20, choices=TransaccionCorresponsaliaStatus.choices,
                               default=TransaccionCorresponsaliaStatus.TCS_ACTIVE)
 
