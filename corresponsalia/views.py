@@ -18,8 +18,8 @@ from common.utils import is_valid_uuid, get_response_data_errors, handler_except
 from common.views import CustomViewSetWithPagination
 from control.utils import process_volcan_api_request
 from corresponsalia.models import Corresponsalia, TransaccionCorresponsalia, TransaccionCorresponsaliaCollection
-from corresponsalia.serializers import ConfigCorresponsaliaSerializer, CorresponsaliaSerializer, \
-    CorresponsaliaSimpleSerializer, CorresponsaliaResponseSerializer, TransaccionCorresponsaliaSerializer, \
+from corresponsalia.serializers import CorresponsaliaSerializer, \
+    CorresponsaliaSimpleSerializer, TransaccionCorresponsaliaSerializer, \
     CreateTransaccionCorresponsaliaSerializer, TransaccionCorresponsaSimpleliaSerializer
 from thalesapi.models import CardBinConfig, CardType
 from thalesapi.utils import get_card_triple_des_process
@@ -35,10 +35,10 @@ class CorresponsaliaApiView(CustomViewSetWithPagination):
         Return all coresponsalias
     """
     serializer_class = CorresponsaliaSimpleSerializer
-    create_serializer_class = ConfigCorresponsaliaSerializer
-    update_serializer_class = ConfigCorresponsaliaSerializer
+    create_serializer_class = CorresponsaliaSerializer
+    update_serializer_class = CorresponsaliaSerializer
     one_serializer_class = CorresponsaliaSerializer
-    response_serializer_class = CorresponsaliaResponseSerializer
+    response_serializer_class = CorresponsaliaSimpleSerializer
     model_class = Corresponsalia
     permission_classes = (IsAuthenticated, IsVerified, IsAdministrator)
     field_pk = 'corresponsalia_id'
@@ -71,8 +71,7 @@ class CorresponsaliaApiView(CustomViewSetWithPagination):
                 Q(country__icontains=q) |
                 Q(city__icontains=q) |
                 Q(branch__icontains=q) |
-                Q(user_payload__icontains=q) |
-                Q(authorization__icontains=q)
+                Q(user_payload__icontains=q)
             ).distinct()
 
         order_by_filter = '{0}'.format(order_by if order_by_desc == 'false' else "-%s" % order_by)
@@ -83,15 +82,20 @@ class CorresponsaliaApiView(CustomViewSetWithPagination):
         response_data = []
         for item in self.queryset:
             data = {
-                'ID': item.id,
-                _('nombre'): item.name,
-                _('issuer_id'): item.issuer_id,
-                _('thales_issuer_id'): item.thales_issuer_id,
-                _('status'): 'Activo' if item.is_active else 'Inactivo',
+                'id_corresponalia': str(item.id),
+                _('descripcion'): item.description,
+                _('pais'): item.country,
+                _('ciudad'): item.city,
+                _('sucursal'): item.branch,
+                _('usuario_paycard'): item.user_paycard,
+                _('password_paycard'): item.pass_paycard,
+                _('emisor'): item.company.volcan_issuer_id,
+                _('estatus'): 'Activo' if item.is_active else 'Inactivo',
             }
             response_data.append(data)
-        fields = ['ID', _('nombre'), _('issuer_id'), _('thales_issuer_id'), _('estatus'), ]
-        title = _(u'Empresas')
+        fields = ['id_corresponalia', _('descripcion'), _('pais'), _('ciudad'), _('sucursal'), _('usuario_paycard'),
+                  _('password_paycard'), _('password_paycard'), _('estatus')]
+        title = _(u'Corresponsalia')
         if export == 'excel':
             xlsx_data = WriteToExcel(response_data, title=title, fields=fields)
             response = HttpResponse(content_type='application/vnd.ms-excel')

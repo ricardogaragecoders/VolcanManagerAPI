@@ -13,44 +13,50 @@ from thalesapi.utils import get_card_triple_des_process
 logger = logging.getLogger(__name__)
 
 class CodigoMovimientoSerializer(serializers.Serializer):
-    codigo = serializers.CharField(max_length=10)
-    descripcion = serializers.CharField(max_length=255)
+    codigo = serializers.CharField(source='code')
+    tipo = serializers.CharField(source='type')
+    descripcion = serializers.CharField(source='description')
 
+class ConfiguracionCorresponsaliaItemSerializer(serializers.Serializer):
+    bin = serializers.CharField()
+    producto = serializers.CharField(source='product')
+    monedas = serializers.ListField(
+        child=serializers.CharField(), source='currencies'
+    )
+    codigos_movimiento = serializers.ListField(
+        child=CodigoMovimientoSerializer(), source='movement_codes'
+    )
 
-class ConfigCorresponsaliaSerializer(serializers.ModelSerializer):
+class CorresponsaliaSerializer(serializers.ModelSerializer):
+    id_corresponsalia = serializers.UUIDField(source='id', read_only=True)
+    descripcion = serializers.CharField(source='description', max_length=50, allow_null=True, allow_blank=True)
     pais = serializers.CharField(source='country', max_length=50, allow_null=True, allow_blank=True)
     ciudad = serializers.CharField(source='city', max_length=50, allow_null=True, allow_blank=True)
     sucursal = serializers.CharField(source='branch', max_length=50, allow_null=True, allow_blank=True)
-    bines = serializers.ListField(child=serializers.CharField(max_length=6), required=False, default=[], allow_null=True, allow_empty=True)
-    productos = serializers.ListField(child=serializers.CharField(max_length=10), required=False, default=[], allow_null=True, allow_empty=True)
-    monedas = serializers.ListField( child=serializers.CharField(max_length=3), required=False, default=[], allow_null=True, allow_empty=True)
-    usuario_paycard = serializers.CharField(source='user_paycard', max_length=50, required=False, default='', allow_null=True, allow_blank=True)
-    codigos_movimiento = CodigoMovimientoSerializer(many=True, required=False, default=[], allow_null=True)
-    emisor = serializers.CharField(max_length=3, allow_null=True, allow_blank=True)
-    autorizacion = serializers.CharField(source='authorization', required=False, default='', max_length=50, allow_null=True, allow_blank=True)
+    configuracion = ConfiguracionCorresponsaliaItemSerializer(source='params.configuration', many=True)
+    usuario_paycard = serializers.CharField(source='user_paycard', max_length=50, required=False, default='',
+                                            allow_null=True, allow_blank=True)
+    password_paycard = serializers.CharField(source='pass_paycard', write_only=True,
+                                             allow_null=True, allow_blank=True)
+    emisor = serializers.CharField(source='company.volcan_issuer_id', max_length=3,
+                                   allow_null=True, allow_blank=True)
 
     class Meta:
         model = Corresponsalia
-        fields = ('pais', 'ciudad', 'sucursal', 'bines', 'productos', 'monedas',
-                  'usuario_paycard', 'codigos_movimiento', 'autorizacion',  'emisor')
+        fields = ('id_corresponsalia','descripcion', 'pais', 'ciudad', 'sucursal',
+                  'configuracion', 'usuario_paycard', 'password_paycard', 'emisor')
 
     def validate(self, data):
-        data = super(ConfigCorresponsaliaSerializer, self).validate(data)
+        data = super(CorresponsaliaSerializer, self).validate(data)
         request = self.context['request']
         user = request.user
         company = None if not self.instance else self.instance.company
         params = {} if not self.instance else self.instance.params
-        if len(params) == 0:
-            params['bines'] = []
-            params['products'] = []
-            params['movements_code'] = []
-            params['currencies'] = []
+        configuration = data.pop('configuracion',
+                          params['configuration'] if 'configuration' in params else [])
         issuer_id = data.pop('emisor', None)
-        bines = data.pop('bines', params['bines'])
-        products = data.pop('productos', params['products'])
-        movements_code = data.pop('codigos_movimiento', params['movements_code'])
-        currencies = data.pop('monedas', params['currencies'])
         user_paycard = data.get('user_paycard', '' if not self.instance else self.instance.user_paycard)
+        pass_paycard = data.get('pass_paycard', None)
 
         if not self.instance or issuer_id:
             company = Company.objects.filter(volcan_issuer_id=issuer_id).first()
@@ -58,37 +64,54 @@ class ConfigCorresponsaliaSerializer(serializers.ModelSerializer):
         if not company:
             raise CustomValidationError(detail={'emisor': _('Emisor no encontrado.')},
                                         code='issuer_not_found')
+        has_prepaid = False
+        currencies = [currency for currency in Currency.objects.values_list('number_code', flat=True).all()]
+        for index,  item in enumerate(configuration):
+            if 'bin' in item:
+                card_bin_config = CardBinConfig.objects.filter(card_bin=item['bin'],
+                                                               emisor=company.volcan_issuer_id.upper()).first()
+                if not card_bin_config:
+                    raise CustomValidationError(detail={
+                        'configuracion': _(
+                            f"El BIN {item['bin']} no esta configurado con el emisor {company.volcan_issuer_id.upper()}."
+                        )},
+                        code='bin_not_found')
+                if card_bin_config.card_type == CardType.CT_PREPAID:
+                    has_prepaid = True
+                item['product'] = card_bin_config.get_card_type_display()
+            else:
+                raise CustomValidationError(detail={'configuracion': _(f"El BIN es requerido")},
+                                            code='bin_required')
 
-        if len(products) > 0:
-            for product in products:
-                if product == 'CREDITO':
-                    cards_bin = CardBinConfig.objects.values_list('card_bin', flat=True).filter(
-                        card_type=CardType.CT_CREDIT, emisor=company.volcan_issuer_id)
-                    bines = list(set(bines + [item for item in cards_bin]))
-                if product == 'PREPAGO':
-                    cards_bin = CardBinConfig.objects.values_list('card_bin', flat=True).filter(
-                        card_type=CardType.CT_PREPAID, emisor=company.volcan_issuer_id)
-                    bines = list(set(bines + [item for item in cards_bin]))
+            if 'currencies' in item and len(item['currencies']) > 0:
+                for currency in item['currencies']:
+                    if currency not in currencies:
+                        raise CustomValidationError(detail={
+                            'configuracion': _(
+                                f"La moneda {currency} no esta configurada en el sistema.")},
+                            code='currency_not_found')
+            else:
+                raise CustomValidationError(detail={'monedas': _(f"Las monedas son requerida(s)")},
+                                            code='currencies_required')
 
-        if len(bines) == 0:
-            raise CustomValidationError(detail={'bines': _('Necesita enviar un bin o producto.')},
-                                        code='bines_reequired')
-        if 'PREPAGO' in products:
-            if len(movements_code) == 0:
-                raise CustomValidationError(detail={'movements_code': _('Necesitas enviar codigos de movimiento.')},
-                                            code='movements_code_reequired')
-            if len(user_paycard) == 0:
-                raise CustomValidationError(detail={'usuario_paycard': _('Usuario paycard es requerido.')},
-                                            code='usuario_paycard_reequired')
+            if 'movement_codes' not in item or len(item['movement_codes']) == 0:
+                raise CustomValidationError(detail={
+                    'configuracion': _(
+                        f"codigos de movimiento son requerdo")},
+                    code='movement_codes_required')
+            # guardamos los cambios
+            configuration[index] = item
 
-        if len(currencies) == 0:
-            raise CustomValidationError(detail={'monedas': _('Necesitas agregar una moneda.')},
-                                        code='currencies_reequired')
+        if pass_paycard:
+            params['credentials'] = Corresponsalia.generate_credentials(user_paycard, pass_paycard)
 
-        params['bines'] = bines
-        params['products'] = products
-        params['movements_code'] = movements_code
-        params['currencies'] = currencies
+        if has_prepaid:
+            if 'credentials' not in params or len(params['credentials']) == 0:
+                raise CustomValidationError(detail={
+                    'pass_paycard': _(f"Paycard credentials required")},
+                    code='paycard_credentials_required')
+
+        params['configuration'] = configuration
         data['params'] = params
         data['company'] = company
         return data
@@ -96,22 +119,7 @@ class ConfigCorresponsaliaSerializer(serializers.ModelSerializer):
 
 class CorresponsaliaSimpleSerializer(serializers.ModelSerializer):
     id_corresponsalia = serializers.UUIDField(source='id')
-    pais = serializers.CharField(source='country')
-    ciudad = serializers.CharField(source='city')
-    sucursal = serializers.CharField(source='branch')
-    usuario_paycard = serializers.CharField(source='user_paycard')
-    autorizacion = serializers.CharField(source='authorization')
-    emisor = serializers.CharField(source='company.volcan_issuer_id')
-
-    class Meta:
-        model = Corresponsalia
-        fields = ('id_corresponsalia', 'pais', 'ciudad', 'sucursal',
-                  'usuario_paycard', 'autorizacion', 'emisor')
-        read_only_fields = fields
-
-
-class CorresponsaliaResponseSerializer(serializers.ModelSerializer):
-    id_corresponsalia = serializers.UUIDField(source='id')
+    descripcion = serializers.CharField(source='description')
     pais = serializers.CharField(source='country')
     ciudad = serializers.CharField(source='city')
     sucursal = serializers.CharField(source='branch')
@@ -119,29 +127,10 @@ class CorresponsaliaResponseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Corresponsalia
-        fields = ('id_corresponsalia', 'pais', 'ciudad', 'sucursal', 'emisor')
+        fields = ('id_corresponsalia', 'descripcion', 'pais', 'ciudad', 'sucursal', 'emisor')
         read_only_fields = fields
 
 
-class CorresponsaliaSerializer(serializers.ModelSerializer):
-    id_corresponsalia = serializers.UUIDField(source='id')
-    pais = serializers.CharField(source='country')
-    ciudad = serializers.CharField(source='city')
-    sucursal = serializers.CharField(source='branch')
-    bines = serializers.ListField(source='params.bines', child=serializers.CharField(max_length=6))
-    productos = serializers.ListField(source='params.products', child=serializers.CharField(max_length=10))
-    monedas = serializers.ListField(source='params.currencies', child=serializers.CharField(max_length=3))
-    usuario_paycard = serializers.CharField(source='user_paycard')
-    codigos_movimiento = CodigoMovimientoSerializer(many=True, source='params.movements_code')
-    autorizacion = serializers.CharField(source='authorization')
-    emisor = serializers.CharField(source='company.volcan_issuer_id')
-
-    class Meta:
-        model = Corresponsalia
-        fields = ('id_corresponsalia', 'bines', 'productos', 'monedas',
-                  'usuario_paycard', 'codigos_movimiento', 'pais',
-                  'ciudad', 'sucursal', 'emisor', 'autorizacion')
-        read_only_fields = fields
 
 
 class TransaccionCorresponsaliaSerializer(serializers.ModelSerializer):
@@ -170,6 +159,7 @@ class TransaccionCorresponsaliaSerializer(serializers.ModelSerializer):
         if corresponsalia:
             return {
                 'id': str(corresponsalia.id),
+                'descripcion': corresponsalia.description,
                 'pais': corresponsalia.country,
                 'ciudad': corresponsalia.city,
                 'sucursal': corresponsalia.branch
@@ -222,7 +212,7 @@ class CreateTransaccionCorresponsaliaSerializer(serializers.ModelSerializer):
         corresponsalia_id = data.pop('corresponsalia_id', None)
         card_number = data.get('card_number', None)
         currency_str = data.pop('currency_str', None)
-        # movement_code = data.get('movement_code', None)
+        movement_code = data.get('movement_code', None)
         amount = data.get('amount', None)
         # reference = data.get('reference', None)
         user = request.user
@@ -250,13 +240,22 @@ class CreateTransaccionCorresponsaliaSerializer(serializers.ModelSerializer):
         else:
             currency = Currency.objects.filter(abr_code=currency_str).first()
 
-        if card_bin_config.card_bin not in corresponsalia.params['bines']:
+        is_bin_found = False
+        for config in corresponsalia.params['configuration']:
+            if config['bin'] == card_bin_config.card_bin:
+                is_bin_found = True
+                if currency.number_code not in corresponsalia.params['currencies']:
+                    raise CustomValidationError(
+                        detail={'moneda': _('Corresponsalia no esta configurada con la moneda.')},
+                        code='currency_not_found')
+                if movement_code not in [code['code'] for code in config['movement_cods']]:
+                    raise CustomValidationError(
+                        detail={'moneda': _('Corresponsalia no esta configurada con la moneda.')},
+                        code='currency_not_found')
+
+        if not is_bin_found:
             raise CustomValidationError(detail={'tarjeta': _('Corresponsalia no esta configurada con el BIN.')},
                                         code='card_bin_config_not_found')
-
-        if currency.number_code not in corresponsalia.params['currencies']:
-            raise CustomValidationError(detail={'moneda': _('Corresponsalia no esta configurada con la moneda.')},
-                                        code='currency_not_found')
 
         data['corresponsalia'] = corresponsalia
         data['currency'] = currency

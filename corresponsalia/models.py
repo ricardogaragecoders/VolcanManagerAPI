@@ -25,6 +25,13 @@ class Corresponsalia(BaseModelExtra):
         else:
             return '{0}'.format(self.branch).strip()
 
+    @staticmethod
+    def generate_credentials(username: str, password: str):
+        import base64
+        userpass = f'{username}:{password}'
+        return base64.b64encode(userpass.encode()).decode()
+
+
     def save(self, *args, **kwargs):
         if not self.pk:
             self.is_active = True

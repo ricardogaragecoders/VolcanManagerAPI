@@ -5471,6 +5471,10 @@ components:
     Corresponsalia:
       type: object
       properties:
+        descripcion:
+          type: string
+          description: 'Mandatorio. Descripcion del comercio y/o Corresponsalia'
+          maxLength: 50
         pais:
           type: string
           description: 'Mandatorio. Pais de la Corresponsalia'
@@ -5483,49 +5487,46 @@ components:
           type: string
           description: 'Mandatorio. Sucursal de la Corresponsalia'
           maxLength: 50
-        productos:
-          type: array
-          description: 'Condicional. si existe este dato no es necesario los bines'
-          items:
-            type: string
-            enum: ['CREDITO', 'PREPAGO', 'DEBITO']
-            default: 'CREDITO'
-          uniqueItems: true
-          minItems: 1
-        bines:
-          type: array
-          description: 'Condicional. Si existe este dato no es necesario los productos'
-          items:
-            type: string
-          uniqueItems: true
-        monedas:
-          type: array
-          description: 'Mandatorio. Los tipos de moenda que puede manejar la Corresponsalia'
-          items:
-            type: string
-            default: '188'
-          uniqueItems: true
-          minItems: 1
         usuario_paycard:
           type: string
           description: 'Condicional. Es requerido si elige un tipo de producto PREPAGO'
-          maxLength: 20
-        codigos_movimiento:
-          type: array
-          description: 'Condicional. Es requerido si elige un tipo de producto PREPAGO'
-          items:
-            type: object
-            properties:
-              codigo:
-                type: string
-                maxLength: 20
-              descripcion:
-                type: string
-                maxLength: 20
-        autorizacion:
-          type: string
-          description: 'Autorizacion'
           maxLength: 50
+        password_paycard:
+          type: string
+          description: 'Condicional. Es requerido si elige un tipo de producto PREPAGO'
+          maxLength: 50
+        configuracion:
+          type: object
+          properties:
+            bin:
+              type: string
+              description: 'BIN'
+              maxLength: 8
+            producto:
+              type: string
+              description: 'Tipo de producto'
+              enum: ['PREPAGO', 'CREDITO']
+              default: 'CREDITO'
+            monedas:
+              type: array
+              description: 'Mandatorio. Los tipos de moenda que puede manejar la Corresponsalia'
+              items:
+                type: string
+                default: '188'
+              uniqueItems: true
+              minItems: 1
+            codigos_movimiento:
+              type: array
+              description: 'Condicional. Es requerido si elige un tipo de producto PREPAGO'
+              items:
+                type: object
+                properties:
+                  codigo:
+                    type: string
+                    maxLength: 20
+                  descripcion:
+                    type: string
+                    maxLength: 20
         emisor:
           type: string
           description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
