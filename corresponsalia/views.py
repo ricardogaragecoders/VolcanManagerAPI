@@ -16,11 +16,12 @@ from common.export_pdf import WriteToPdf
 from common.utils import is_valid_uuid, get_response_data_errors, handler_exception_general, \
     get_datetime_from_querystring, model_code_generator
 from common.views import CustomViewSetWithPagination
-from control.utils import process_volcan_api_request
 from corresponsalia.models import Corresponsalia, TransaccionCorresponsalia, TransaccionCorresponsaliaCollection
-from corresponsalia.serializers import CorresponsaliaSerializer, \
+from corresponsalia.serializers import CreateCorresponsaliaSerializer, \
     CorresponsaliaSimpleSerializer, TransaccionCorresponsaliaSerializer, \
-    CreateTransaccionCorresponsaliaSerializer, TransaccionCorresponsaSimpleliaSerializer
+    CreateTransaccionCorresponsaliaSerializer, TransaccionCorresponsaSimpleliaSerializer, \
+    CorresponsaliaCompleteSerializer
+from corresponsalia.utils import process_parabilia_api_request
 from thalesapi.models import CardBinConfig, CardType
 from thalesapi.utils import get_card_triple_des_process
 from users.permissions import IsVerified, IsOperator, IsAdministrator
@@ -35,9 +36,9 @@ class CorresponsaliaApiView(CustomViewSetWithPagination):
         Return all coresponsalias
     """
     serializer_class = CorresponsaliaSimpleSerializer
-    create_serializer_class = CorresponsaliaSerializer
-    update_serializer_class = CorresponsaliaSerializer
-    one_serializer_class = CorresponsaliaSerializer
+    create_serializer_class = CreateCorresponsaliaSerializer
+    update_serializer_class = CreateCorresponsaliaSerializer
+    one_serializer_class = CorresponsaliaCompleteSerializer
     response_serializer_class = CorresponsaliaSimpleSerializer
     model_class = Corresponsalia
     permission_classes = (IsAuthenticated, IsVerified, IsAdministrator)
@@ -240,10 +241,10 @@ class TransaccionApiView(CustomViewSetWithPagination):
                 'Accept': 'application/json',
                 "Credenciales": self.get_credentials_paycad(corresponsalia)
             }
-            resp = process_volcan_api_request(data=data_json, url=api_url, headers=headers)
-            if resp[1] == 200:
-                cache.set(key_cache, resp[0]['Token'], 30)
-                corresponsalia.access_token_paycard = resp[0]['Token']
+            response_data, response_status = process_parabilia_api_request(data=data_json, url=api_url, request=self.request, headers=headers)
+            if response_status in [200, 201, 203, 204]:
+                cache.set(key_cache, response_data['Token'], 30)
+                corresponsalia.access_token_paycard = response_data['Token']
                 corresponsalia.save()
         return cache.get(key_cache) if key_cache in cache else None
 
@@ -275,18 +276,19 @@ class TransaccionApiView(CustomViewSetWithPagination):
         url_server = settings.SERVER_VOLCAN_PARABILIA_URL
         api_url = f'{url_server}{settings.URL_PARABILIA_MOVIMIENTO_MANUAL}'
 
-        resp_msg, resp_data, response_status = process_volcan_api_request(data=request_data, headers=headers,
+        response_data, response_status = process_parabilia_api_request(data=request_data, headers=headers,
                                                                           url=api_url, request=request, times=0)
         if response_status == 200:
-            if resp_data['CodRespuesta'] == '0000' or len(resp_data['Tarjeta']) > 0:
+            if 'CodRespuesta' in response_data and int(response_data['CodRespuesta']) == 0:
                 transaction_corresponsalia.authorization = model_code_generator(TransaccionCorresponsalia, 32,
-                                                                                code='authorization')
+                                                                                code='authorization').upper()
                 transaction_corresponsalia.save()
                 db = TransaccionCorresponsaliaCollection()
                 db.insert_one(data={
                     "transaction_id": str(transaction_corresponsalia.id),
                     "request_data": request_data,
-                    "response_data": {k.lower(): v.lower() for k, v, in resp_data.items()}
+                    "response_data": response_data,
+                    "created_at": datetime.now(pytz.utc)
                 })
                 self.make_response_success(status=response_status, message="Transacción aprobada", data={
                     "RSP_ERROR": "OK",
@@ -298,7 +300,7 @@ class TransaccionApiView(CustomViewSetWithPagination):
                     'moneda': transaction_corresponsalia.currency.number_code
                 })
                 return True
-        self.make_response_success(status=response_status, message=resp_msg, data=resp_data)
+        self.make_response_success(status=response_status, data=response_data)
 
 
     def create_credit_transaction(self, request, *args, **kwargs):
@@ -328,13 +330,15 @@ class TransaccionApiView(CustomViewSetWithPagination):
         if 'RSP_CODIGO' in response_data and (
                 response_data['RSP_CODIGO'].isnumeric() and int(response_data['RSP_CODIGO']) == 0
         ) or response_data['RSP_CODIGO'] == '':
-            transaction_corresponsalia.authorization = model_code_generator(TransaccionCorresponsalia, 32, code='authorization')
+            transaction_corresponsalia.authorization = model_code_generator(TransaccionCorresponsalia, 32,
+                                                                            code='authorization').upper()
             transaction_corresponsalia.save()
             db = TransaccionCorresponsaliaCollection()
             db.insert_one(data={
                 "transaction_id": str(transaction_corresponsalia.id),
                 "request_data": request_data,
-                "response_data": {k.lower(): v.lower() for k, v, in response_data.items()}
+                "response_data": response_data,
+                "created_at": datetime.now(pytz.utc)
             })
             self.make_response_success(status=response_status, message="Transacción aprobada", data={
                 "RSP_ERROR": "OK",

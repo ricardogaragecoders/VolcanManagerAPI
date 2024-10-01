@@ -27,13 +27,13 @@ class ConfiguracionCorresponsaliaItemSerializer(serializers.Serializer):
         child=CodigoMovimientoSerializer(), source='movement_codes'
     )
 
-class CorresponsaliaSerializer(serializers.ModelSerializer):
+class CreateCorresponsaliaSerializer(serializers.ModelSerializer):
     id_corresponsalia = serializers.UUIDField(source='id', read_only=True)
     descripcion = serializers.CharField(source='description', max_length=50, allow_null=True, allow_blank=True)
     pais = serializers.CharField(source='country', max_length=50, allow_null=True, allow_blank=True)
     ciudad = serializers.CharField(source='city', max_length=50, allow_null=True, allow_blank=True)
     sucursal = serializers.CharField(source='branch', max_length=50, allow_null=True, allow_blank=True)
-    configuracion = ConfiguracionCorresponsaliaItemSerializer(source='params.configuration', many=True)
+    configuracion = ConfiguracionCorresponsaliaItemSerializer(source='configuration', many=True)
     usuario_paycard = serializers.CharField(source='user_paycard', max_length=50, required=False, default='',
                                             allow_null=True, allow_blank=True)
     password_paycard = serializers.CharField(source='pass_paycard', write_only=True,
@@ -47,12 +47,12 @@ class CorresponsaliaSerializer(serializers.ModelSerializer):
                   'configuracion', 'usuario_paycard', 'password_paycard', 'emisor')
 
     def validate(self, data):
-        data = super(CorresponsaliaSerializer, self).validate(data)
+        data = dict(super(CreateCorresponsaliaSerializer, self).validate(data))
         request = self.context['request']
         user = request.user
         company = None if not self.instance else self.instance.company
         params = {} if not self.instance else self.instance.params
-        configuration = data.pop('configuracion',
+        configuration = data.pop('configuration',
                           params['configuration'] if 'configuration' in params else [])
         issuer_id = data.pop('emisor', None)
         user_paycard = data.get('user_paycard', '' if not self.instance else self.instance.user_paycard)
@@ -116,6 +116,21 @@ class CorresponsaliaSerializer(serializers.ModelSerializer):
         data['company'] = company
         return data
 
+class CorresponsaliaCompleteSerializer(serializers.ModelSerializer):
+    id_corresponsalia = serializers.UUIDField(source='id')
+    descripcion = serializers.CharField(source='description')
+    pais = serializers.CharField(source='country')
+    ciudad = serializers.CharField(source='city')
+    sucursal = serializers.CharField(source='branch')
+    configuracion = ConfiguracionCorresponsaliaItemSerializer(source='params.configuration', many=True)
+    usuario_paycard = serializers.CharField(source='user_paycard')
+    emisor = serializers.CharField(source='company.volcan_issuer_id')
+
+    class Meta:
+        model = Corresponsalia
+        fields = ('id_corresponsalia', 'descripcion', 'pais', 'ciudad', 'sucursal',
+                  'configuracion', 'usuario_paycard', 'emisor')
+        read_only_fields = fields
 
 class CorresponsaliaSimpleSerializer(serializers.ModelSerializer):
     id_corresponsalia = serializers.UUIDField(source='id')
@@ -208,14 +223,14 @@ class CreateTransaccionCorresponsaliaSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         data = super(CreateTransaccionCorresponsaliaSerializer, self).validate(data)
-        request = self.context['request']
+        # request = self.context['request']
         corresponsalia_id = data.pop('corresponsalia_id', None)
         card_number = data.get('card_number', None)
         currency_str = data.pop('currency_str', None)
         movement_code = data.get('movement_code', None)
         amount = data.get('amount', None)
         # reference = data.get('reference', None)
-        user = request.user
+        # user = request.user
 
         try:
             corresponsalia = Corresponsalia.objects.get(id=corresponsalia_id)
@@ -244,11 +259,11 @@ class CreateTransaccionCorresponsaliaSerializer(serializers.ModelSerializer):
         for config in corresponsalia.params['configuration']:
             if config['bin'] == card_bin_config.card_bin:
                 is_bin_found = True
-                if currency.number_code not in corresponsalia.params['currencies']:
+                if currency.number_code not in config['currencies']:
                     raise CustomValidationError(
                         detail={'moneda': _('Corresponsalia no esta configurada con la moneda.')},
                         code='currency_not_found')
-                if movement_code not in [code['code'] for code in config['movement_cods']]:
+                if movement_code not in [code['code'] for code in config['movement_codes']]:
                     raise CustomValidationError(
                         detail={'moneda': _('Corresponsalia no esta configurada con la moneda.')},
                         code='currency_not_found')
@@ -259,7 +274,7 @@ class CreateTransaccionCorresponsaliaSerializer(serializers.ModelSerializer):
 
         data['corresponsalia'] = corresponsalia
         data['currency'] = currency
-        data['card_real'] = card_real
+        # data['card_real'] = card_real
         data['card_bin_config'] = card_bin_config
 
         if '.' in amount:

@@ -23,7 +23,7 @@ class TransaccionCorresponsaliaManager(models.Manager):
     """
 
     def get_queryset(self):
-        return self.all_objects().filter(is_deleted=False)
+        return self.all_objects().filter(is_active=True)
 
     def all_objects(self):
         return super(TransaccionCorresponsaliaManager, self).get_queryset().select_related(

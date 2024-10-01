@@ -5496,37 +5496,40 @@ components:
           description: 'Condicional. Es requerido si elige un tipo de producto PREPAGO'
           maxLength: 50
         configuracion:
-          type: object
-          properties:
-            bin:
-              type: string
-              description: 'BIN'
-              maxLength: 8
-            producto:
-              type: string
-              description: 'Tipo de producto'
-              enum: ['PREPAGO', 'CREDITO']
-              default: 'CREDITO'
-            monedas:
-              type: array
-              description: 'Mandatorio. Los tipos de moenda que puede manejar la Corresponsalia'
-              items:
+          type: array
+          description: 'Configuracion de corresponsalia'
+          items:
+            type: object
+            properties:
+              bin:
                 type: string
-                default: '188'
-              uniqueItems: true
-              minItems: 1
-            codigos_movimiento:
-              type: array
-              description: 'Condicional. Es requerido si elige un tipo de producto PREPAGO'
-              items:
-                type: object
-                properties:
-                  codigo:
-                    type: string
-                    maxLength: 20
-                  descripcion:
-                    type: string
-                    maxLength: 20
+                description: 'BIN'
+                maxLength: 8
+              producto:
+                type: string
+                description: 'Tipo de producto'
+                enum: ['PREPAGO', 'CREDITO']
+                default: 'CREDITO'
+              monedas:
+                type: array
+                description: 'Mandatorio. Los tipos de moenda que puede manejar la Corresponsalia'
+                items:
+                  type: string
+                  default: '188'
+                uniqueItems: true
+                minItems: 1
+              codigos_movimiento:
+                type: array
+                description: 'Condicional. Es requerido si elige un tipo de producto PREPAGO'
+                items:
+                  type: object
+                  properties:
+                    codigo:
+                      type: string
+                      maxLength: 20
+                    descripcion:
+                      type: string
+                      maxLength: 20
         emisor:
           type: string
           description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
