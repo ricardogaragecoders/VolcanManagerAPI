@@ -5,8 +5,9 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from common.exceptions import CustomValidationError
+from common.utils import code_generator
 from control.models import Company, Currency
-from corresponsalia.models import Corresponsalia, TransaccionCorresponsalia
+from corresponsalia.models import Corresponsalia, TransaccionCorresponsalia, TransaccionCorresponsaliaStatus
 from thalesapi.models import CardBinConfig, CardType
 from thalesapi.utils import get_card_triple_des_process
 
@@ -226,10 +227,10 @@ class CreateTransaccionCorresponsaliaSerializer(serializers.ModelSerializer):
         # request = self.context['request']
         corresponsalia_id = data.pop('corresponsalia_id', None)
         card_number = data.get('card_number', None)
-        currency_str = data.pop('currency_str', None)
+        currency_str = data.pop('currency_str', '').upper()
         movement_code = data.get('movement_code', None)
         amount = data.get('amount', None)
-        # reference = data.get('reference', None)
+        reference = data.get('reference', '')
         # user = request.user
 
         try:
@@ -255,6 +256,10 @@ class CreateTransaccionCorresponsaliaSerializer(serializers.ModelSerializer):
         else:
             currency = Currency.objects.filter(abr_code=currency_str).first()
 
+        if not currency:
+            raise CustomValidationError(detail={'moneda': _(f'Moneda {currency_str} no identificada')},
+                                        code='currency_not_found')
+
         is_bin_found = False
         for config in corresponsalia.params['configuration']:
             if config['bin'] == card_bin_config.card_bin:
@@ -265,8 +270,8 @@ class CreateTransaccionCorresponsaliaSerializer(serializers.ModelSerializer):
                         code='currency_not_found')
                 if movement_code not in [code['code'] for code in config['movement_codes']]:
                     raise CustomValidationError(
-                        detail={'moneda': _('Corresponsalia no esta configurada con la moneda.')},
-                        code='currency_not_found')
+                        detail={'codigo_movimiento': _('Codigo de movimiento no configurado con BIN.')},
+                        code='movement_code_not_found')
 
         if not is_bin_found:
             raise CustomValidationError(detail={'tarjeta': _('Corresponsalia no esta configurada con el BIN.')},
@@ -276,6 +281,7 @@ class CreateTransaccionCorresponsaliaSerializer(serializers.ModelSerializer):
         data['currency'] = currency
         # data['card_real'] = card_real
         data['card_bin_config'] = card_bin_config
+        data['reference'] = code_generator(10, option='num') if len(reference) == 0 else reference
 
         if '.' in amount:
             data['amount'] = Decimal(amount)
@@ -306,3 +312,44 @@ class TransaccionCorresponsaSimpleliaSerializer(serializers.ModelSerializer):
         fields = ('id_transaccion', 'id_corresponsalia', 'tarjeta', 'moneda', 'codigo_movimiento',
                   'importe', 'referencia_numerica', 'estatus', 'fecha_creacion')
         read_only_fields = fields
+
+
+
+class CreateTransaccionReversoCorresponsaliaSerializer(serializers.ModelSerializer):
+    id_corresponsalia = serializers.UUIDField(source='corresponsalia_id', allow_null=True)
+    tarjeta = serializers.CharField(source='card_number', required=False, allow_blank=True, allow_null=True, default='')
+    autorizacion = serializers.CharField(source='autorization', required=False, allow_blank=True, allow_null=True,
+                                         default='')
+
+    class Meta:
+        model = TransaccionCorresponsalia
+        fields = ('id_corresponsalia', 'tarjeta', 'autorizacion')
+
+    def validate(self, data):
+        data = super(CreateTransaccionReversoCorresponsaliaSerializer, self).validate(data)
+        corresponsalia_id = data.pop('corresponsalia_id', None)
+        card_number = data.pop('card_number', None)
+        autorization = data.pop('autorization', None)
+
+        try:
+            corresponsalia = Corresponsalia.objects.get(id=corresponsalia_id)
+        except Corresponsalia.DoesNotExist:
+            raise CustomValidationError(detail={'id_corresponsalia': _('Corresponsalia no encontrada.')},
+                                        code='corresponsalia_not_found')
+
+        try:
+            transaction_corresponsalia = TransaccionCorresponsalia.objects.get(corresponsalia=corresponsalia,
+                                                                               card_number=card_number,
+                                                                               autorization=autorization)
+        except Corresponsalia.DoesNotExist:
+            raise CustomValidationError(detail={'autorizacion': _('Autorizacion no fue encontrada.')},
+                                        code='autorization_not_found')
+
+        if transaction_corresponsalia.status != TransaccionCorresponsaliaStatus.TCS_RETURNED:
+            raise CustomValidationError(detail={'autorizacion': _('Transaccion ha sido reversada.')},
+                                        code='autorization_invalid')
+
+        data['corresponsalia'] = corresponsalia
+        data['transaction_corresponsalia'] = transaction_corresponsalia
+
+        return data

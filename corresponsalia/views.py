@@ -14,13 +14,14 @@ from django.http import HttpResponse
 from common.export_excel import WriteToExcel
 from common.export_pdf import WriteToPdf
 from common.utils import is_valid_uuid, get_response_data_errors, handler_exception_general, \
-    get_datetime_from_querystring, model_code_generator
+    get_datetime_from_querystring, model_code_generator, code_generator
 from common.views import CustomViewSetWithPagination
-from corresponsalia.models import Corresponsalia, TransaccionCorresponsalia, TransaccionCorresponsaliaCollection
+from corresponsalia.models import Corresponsalia, TransaccionCorresponsalia, TransaccionCorresponsaliaCollection, \
+    TransaccionCorresponsaliaStatus
 from corresponsalia.serializers import CreateCorresponsaliaSerializer, \
     CorresponsaliaSimpleSerializer, TransaccionCorresponsaliaSerializer, \
     CreateTransaccionCorresponsaliaSerializer, TransaccionCorresponsaSimpleliaSerializer, \
-    CorresponsaliaCompleteSerializer
+    CorresponsaliaCompleteSerializer, CreateTransaccionReversoCorresponsaliaSerializer
 from corresponsalia.utils import process_parabilia_api_request
 from thalesapi.models import CardBinConfig, CardType
 from thalesapi.utils import get_card_triple_des_process
@@ -128,6 +129,7 @@ class TransaccionApiView(CustomViewSetWithPagination):
         return super().initial(request, *args, **kwargs)
 
     def get_queryset(self):
+        status_transaccion = self.request.query_params.get('st', 'all')
         corresponsalia_id = self.request.query_params.get('coId', '')
         q = self.request.query_params.get('q', None)
         order_by = self.request.query_params.get('orderBy', 'created_at')
@@ -149,6 +151,8 @@ class TransaccionApiView(CustomViewSetWithPagination):
         if is_valid_uuid(corresponsalia_id):
             filters['corresponsalia_id'] = corresponsalia_id
 
+        if status_transaccion != 'all':
+            filters['status'] = status_transaccion
 
         if len(filters) > 0:
             queryset = queryset.filter(**filters).distinct()
@@ -250,6 +254,8 @@ class TransaccionApiView(CustomViewSetWithPagination):
 
     def create_prepaid_transaction(self, request, *args, **kwargs):
         transaction_corresponsalia: Optional[TransaccionCorresponsalia] = kwargs.get('transaction', None)
+        status_transaction: Optional[TransaccionCorresponsaliaStatus] = kwargs.get(
+            'status_transaction', TransaccionCorresponsaliaStatus.TCS_PROCESSED)
         assert transaction_corresponsalia, "La transaccion no fue proporcionada"
         access_token_paycard = self.get_access_token_paycard(corresponsalia=transaction_corresponsalia.corresponsalia)
         if not access_token_paycard:
@@ -261,15 +267,21 @@ class TransaccionApiView(CustomViewSetWithPagination):
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         }
+        if status_transaction == TransaccionCorresponsaliaStatus.TCS_PROCESSED:
+            movement_code = transaction_corresponsalia.movement_code
+            reference = transaction_corresponsalia.reference
+        else:
+            movement_code = transaction_corresponsalia.movement_code_reverse
+            reference = code_generator(10, option='num')
 
         request_data = {
             "IDSolicitud": "1",
-            "Tarjeta": get_card_triple_des_process(transaction_corresponsalia.card_number, is_descript=False),
+            "Tarjeta": get_card_triple_des_process(transaction_corresponsalia.card_number, is_descript=True),
             "MedioAcceso": "",
             "TipoMedioAcceso": "",
             "Importe": transaction_corresponsalia.amount,
-            "ClaveMovimiento": transaction_corresponsalia.movement_code,
-            "RefNumerica": transaction_corresponsalia.reference,
+            "ClaveMovimiento": movement_code,
+            "RefNumerica": reference,
             "Observaciones": "",
             "ConceptoPago": ""
         }
@@ -280,14 +292,17 @@ class TransaccionApiView(CustomViewSetWithPagination):
                                                                           url=api_url, request=request, times=0)
         if response_status == 200:
             if 'CodRespuesta' in response_data and int(response_data['CodRespuesta']) == 0:
-                transaction_corresponsalia.authorization = model_code_generator(TransaccionCorresponsalia, 32,
-                                                                                code='authorization').upper()
+                if not transaction_corresponsalia.authorization:
+                    transaction_corresponsalia.authorization = model_code_generator(TransaccionCorresponsalia, 32,
+                                                                                    code='authorization').upper()
+                transaction_corresponsalia.status = status_transaction
                 transaction_corresponsalia.save()
                 db = TransaccionCorresponsaliaCollection()
                 db.insert_one(data={
                     "transaction_id": str(transaction_corresponsalia.id),
                     "request_data": request_data,
                     "response_data": response_data,
+                    "status": status_transaction,
                     "created_at": datetime.now(pytz.utc)
                 })
                 self.make_response_success(status=response_status, message="Transacción aprobada", data={
@@ -300,25 +315,46 @@ class TransaccionApiView(CustomViewSetWithPagination):
                     'moneda': transaction_corresponsalia.currency.number_code
                 })
                 return True
+        # error, si llegua aqui puede ser que no haya sido efectiva la peticion
+        db = TransaccionCorresponsaliaCollection()
+        db.insert_one(data={
+            "transaction_id": str(transaction_corresponsalia.id),
+            "request_data": request_data,
+            "response_data": response_data,
+            "status": 'error' if status_transaction == TransaccionCorresponsaliaStatus.TCS_PROCESSED else 'error_returned',
+            "created_at": datetime.now(pytz.utc)
+        })
         self.make_response_success(status=response_status, data=response_data)
+        return False
 
 
     def create_credit_transaction(self, request, *args, **kwargs):
         transaction_corresponsalia: Optional[TransaccionCorresponsalia] = kwargs.get('transaction', None)
+        status_transaction: Optional[TransaccionCorresponsaliaStatus] = kwargs.get(
+            'status_transaction', TransaccionCorresponsaliaStatus.TCS_PROCESSED)
         assert transaction_corresponsalia, "La transaccion no fue proporcionada"
         from control.utils import gestion_transacciones
 
+        if status_transaction == TransaccionCorresponsaliaStatus.TCS_PROCESSED:
+            movement_code = transaction_corresponsalia.movement_code
+            reference = transaction_corresponsalia.reference
+            autorization = ""
+        else:
+            movement_code = transaction_corresponsalia.movement_code_reverse
+            reference = code_generator(10, option='num')
+            autorization = ""
+
         request_data = {
                 "tarjeta": transaction_corresponsalia.card_number,
-                "transaccion": transaction_corresponsalia.movement_code,
+                "transaccion": movement_code,
                 "importe": transaction_corresponsalia.amount,
                 "moneda": transaction_corresponsalia.currency.number_code,
-                "fecha_trx": transaction_corresponsalia.created_at.strftime("%Y%m%d"),
-                "hora_trx": transaction_corresponsalia.created_at.strftime("%H%M%S"),
+                "fecha_trx": transaction_corresponsalia.updated_at.strftime("%Y%m%d"),
+                "hora_trx": transaction_corresponsalia.updated_at.strftime("%H%M%S"),
                 "origen_mov": "",
-                "referencia": "",
+                "referencia": f"{reference}",
                 "doc_oper": "",
-                "autorizacion": "",
+                "autorizacion": f"{autorization}",
                 "comercio": transaction_corresponsalia.corresponsalia.description,
                 "ciudad": transaction_corresponsalia.corresponsalia.city,
                 "pais": transaction_corresponsalia.corresponsalia.country,
@@ -329,15 +365,22 @@ class TransaccionApiView(CustomViewSetWithPagination):
                                                                                  request_data=request_data)
         if 'RSP_CODIGO' in response_data and (
                 response_data['RSP_CODIGO'].isnumeric() and int(response_data['RSP_CODIGO']) == 0
-        ) or response_data['RSP_CODIGO'] == '':
+            ) or response_data['RSP_CODIGO'] == '':
+
+            # if 'RSP_AUTORIZ' not in response_data:
             transaction_corresponsalia.authorization = model_code_generator(TransaccionCorresponsalia, 32,
                                                                             code='authorization').upper()
+            # else:
+            #     transaction_corresponsalia.authorization = response_data['RSP_AUTORIZ']
+
+            transaction_corresponsalia.status = status_transaction
             transaction_corresponsalia.save()
             db = TransaccionCorresponsaliaCollection()
             db.insert_one(data={
                 "transaction_id": str(transaction_corresponsalia.id),
                 "request_data": request_data,
                 "response_data": response_data,
+                "status": status_transaction,
                 "created_at": datetime.now(pytz.utc)
             })
             self.make_response_success(status=response_status, message="Transacción aprobada", data={
@@ -350,4 +393,49 @@ class TransaccionApiView(CustomViewSetWithPagination):
                 'moneda': transaction_corresponsalia.currency.number_code
             })
         else:
+            # error
+            db = TransaccionCorresponsaliaCollection()
+            db.insert_one(data={
+                "transaction_id": str(transaction_corresponsalia.id),
+                "request_data": request_data,
+                "response_data": response_data,
+                "status": 'error' if status_transaction == TransaccionCorresponsaliaStatus.TCS_PROCESSED else 'error_returned',
+                "created_at": datetime.now(pytz.utc)
+            })
             self.make_response_success(status=response_status, message=response_message, data=response_data)
+
+
+class TransaccionReversoApiView(TransaccionApiView):
+    serializer_class = TransaccionCorresponsaSimpleliaSerializer
+    create_serializer_class = CreateTransaccionReversoCorresponsaliaSerializer
+    one_serializer_class = TransaccionCorresponsaliaSerializer
+    model_class = TransaccionCorresponsalia
+    permission_classes = (IsAuthenticated, IsVerified, IsOperator)
+
+    def create(self, request, *args, **kwargs):
+        try:
+            request_data = request.data if 'request_data' not in kwargs else kwargs['request_data']
+            self.serializer = self.get_create_serializer(data=request_data)
+            if self.serializer.is_valid():
+                transaction_corresponsalia: TransaccionCorresponsalia = self.serializer.validated_data.pop(
+                    'transaction_corresponsalia', None)
+                if transaction_corresponsalia:
+                    if transaction_corresponsalia.card_bin_config.card_type == CardType.CT_PREPAID:
+                        self.create_prepaid_transaction(request=request, transaction=transaction_corresponsalia,
+                                                       status_transaction=TransaccionCorresponsaliaStatus.TCS_RETURNED)
+                    elif transaction_corresponsalia.card_bin_config.card_type == CardType.CT_CREDIT:
+                        self.create_credit_transaction(request=request, transaction=transaction_corresponsalia,
+                                                       status_transaction=TransaccionCorresponsaliaStatus.TCS_RETURNED)
+                    else:
+                        self.make_response_success(status=rest_framework.status.HTTP_404_NOT_FOUND,
+                                                   message='Tipo de tarjeta no identificado')
+                else:
+                    self.make_response_success(status=rest_framework.status.HTTP_404_NOT_FOUND,
+                                               message='BIN no registrado')
+            else:
+                self.resp = get_response_data_errors(self.serializer.errors)
+        except Exception as e:
+            self.resp = handler_exception_general(__name__, e)
+        finally:
+            return self.get_response()
+

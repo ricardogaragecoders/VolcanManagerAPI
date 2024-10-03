@@ -2497,6 +2497,19 @@ paths:
             type: string
             format: date
             pattern: '^\d{4}-\d{2}-\d{2}$'
+        - name: coId
+          in: query
+          description: Corresponsalia ID.
+          required: false
+          schema:
+            type: string
+        - name: st
+          in: query
+          description: Estatus transaccion corresponsalia.
+          required: false
+          schema:
+            type: string
+            enum: ['all', 'active', 'processed', 'rejected', 'error', 'returned', 'error_returned']
         - name: q
           description: Find by referencia, numero de tarjeta
           in: query
@@ -2553,34 +2566,6 @@ paths:
           description: 'Returns a corresponsalia transaccion.'
       tags:
         - VolcanManager::Corresponsalias::Transacciones
-    patch:
-      operationId: api_corresponsalia_transaccion_update
-      description: Update a corresponsalia transaccion.
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: "#/components/schemas/CorresponsaliaTransaccion"
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CorresponsaliaTransaccion"
-        required: true
-      summary: Update a corresponalia transaccion.
-      responses:
-        '200':
-          description: 'Update a corresponsalia transaccion.'
-      tags:
-        - VolcanManager::Corresponsalias::Transacciones
-    delete:
-      operationId: api_corresponsalia_transaccion_delete
-      description: Delete a corresponsalia transaccion.
-      summary: Delete a corresponsalia transaccion.
-      parameters: []
-      responses:
-        '200':
-          description: 'Delete a corresponsalia transaccion.'
-      tags:
-        - VolcanManager::Corresponsalias::Transacciones
     parameters:
       - name: transaccion_id
         in: path
@@ -2588,6 +2573,26 @@ paths:
         description: Transsaccion ID
         schema:
           type: string
+  /volcan/api/Corresponsalias/Reversos/:
+    post:
+      operationId: api_corresponsalia_reverso_create
+      description: Create correponsalia reverso.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/CorresponsaliaTransaccionReverso"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CorresponsaliaTransaccionReverso"
+        required: true
+      summary: Create corresponsalia transaccion reverso
+      responses:
+        '200':
+          description: 'Create correponsalia transaccion reverso'
+      tags:
+        - VolcanManager::Corresponsalias::Transacciones
+    parameters: []
   /volcan/api/IntraExtras/:
     post:
       operationId: api_control_intra_extras_mock
@@ -5527,6 +5532,9 @@ components:
                     codigo:
                       type: string
                       maxLength: 20
+                    tipo:
+                      type: string
+                      maxLength: 20
                     descripcion:
                       type: string
                       maxLength: 20
@@ -5574,6 +5582,25 @@ components:
         - importe
         - moneda
         - codigo_movimiento
+    CorresponsaliaTransaccionReverso:
+      type: object
+      properties:
+        id_corresponsalia:
+          type: string
+          description: 'Mandatorio. Corresponsalia ID'
+          maxLength: 50
+        tarjeta:
+          type: string
+          description: 'Mandatorio. Tarjeta'
+          maxLength: 16
+        autorizacion:
+          type: string
+          description: 'Mandatorio. Codigo de autorizacion de la transaccion'
+          maxLength: 50
+      required:
+        - id_corresponsalia
+        - tarjeta
+        - autorizacion
     Intra_Extras:
       type: object
       properties:

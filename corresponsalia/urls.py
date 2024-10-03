@@ -13,4 +13,6 @@ urlpatterns = [
     path('Corresponsalias/Transacciones/<str:transaccion_id>/',
          TransaccionApiView.as_view({'get': 'retrieve'})),
 
+    path('Corresponsalias/Reversos/',
+         TransaccionReversoApiView.as_view({'post': 'create'})),
 ]
