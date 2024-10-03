@@ -2793,6 +2793,148 @@ paths:
         description: ID Monitor System
         schema:
           type: string
+  /volcan/api/reports/:
+    get:
+      operationId: api_volcan_reports_read
+      description: Return reports
+      summary: Return reports
+      parameters:
+        - name: limit
+          in: query
+          description: Number of results to return per page.
+          required: false
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          description: The initial index from which to return the results.
+          required: false
+          schema:
+            type: integer
+        - name: issuer_id
+          in: query
+          description: Emisor
+          required: false
+          schema:
+            type: string
+        - name: active
+          description: Active or Inactive
+          in: query
+          required: false
+          schema:
+            type: boolean
+            enum: [true, false]
+        - name: rtts
+          in: query
+          description: Report type
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [logs,]
+        - name: q
+          description: Find by report_type,
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: from_date
+          description: Date from
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+            examples: '2020-01-01'
+            pattern: '^\d{4}-\d{2}-\d{2}$'
+        - name: to_date
+          description: Date to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+            examples: '2020-01-31'
+            pattern: '^\d{4}-\d{2}-\d{2}$'
+        - name: orderBy
+          description: Order By field
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ 'report_type', 'created_at', 'updated_at',]
+            default: report_type
+        - name: orderByDesc
+          description: Order desc
+          in: query
+          schema:
+            type: boolean
+            enum: [ true, false ]
+            default: false
+      responses:
+        '200':
+          description: 'Return reports'
+      tags:
+        - VolcanManager::Reports
+    post:
+      operationId: api_volcan_report_create
+      description: Create a new report.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Report"
+        required: true
+      summary: Create a new report.
+      responses:
+        '201':
+          description: 'Create a new report'
+      tags:
+        - VolcanManager::Reports
+    parameters: []
+  /volcan/api/reports/{report_id}/:
+    get:
+      operationId: api_volcan_report_read
+      description: Return a report.
+      summary: Return a report.
+      parameters: []
+      responses:
+        '200':
+          description: 'Returns a report.'
+      tags:
+        - VolcanManager::Reports
+    patch:
+      operationId: api_volcan_report_update
+      description: Update a report.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Report"
+        required: true
+      summary: Update a report.
+      responses:
+        '200':
+          description: 'Update a report'
+      tags:
+        - VolcanManager::Reports
+#    delete:
+#      operationId: api_loyalty_redemption_delete
+#      description: Cancel a loyalty redemption.
+#      summary: Cancel a loyalty redemption.
+#      parameters: []
+#      responses:
+#        '200':
+#          description: 'Cancel a loyalty redemption.'
+#      tags:
+#        - RDL::Loyalty::Reports
+    parameters:
+      - name: report_id
+        in: path
+        required: true
+        schema:
+          type: string
 components:
   schemas:
     LoginToken:
@@ -2877,6 +3019,53 @@ components:
       required:
         - first_name
         - last_name
+    Report:
+      type: object
+      properties:
+        issuer_id:
+          type: string
+          description: Emisor
+        report_type:
+          type: string
+          description: Report Type
+          enum: ['logs',]
+          default: 'logs'
+          maxLength: 30
+        time_zone:
+          type: string
+          description: Timezone
+          enum: ['America/Mexico_City']
+          default: 'America/Mexico_City'
+          maxLength: 50
+        initial_date:
+          description: 'Initial date.'
+          type: string
+          format: date
+          example: '2022-11-01'
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+        final_date:
+          description: 'Final date.'
+          type: string
+          format: date
+          example: '2022-11-30'
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+        params:
+          type: object
+          properties:
+            orderBy:
+              type: string
+              description: Order by
+              enum: ['CreatedAt', 'UpdatedAt']
+              default: 'CreatedAt'
+            orderByDesc:
+              type: boolean
+              description: Order by desc
+              enum: [false, true]
+              default: false
+      required:
+        - issuer_id
+        - report_type
+        - initial_date
     CreacionEnte:
       type: object
       properties:
