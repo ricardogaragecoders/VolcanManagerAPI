@@ -261,6 +261,7 @@ class CreateTransaccionCorresponsaliaSerializer(serializers.ModelSerializer):
                                         code='currency_not_found')
 
         is_bin_found = False
+        movement_code_item = None
         for config in corresponsalia.params['configuration']:
             if config['bin'] == card_bin_config.card_bin:
                 is_bin_found = True
@@ -268,7 +269,11 @@ class CreateTransaccionCorresponsaliaSerializer(serializers.ModelSerializer):
                     raise CustomValidationError(
                         detail={'moneda': _('Corresponsalia no esta configurada con la moneda.')},
                         code='currency_not_found')
-                if movement_code not in [code['code'] for code in config['movement_codes']]:
+                for movement_item in config['movement_codes']:
+                    if movement_item['code'] == movement_code:
+                        movement_code_item = movement_item
+
+                if not movement_code_item:
                     raise CustomValidationError(
                         detail={'codigo_movimiento': _('Codigo de movimiento no configurado con BIN.')},
                         code='movement_code_not_found')
@@ -282,6 +287,7 @@ class CreateTransaccionCorresponsaliaSerializer(serializers.ModelSerializer):
         # data['card_real'] = card_real
         data['card_bin_config'] = card_bin_config
         data['reference'] = code_generator(10, option='num') if len(reference) == 0 else reference
+        data['params'] = {'movement_code': movement_code_item}
 
         if '.' in amount:
             data['amount'] = Decimal(amount)
@@ -318,7 +324,7 @@ class TransaccionCorresponsaSimpleliaSerializer(serializers.ModelSerializer):
 class CreateTransaccionReversoCorresponsaliaSerializer(serializers.ModelSerializer):
     id_corresponsalia = serializers.UUIDField(source='corresponsalia_id', allow_null=True)
     tarjeta = serializers.CharField(source='card_number', required=False, allow_blank=True, allow_null=True, default='')
-    autorizacion = serializers.CharField(source='autorization', required=False, allow_blank=True, allow_null=True,
+    autorizacion = serializers.CharField(source='authorization', required=False, allow_blank=True, allow_null=True,
                                          default='')
 
     class Meta:
@@ -329,7 +335,7 @@ class CreateTransaccionReversoCorresponsaliaSerializer(serializers.ModelSerializ
         data = super(CreateTransaccionReversoCorresponsaliaSerializer, self).validate(data)
         corresponsalia_id = data.pop('corresponsalia_id', None)
         card_number = data.pop('card_number', None)
-        autorization = data.pop('autorization', None)
+        authorization = data.pop('authorization', None)
 
         try:
             corresponsalia = Corresponsalia.objects.get(id=corresponsalia_id)
@@ -340,16 +346,33 @@ class CreateTransaccionReversoCorresponsaliaSerializer(serializers.ModelSerializ
         try:
             transaction_corresponsalia = TransaccionCorresponsalia.objects.get(corresponsalia=corresponsalia,
                                                                                card_number=card_number,
-                                                                               autorization=autorization)
-        except Corresponsalia.DoesNotExist:
+                                                                               authorization=authorization)
+        except TransaccionCorresponsalia.DoesNotExist:
             raise CustomValidationError(detail={'autorizacion': _('Autorizacion no fue encontrada.')},
-                                        code='autorization_not_found')
+                                        code='authorization_not_found')
 
-        if transaction_corresponsalia.status != TransaccionCorresponsaliaStatus.TCS_RETURNED:
-            raise CustomValidationError(detail={'autorizacion': _('Transaccion ha sido reversada.')},
-                                        code='autorization_invalid')
+        if transaction_corresponsalia.status == TransaccionCorresponsaliaStatus.TCS_RETURNED:
+            raise CustomValidationError(detail={'status': _('Transaccion ha sido reversada.')},
+                                        code='transaction_returned')
+
+        # Pasaron las validaciones, por lo tanto se pueden actualizar el movement_code_reverse
+        # recogemos el movement_code_item
+        movement_code_item = transaction_corresponsalia.params['movement_code']
+        movement_code_reverse_item = None
+        reverse_type = f"Reverso{movement_code_item['type']}"
+        for config in corresponsalia.params['configuration']:
+            if config['bin'] == transaction_corresponsalia.card_bin_config.card_bin:
+                for movement_item in config['movement_codes']:
+                    if movement_item['type'] == reverse_type:
+                        movement_code_reverse_item = movement_item
+
+                if not movement_code_reverse_item:
+                    raise CustomValidationError(
+                        detail={'movement_code_reverse': _('Codigo de movimiento para reverso no configurado en BIN.')},
+                        code='movement_code_reverse_not_found')
 
         data['corresponsalia'] = corresponsalia
+        transaction_corresponsalia.params['movement_code_reverse'] = movement_code_reverse_item
+        transaction_corresponsalia.save()
         data['transaction_corresponsalia'] = transaction_corresponsalia
-
         return data

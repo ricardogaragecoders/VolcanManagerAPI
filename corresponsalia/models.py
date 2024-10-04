@@ -55,7 +55,6 @@ class TransaccionCorresponsalia(BaseModel):
                                         related_name='transactions', null=True, blank=True)
     card_number = models.CharField(max_length=16)
     movement_code = models.CharField(max_length=4, null=True, blank=True)
-    movement_code_reverse = models.CharField(max_length=4, null=True, blank=True)
     amount = models.FloatField(default=0.0)
     reference = models.CharField(max_length=50, null=True, blank=True)
     card_bin_config = models.ForeignKey('thalesapi.CardBinConfig', on_delete=models.DO_NOTHING,
@@ -64,6 +63,7 @@ class TransaccionCorresponsalia(BaseModel):
                                         related_name='transactions', null=True, blank=True)
     is_active = models.BooleanField(default=True)
     authorization = models.CharField(max_length=150, null=True, blank=True)
+    params = models.JSONField(default=dict)
     status = models.CharField(max_length=20, choices=TransaccionCorresponsaliaStatus.choices,
                               default=TransaccionCorresponsaliaStatus.TCS_ACTIVE)
 

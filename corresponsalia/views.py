@@ -271,7 +271,7 @@ class TransaccionApiView(CustomViewSetWithPagination):
             movement_code = transaction_corresponsalia.movement_code
             reference = transaction_corresponsalia.reference
         else:
-            movement_code = transaction_corresponsalia.movement_code_reverse
+            movement_code = transaction_corresponsalia.params['movement_code_reverse']['code']
             reference = code_generator(10, option='num')
 
         request_data = {
@@ -338,11 +338,11 @@ class TransaccionApiView(CustomViewSetWithPagination):
         if status_transaction == TransaccionCorresponsaliaStatus.TCS_PROCESSED:
             movement_code = transaction_corresponsalia.movement_code
             reference = transaction_corresponsalia.reference
-            autorization = ""
+            authorization = ""
         else:
-            movement_code = transaction_corresponsalia.movement_code_reverse
+            movement_code = transaction_corresponsalia.params['movement_code_reverse']['code']
             reference = code_generator(10, option='num')
-            autorization = ""
+            authorization = transaction_corresponsalia.params['authorization_origin']
 
         request_data = {
                 "tarjeta": transaction_corresponsalia.card_number,
@@ -354,7 +354,7 @@ class TransaccionApiView(CustomViewSetWithPagination):
                 "origen_mov": "",
                 "referencia": f"{reference}",
                 "doc_oper": "",
-                "autorizacion": f"{autorization}",
+                "autorizacion": f"{authorization}",
                 "comercio": transaction_corresponsalia.corresponsalia.description,
                 "ciudad": transaction_corresponsalia.corresponsalia.city,
                 "pais": transaction_corresponsalia.corresponsalia.country,
@@ -367,11 +367,11 @@ class TransaccionApiView(CustomViewSetWithPagination):
                 response_data['RSP_CODIGO'].isnumeric() and int(response_data['RSP_CODIGO']) == 0
             ) or response_data['RSP_CODIGO'] == '':
 
-            # if 'RSP_AUTORIZ' not in response_data:
-            transaction_corresponsalia.authorization = model_code_generator(TransaccionCorresponsalia, 32,
-                                                                            code='authorization').upper()
-            # else:
-            #     transaction_corresponsalia.authorization = response_data['RSP_AUTORIZ']
+            if status_transaction == TransaccionCorresponsaliaStatus.TCS_PROCESSED:
+                transaction_corresponsalia.authorization = model_code_generator(TransaccionCorresponsalia, 32,
+                                                                                code='authorization').upper()
+                if 'RSP_AUTORIZ' in response_data and len(response_data['RSP_AUTORIZ']) > 0:
+                    transaction_corresponsalia.params['authorization_origin'] = response_data['RSP_AUTORIZ']
 
             transaction_corresponsalia.status = status_transaction
             transaction_corresponsalia.save()
