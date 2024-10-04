@@ -151,36 +151,36 @@ class CorresponsaliaSimpleSerializer(serializers.ModelSerializer):
 
 class TransaccionCorresponsaliaSerializer(serializers.ModelSerializer):
     id_transaccion = serializers.UUIDField(source='id')
-    corresponsalia = serializers.SerializerMethodField(read_only=True)
+    corresponsalia = CorresponsaliaSimpleSerializer(read_only=True)
     tarjeta = serializers.CharField(source='card_number', required=False, allow_blank=True, allow_null=True, default='')
     moneda = serializers.SerializerMethodField(read_only=True)
     codigo_movimiento = serializers.CharField(source='movement_code', required=False, allow_blank=True, allow_null=True, default='')
     importe = serializers.CharField(source='amount', required=False, allow_blank=True, allow_null=True, default='')
     referencia_numerica = serializers.CharField(source='reference', required=False, allow_blank=True, allow_null=True, default='')
     card_bin = serializers.SerializerMethodField(read_only=True)
-    transcciones = serializers.SerializerMethodField(read_only=True)
+    transacciones = serializers.SerializerMethodField(read_only=True)
     estatus = serializers.CharField(source='status')
     fecha_creacion = serializers.DateTimeField(source='created_at')
 
     class Meta:
         model = TransaccionCorresponsalia
-        fields = ('id_transaccion', 'id_corresponsalia',
+        fields = ('id_transaccion', 'corresponsalia',
                   'tarjeta', 'moneda', 'codigo_movimiento', 'importe',
-                  'referencia_numerica', 'card_bin', 'transcciones',
-                  'estatus', 'fecha_creacion')
+                  'referencia_numerica', 'card_bin', 'transacciones',
+                  'estatus', 'params', 'fecha_creacion')
         read_only_fields = fields
 
-    def get_corresponsalia(self, instance):
-        corresponsalia = instance.corresponsalia
-        if corresponsalia:
-            return {
-                'id': str(corresponsalia.id),
-                'descripcion': corresponsalia.description,
-                'pais': corresponsalia.country,
-                'ciudad': corresponsalia.city,
-                'sucursal': corresponsalia.branch
-            }
-        return None
+    # def get_corresponsalia(self, instance):
+    #     corresponsalia = instance.corresponsalia
+    #     if corresponsalia:
+    #         return {
+    #             'id': str(corresponsalia.id),
+    #             'descripcion': corresponsalia.description,
+    #             'pais': corresponsalia.country,
+    #             'ciudad': corresponsalia.city,
+    #             'sucursal': corresponsalia.branch
+    #         }
+    #     return None
 
     def get_moneda(self, instance):
         currency = instance.currency
@@ -198,12 +198,23 @@ class TransaccionCorresponsaliaSerializer(serializers.ModelSerializer):
             return {
                 'BIN': card_bin_config.card_bin,
                 'tipo': card_bin_config.get_card_type_display(),
-                'emisor': card_bin_config.issuer_id
+                'emisor': card_bin_config.emisor
             }
         return None
 
     def get_transacciones(self, instance):
-        return {}
+        from .models import TransaccionCorresponsaliaCollection
+        db = TransaccionCorresponsaliaCollection()
+        queryset = db.find({'transaction_id': str(instance.id)}, 'created_at', 1)
+        transactions_data = []
+        for item in queryset:
+            transactions_data.append({
+                "id": str(item['_id']),
+                "request_data": item['request_data'],
+                "response_data": item['response_data'],
+                "created_at": item['created_at']
+            })
+        return transactions_data
 
 
 class CreateTransaccionCorresponsaliaSerializer(serializers.ModelSerializer):

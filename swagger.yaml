@@ -2522,8 +2522,8 @@ paths:
           required: false
           schema:
             type: string
-            enum: ['tarjeta', 'referencia']
-            default: branch
+            enum: ['card_number', 'reference', 'created_at', 'updated_at',]
+            default: created_at
         - name: orderByDesc
           description: Order desc
           in: query
