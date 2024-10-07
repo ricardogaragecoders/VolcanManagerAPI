@@ -58,7 +58,8 @@ INSTALLED_APPS = [
     'thalesapi',
     'webhook',
     'estrato',
-    'reports'
+    'reports',
+    'corresponsalia'
 ]
 
 MIDDLEWARE = [
@@ -369,7 +370,7 @@ DEFAULT_PASSWORD = env.str('DEFAULT_PASSWORD', '')
 DEFAULT_TIMEZONE = env.str('DEFAULT_TIMEZONE', 'America/Mexico_City')
 
 SERVER_VOLCAN_AZ7_URL = env.str('SERVER_VOLCAN_AZ7_URL', 'http://10.23.102.10:21005')
-SERVER_VOLCAN_PAYCARD_URL = env.str('SERVER_VOLCAN_PAYCARD_URL', 'http://10.23.106.33/wsParabiliumVolcan')
+SERVER_VOLCAN_PARABILIA_URL = env.str('SERVER_VOLCAN_PARABILIA_URL', 'http://10.23.106.33/wsParabiliumVolcan')
 
 PUB_KEY_D1_SERVER_TO_ISSUER_SERVER_PEM = env.str('PUB_KEY_D1_SERVER_TO_ISSUER_SERVER_PEM', '')
 PRIV_KEY_D1_SERVER_TO_ISSUER_SERVER_PEM = env.str('PRIV_KEY_D1_SERVER_TO_ISSUER_SERVER_PEM', '')
@@ -478,8 +479,10 @@ URL_AZ7_REFINANCIAMIENTO = env.str('URL_AZ7_REFINANCIAMIENTO',
                                    '/web/services/Volcan_Traslado_Financiamientos_1')
 
 # obtenerDatosTokenizacionPrepago
-URL_AZ7_LOGIN = env.str('URL_AZ7_LOGIN', '/wsParabiliumVolcan/api/Login')
-URL_AZ7_CONSULTA_TOKEN_TARJETA = env.str('URL_AZ7_CONSULTA_TOKEN_TARJETA',
-                                         '/wsParabiliumVolcan/api/ConsultarTokenTarjeta')
+URL_PARABILIA_LOGIN = env.str('URL_PARABILIA_LOGIN', '/api/Login')
+URL_PARABILIA_CONSULTA_TOKEN_TARJETA = env.str('URL_PARABILIA_CONSULTA_TOKEN_TARJETA',
+                                         '/api/ConsultarTokenTarjeta')
+URL_PARABILIA_MOVIMIENTO_MANUAL = env.str('URL_PARABILIA_MOVIMIENTO_MANUAL',
+                                         '/api/MovimientoManualV2')
 PARAM_AZ7_PAYCARD_USUARIO = env.str('PARAM_AZ7_PAYCARD_USUARIO', '')
 PARAM_AZ7_PAYCARD_PASSWORD = env.str('PARAM_AZ7_PAYCARD_PASSWORD', '')

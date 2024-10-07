@@ -52,7 +52,7 @@ class RequestLoggingMiddleware(MiddlewareMixin):
     skip_logging_keywords = [
         "volcan/api/issuers", "volcan/api/operators", "volcan/api/Webhooks", "volcan/api/Notificaciones",
         "volcan/api/Transacciones", "thales/api/bin/configurations", "volcan/api/ApiKeys",
-        "volcan/api/commons/monitor/systems", "volcan/api/reports",
+        "volcan/api/commons/monitor/systems", "volcan/api/reports", "volcan/api/currencies",
         "media/report", "media/account-statements", "static/swagger-ui",
         "favicon.ico"
     ]
