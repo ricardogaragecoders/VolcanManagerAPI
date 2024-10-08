@@ -39,8 +39,7 @@ class CreateCorresponsaliaSerializer(serializers.ModelSerializer):
                                             allow_null=True, allow_blank=True)
     password_paycard = serializers.CharField(source='pass_paycard', write_only=True,
                                              allow_null=True, allow_blank=True)
-    emisor = serializers.CharField(source='company.volcan_issuer_id', max_length=3,
-                                   allow_null=True, allow_blank=True)
+    emisor = serializers.CharField(max_length=3, allow_null=True, allow_blank=True)
 
     class Meta:
         model = Corresponsalia
@@ -59,7 +58,7 @@ class CreateCorresponsaliaSerializer(serializers.ModelSerializer):
         user_paycard = data.get('user_paycard', '' if not self.instance else self.instance.user_paycard)
         pass_paycard = data.get('pass_paycard', None)
 
-        if not self.instance or issuer_id:
+        if not self.instance and issuer_id:
             company = Company.objects.filter(volcan_issuer_id=issuer_id).first()
 
         if not company:
@@ -104,7 +103,7 @@ class CreateCorresponsaliaSerializer(serializers.ModelSerializer):
             configuration[index] = item
 
         if pass_paycard:
-            params['credentials'] = Corresponsalia.generate_credentials(user_paycard, pass_paycard)
+            params['credentials'] = Corresponsalia.generate_credentials(user_paycard, str(pass_paycard))
 
         if has_prepaid:
             if 'credentials' not in params or len(params['credentials']) == 0:
