@@ -85,10 +85,10 @@ class ThalesApiView(CustomViewSet):
         logger.info('Verify Card')
         logger.info(request_data)
 
-        if 'cardBin' in request_data and is_card_bin_valid(request_data['cardBin']):
+        if 'cardBin' in request_data and is_card_bin_valid(request_data['cardBin'], issuer_id=issuer_id):
             # aqui revisamos si es credito o prepago
             card_bin = request_data['cardBin']
-            card_bin_config = get_card_bin_config(key_cache=card_bin)
+            card_bin_config = get_card_bin_config(key_cache=card_bin, issuer_id=issuer_id)
             # card_type = CardType.CT_PREPAID if card_bin in '53876436' else CardType.CT_CREDIT
             if card_bin_config['card_type'] == CardType.CT_CREDIT:
                 from thalesapi.utils import post_verify_card_credit
