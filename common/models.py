@@ -16,9 +16,9 @@ class NameStrMixin:
 
 
 class BaseModel(models.Model, NameStrMixin):
+    id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    status = models.ForeignKey('common.Status', on_delete=models.DO_NOTHING, blank=True, null=True)
 
     class Meta:
         abstract = True

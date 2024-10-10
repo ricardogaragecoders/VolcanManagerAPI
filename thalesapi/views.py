@@ -345,8 +345,8 @@ class ThalesApiViewPrivate(ThalesApiView):
         serializer = self.get_serializer(data=data)
         response_data = {}
         if serializer.is_valid():
-            url_server = settings.SERVER_VOLCAN_PAYCARD_URL
-            api_url = f'{url_server}{settings.URL_AZ7_CONSULTA_TOKEN_TARJETA}'
+            url_server = settings.SERVER_VOLCAN_PARABILIA_URL
+            api_url = f'{url_server}{settings.URL_PARABILIA_CONSULTA_TOKEN_TARJETA}'
             validated_data = serializer.validated_data.copy()
             client = validated_data.pop('client', None)
             card = validated_data.pop('card', request_data['tarjeta'])

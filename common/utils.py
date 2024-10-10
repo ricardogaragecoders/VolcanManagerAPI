@@ -175,7 +175,7 @@ def code_generator(characters, **kwargs):
     return code
 
 
-def model_code_generator(model, digits, *args, **kwargs):
+def model_code_generator(model, digits, *args, **kwargs) -> str:
     """
         Return code generator about model
     """

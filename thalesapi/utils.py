@@ -84,8 +84,8 @@ def get_credentials_paycad():
 
 def get_access_token_paycard():
     if 'access_token_paycard' not in cache:
-        url_server = settings.SERVER_VOLCAN_PAYCARD_URL
-        api_url = f'{url_server}{settings.URL_AZ7_LOGIN}'
+        url_server = settings.SERVER_VOLCAN_PARABILIA_URL
+        api_url = f'{url_server}{settings.URL_PARABILIA_LOGIN}'
         data_json = {
             'NombreUsuario': settings.PARAM_AZ7_PAYCARD_USUARIO,
             'Password': settings.PARAM_AZ7_PAYCARD_PASSWORD
@@ -383,7 +383,7 @@ def post_verify_card_prepaid(request, *args, **kwargs):
         request_data = request.data.copy()
     else:
         request_data = kwargs['request_data'].copy()
-    url_server = settings.SERVER_VOLCAN_PAYCARD_URL
+    url_server = settings.SERVER_VOLCAN_PARABILIA_URL
     api_url = f'{url_server}{request.path}'
     data_json = json.dumps(request_data.copy())
     serializer = VerifyCardCreditSerializer(data=request_data.copy())
@@ -458,7 +458,7 @@ def get_consumer_information_credit(request, *args, **kwargs):
 def get_consumer_information_prepaid(request, *args, **kwargs):
     client = kwargs.get('client', None)
     card_detail = kwargs.get('card_detail', None)
-    url_server = settings.SERVER_VOLCAN_PAYCARD_URL
+    url_server = settings.SERVER_VOLCAN_PARABILIA_URL
     api_url = f'{url_server}{request.get_full_path()}'
 
     if client and card_detail:
@@ -561,7 +561,7 @@ def get_card_credentials_credit_testing(request, *args, **kwargs):
 
 
 def get_card_credentials_prepaid(request, *args, **kwargs):
-    url_server = settings.SERVER_VOLCAN_PAYCARD_URL
+    url_server = settings.SERVER_VOLCAN_PARABILIA_URL
     api_url = f'{url_server}{request.path}'
     response_data, response_status = process_prepaid_api_request(data=dict(), url=api_url,
                                                                  request=request, http_verb='GET')
@@ -621,7 +621,7 @@ def get_or_create_card_client(consumer_id=None, card_name: str = '',
 
 def post_deliver_otp(request, *args, **kwargs):
     # from webhook.models import Webhook
-    # url_server = settings.SERVER_VOLCAN_PAYCARD_URL
+    # url_server = settings.SERVER_VOLCAN_PARABILIA_URL
     # webhook = Webhook.objects.get(account_issuer='TTT')
     consumer_id = kwargs.get('consumer_id', '')
     issuer_id = kwargs.get('issuer_id', '')

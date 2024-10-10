@@ -1,6 +1,8 @@
+from email.policy import default
+
 from django.db import models
 
-from common.models import BaseModelExtra
+from common.models import BaseModelExtra, BaseModel
 from control.managers import OperatorManager
 
 
@@ -44,3 +46,18 @@ class Operator(BaseModelExtra):
     class Meta:
         ordering = ["profile__first_name", "profile__last_name"]
 
+
+class Currency(BaseModel):
+    name  = models.CharField(max_length=45)
+    abr_code = models.CharField(max_length=3)
+    number_code = models.CharField(max_length=3)
+    decimals = models.SmallIntegerField(default=2)
+    is_active = models.BooleanField(default=True)
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.is_active = True
+        super(Currency, self).save(*args, **kwargs)
+
+    class Meta:
+        ordering = ["abr_code"]
