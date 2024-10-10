@@ -29,10 +29,10 @@ def get_str_from_date_az7(s_date):
         return s_date
 
 
-def get_cards_bin(length=8):
-    key_cache = f'cards-bin-{length}'
+def get_cards_bin(length=8, issuer_id: str = ''):
+    key_cache = f'cards-bin-{length}-{issuer_id}'
     if key_cache not in cache:
-        cards_bin = CardBinConfig.objects.values_list('card_bin', flat=True).all()
+        cards_bin = CardBinConfig.objects.values_list('card_bin', flat=True).filter(issuer_id=issuer_id)
         cards_bin = [card_bin[:length] for card_bin in cards_bin]
         cache.set(key_cache, cards_bin, 60 * 60 * 24)
     return cache.get(key_cache)
@@ -54,16 +54,17 @@ def get_cards_bin_credit():
     return cache.get(key_cache)
 
 
-def get_card_bin_config(key_cache: str = ''):
-    if key_cache not in cache:
+def get_card_bin_config(key_cache: str = '', issuer_id: str = ''):
+    key_cache_real = f"{key_cache}-{issuer_id}"
+    if key_cache_real not in cache:
         values = CardBinConfig.objects.values('issuer_id', 'card_type', 'card_product_id', 'card_bin',
-                                              'emisor').filter(card_bin__startswith=key_cache).first()
-        cache.set(key_cache, values, 60 * 60 * 24)
-    return cache.get(key_cache)
+                                              'emisor').filter(card_bin__startswith=key_cache, issuer_id=issuer_id).first()
+        cache.set(key_cache_real, values, 60 * 60 * 24)
+    return cache.get(key_cache_real)
 
 
-def is_card_bin_valid(card_bin):
-    return card_bin in get_cards_bin(length=len(card_bin))
+def is_card_bin_valid(card_bin, issuer_id:str = ''):
+    return card_bin in get_cards_bin(length=len(card_bin), issuer_id=issuer_id)
 
 
 def get_url_thales_register_customer_with_cards(issuer_id, consumer_id):
