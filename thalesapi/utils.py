@@ -399,6 +399,17 @@ def post_verify_card_prepaid(request, *args, **kwargs):
         response_data['cardName'] = card_name
     return response_data, response_status
 
+def clean_dict_response_thalesapi(data):
+    new_data = {}
+    for key, value in data.items():
+        if isinstance(value, dict):
+            new_value = clean_dict_response_thalesapi(value)
+            if new_value:
+                new_data[key] = new_value
+        elif value:
+            new_data[key] = value
+    return new_data
+
 
 def get_consumer_information_credit(request, *args, **kwargs):
     from thalesapi.serializers import GetConsumerInfoSerializer
@@ -424,6 +435,7 @@ def get_consumer_information_credit(request, *args, **kwargs):
                 data = {
                     "language": "en-US",
                     "firstName": response_data['RSP_NOMBRE1'] if 'RSP_NOMBRE1' in response_data else '',
+                    "middleName": response_data['RSP_NOMBRE2'] if 'RSP_NOMBRE2' in response_data else '',
                     "lastName": response_data['RSP_APELLIDO1'] if 'RSP_APELLIDO1' in response_data else '',
                     "dateOfBirth": get_str_from_date_az7(
                         response_data['RSP_FECHA_NAC']) if 'RSP_FECHA_NAC' in response_data else '',
@@ -442,10 +454,8 @@ def get_consumer_information_credit(request, *args, **kwargs):
                         "countryCode": get_country_code_by_name(country_name=country)
                     }
                 }
-                if 'RSP_NOMBRE2' in response_data and len(response_data['RSP_NOMBRE2']) > 0:
-                    data["middleName"] = response_data['RSP_NOMBRE2']
 
-                response_data = data
+                response_data = clean_dict_response_thalesapi(data)
             else:
                 response_status = 400
                 response_data = {'error': response_data['RSP_DESCRIPCION']}
