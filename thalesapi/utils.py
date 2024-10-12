@@ -476,6 +476,7 @@ def get_consumer_information_prepaid(request, *args, **kwargs):
 
     response_data, response_status = process_prepaid_api_request(data=dict(), url=api_url,
                                                                  request=request, http_verb='GET')
+    response_data = clean_dict_response_thalesapi(response_data)
     return response_data, response_status
 
 
