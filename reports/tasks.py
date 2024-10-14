@@ -105,6 +105,12 @@ def CreateReportExcelLogs(report_id: int, report: Report = None):
             created_at = timezone.localtime(item['created_at'], timezone=report_timezone)
             rsp_success = 'Exitoso' if 'rsp_success' in item['response_data'] and item['response_data'][
                 'rsp_success'] else 'No exitoso'
+            if 'Origin' in item['headers']:
+                origin = item['headers']['Origin']
+            elif 'Client-IP' in item['headers']:
+                origin = item['headers']['Client-IP']
+            else:
+                origin = ''
             data = {
                 'ID': str(item['_id']),
                 'Webservice': item['url'],
@@ -114,7 +120,7 @@ def CreateReportExcelLogs(report_id: int, report: Report = None):
                 'Hora': created_at.strftime("%H:%M"),
                 'Usuario': item['user']['username'],
                 'Emisor': item['user']['emisor'],
-                'Origin': item['headers']['Origin'] if 'Origin' in item['headers'] else ''
+                'Origin': origin
             }
             query_data.append(data)
 

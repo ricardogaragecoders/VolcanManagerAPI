@@ -66,6 +66,15 @@ class RequestLoggingMiddleware(MiddlewareMixin):
         # Record the start time
         request.start_time = timezone.now()
 
+    def get_client_ip(self, request):
+        """Utility method to get the client IP address"""
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]  # The first IP in X-Forwarded-For is the real client IP
+        else:
+            ip = request.META.get('REMOTE_ADDR')  # Fallback to REMOTE_ADDR if not behind a proxy
+        return ip
+
     def process_response(self, request, response):
         if any(keyword in request.path for keyword in self.skip_logging_keywords):
             return response
@@ -93,6 +102,11 @@ class RequestLoggingMiddleware(MiddlewareMixin):
                             "Accept-Language", "Accept-Encoding", "Origin", "Authorization"]
         headers = {key: (value if key.lower() != 'authorization' else 'Bearer ***') for key, value in
                    request.headers.items() if key in relevant_headers}
+
+        # Add the client IP to the headers
+        client_ip = self.get_client_ip(request)
+        headers["Client-IP"] = client_ip
+
         if "Content-Type" in headers and headers["Content-Type"] == "application/x-www-form-urlencoded":
             # Convert URL-encoded form data to a dictionary
             request_data = parse_qs(request._body.decode('utf-8'))
