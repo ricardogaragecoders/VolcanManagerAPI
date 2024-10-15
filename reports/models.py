@@ -14,6 +14,7 @@ def report_directory_path(instance, filename):
 
 class ReportType(models.TextChoices):
     RT_LOGS = 'logs', _('Logs')
+    RT_TOTAL_LOGS = 'total_logs', _('Totales logs')
 
 
 class Report(BaseModelExtra):
