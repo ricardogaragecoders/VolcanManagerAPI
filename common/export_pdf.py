@@ -10,10 +10,10 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 
 
-def WriteToPdf(querydata, title=None, fields=[]):
+def WriteToPdf(query_data, title=None, fields=[]):
     buffer = BytesIO()
     report = PdfPrint(buffer)
-    pdf = report.report(querydata, title, fields)
+    pdf = report.report(query_data, title, fields)
     return pdf
 
 
@@ -23,7 +23,7 @@ class PdfPrint:
         self.pageSize = landscape(A4)
         self.width, self.height = self.pageSize
 
-    def report(self, querydata, title, fields):
+    def report(self, query_data, title, fields):
         doc = SimpleDocTemplate(
             self.buffer, rightMargin=10, leftMargin=10,
             topMargin=30, bottomMargin=72,
@@ -51,7 +51,7 @@ class PdfPrint:
         table_data.append(headers_data)
 
         # add a row to table
-        for item in querydata:
+        for item in query_data:
             item_data = []
             for field in fields:
                 item_data.append(item[field])

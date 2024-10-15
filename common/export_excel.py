@@ -10,6 +10,7 @@ def WriteToExcel(query_data, **kwargs):
     workbook = xlsxwriter.Workbook(output)
     fields = kwargs['fields'] if 'fields' in kwargs else []
     title = kwargs['title'] if 'title' in kwargs else None
+    subtitle = kwargs['subtitle'] if 'subtitle' in kwargs else None
     with_title = 4 if title else 0
     capitalize_fields = kwargs['capitalize_fields'] if 'capitalize_fields' in kwargs else True
 
@@ -17,6 +18,12 @@ def WriteToExcel(query_data, **kwargs):
     title_format = workbook.add_format({
         'bold': True,
         'font_size': 14,
+        'align': 'center',
+        'valign': 'vcenter'
+    })
+    subtitle_format = workbook.add_format({
+        'bold': False,
+        'font_size': 12,
         'align': 'center',
         'valign': 'vcenter'
     })
@@ -35,10 +42,15 @@ def WriteToExcel(query_data, **kwargs):
         # create title
         title_text = gettext(title)
         # add title to sheet, use merge_range to let title span over multiple columns
-
         range_title_text = 'A2:{0}2'.format(get_letter_from_number(len(fields)-2))
-
         worksheet_s.merge_range(range_title_text, title_text.title(), title_format)
+
+    if subtitle:
+        # create subtitle
+        title_text = gettext(subtitle)
+        # add title to sheet, use merge_range to let title span over multiple columns
+        range_title_text = 'A3:{0}3'.format(get_letter_from_number(len(fields)-2))
+        worksheet_s.merge_range(range_title_text, title_text, subtitle_format)
 
     # Add headers for data
     cont = 0
