@@ -1,6 +1,8 @@
 import logging
 import uuid
 
+import pytz
+from bson.codec_options import CodecOptions
 from django.db import models
 from django.forms import model_to_dict
 from django.utils.text import slugify
@@ -142,7 +144,9 @@ class ModelDiffMixin(object):
 class MongoConnection(object):
     def __init__(self):
         from volcanmanagerapi import DB_MONGO_CLIENT as client
-        self.db = client['volcanmanagerapidb']
+        time_zone = pytz.timezone('America/Mexico_City')
+        codec_options = CodecOptions(tz_aware=True, tzinfo=time_zone)
+        self.db = client.get_database('volcanmanagerapidb', codec_options=codec_options)
         self.collection = None
 
     def get_collection(self, name):
@@ -159,38 +163,40 @@ class MonitorCollection(MongoConnection):
         return self.collection.insert_one(data)
 
     def find(self, filters, sort='updated_at', direction=-1, per_page=20, page=0):
-        import pytz
-        from bson.codec_options import CodecOptions
-        time_zone = pytz.timezone('America/Mexico_City')
         try:
-            collection = self.collection.with_options(codec_options=CodecOptions(tz_aware=True, tzinfo=time_zone))
-            data = collection.find(filters).limit(per_page).skip(per_page * page).sort(sort, direction)
+            data = self.collection.find(filters).limit(per_page).skip(per_page * page).sort(sort, direction)
         except Exception as e:
             logger.error(e.args.__str__())
             data = {}
         return data
 
     def find_all(self, filters, sort='updated_at', direction=-1):
-        import pytz
-        from bson.codec_options import CodecOptions
-        time_zone = pytz.timezone('America/Mexico_City')
+        session = None
         try:
-            collection = self.collection.with_options(codec_options=CodecOptions(tz_aware=True, tzinfo=time_zone))
-            data = collection.find(filters).sort(sort, direction)
+            # Inicia la sesión explícita
+            session = self.db.client.start_session()
+
+            # Ejecuta la consulta con no_cursor_timeout dentro de la sesión
+            data = self.collection.find(filters, no_cursor_timeout=True, session=session) \
+                .sort(sort, direction) \
+                .batch_size(1000)
+
+            # Itera sobre los datos (si es necesario)
+            for item in data:
+                yield item  # Puedes cambiar el procesamiento según sea necesario
+
         except Exception as e:
             logger.error(e.args.__str__())
-            data = {}
-        return data
+        finally:
+            # Asegúrate de cerrar la sesión
+            if session:
+                session.end_session()
 
     def find_one(self, filters):
         return self.collection.find_one(filters)
 
     def count_all(self, filters):
-        from bson.codec_options import CodecOptions
-        import pytz
-        time_zone = pytz.timezone('America/Mexico_City')
-        collection = self.collection.with_options(codec_options=CodecOptions(tz_aware=True, tzinfo=time_zone))
-        return collection.count_documents(filters)
+        return self.collection.count_documents(filters)
 
     def update_one(self, filters, data):
         if self.collection.count_documents(filters):

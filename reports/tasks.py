@@ -12,6 +12,7 @@ from django.utils import timezone
 from common.models import MonitorCollection
 from common.utils import get_letter_from_number, make_day_start, make_day_end
 from reports.models import Report, ReportType
+from volcanmanagerapi import settings
 
 
 def camel_to_snake(name):
@@ -30,7 +31,7 @@ def control_create_report(report_id: int, report_type = None):
             report_type = ''
 
     if report_type == ReportType.RT_LOGS:
-        return CreateReportExcelLogs(report_id=report_id, report=report)
+        return CreateReportTextLogs(report_id=report_id, report=report)
     elif report_type == ReportType.RT_TOTAL_LOGS:
         return CreateReportExcelLogsSummary(report_id=report_id, report=report)
     return None
@@ -79,7 +80,7 @@ def CreateReportExcelLogs(report_id: int, report: Report = None):
             'valign': 'top',
             'border': 1
         })
-        cell_center = workbook.add_format({'align': 'center'})
+        cell_center = workbook.add_format({'align': 'center', 'num_format': '@'})
 
         # Crear worksheet
         worksheet_s = workbook.add_worksheet("report")
@@ -167,6 +168,100 @@ def CreateReportExcelLogs(report_id: int, report: Report = None):
         report.report = ContentFile(xlsx_data, name='{0}.{1}'.format(report.report_type, 'xlsx'))
         report.is_processed = True
         report.save()
+
+        del queryset
+    return True
+
+
+@shared_task()
+def CreateReportTextLogs(report_id: int, report: Report = None):
+    """
+    Generates a report of access logs in a pipe-delimited text format.
+
+    Args:
+        report_id (int): ID of the report to generate.
+        report (Report, optional): Report object (default: None).
+
+    Returns:
+        bool: True if the report is generated successfully, False otherwise.
+    """
+    filters = dict()
+
+    if not report:
+        try:
+            report = Report.objects.get(id=report_id)
+        except Report.DoesNotExist:
+            return False
+
+    if report and not report.is_processed:
+        from_date, to_date = report.initial_date, report.final_date
+        tz_report = report.time_zone  # "America/Mexico_City"
+        from_date = make_day_start(from_date)
+        to_date = make_day_end(to_date)
+
+        # Format dates for inclusion in filename
+        from_date_str = from_date.strftime("%Y-%m-%d")
+        to_date_str = to_date.strftime("%Y-%m-%d")
+
+        if from_date and to_date:
+            filters['created_at'] = {
+                "$gte": from_date,
+                "$lt": to_date
+            }
+
+        sort = 'created_at'
+        direction = pymongo.ASCENDING
+        issuer = report.company.volcan_issuer_id
+        filters['user.emisor'] = issuer
+
+        if report.report and os.path.isfile(report.report.path):
+            os.remove(report.report.path)
+
+        # Define the path where the file will be saved
+        report_directory = f"{settings.MEDIA_ROOT}/report/{report.id}"
+        if not os.path.exists(report_directory):
+            os.makedirs(report_directory)
+
+        db = MonitorCollection()
+        # Optimize query with batch_size and no_cursor_timeout
+        queryset = db.find_all(filters, sort, direction)
+
+        # Open file for writing in pipe-delimited format
+        filename = f"report_{from_date_str}_{to_date_str}_{issuer}.txt"
+        filename_path = f"{report_directory}/{filename}"
+        fields = ['ID', 'Webservice', 'StatusCode', 'RspSuccess', 'Fecha', 'Hora', 'Usuario', 'Emisor', 'Origin']
+        with open(filename_path, 'w') as report_file:
+            # Write header row
+            report_file.write('|'.join(fields) + '\n')
+
+            report_timezone = pytz.timezone(report.time_zone)
+            for item in queryset:
+                created_at = timezone.localtime(item['created_at'], timezone=report_timezone)
+                rsp_success = 'Exitoso' if 'rsp_success' in item['response_data'] and item['response_data'][
+                    'rsp_success'] else 'No exitoso'
+                origin = item['headers'].get('Origin', item['headers'].get('Client-IP', ''))
+                data = [
+                    str(item.get('_id', '')),
+                    item.get('url', ''),
+                    str(item.get('status_code', '')),
+                    rsp_success,
+                    created_at.strftime("%d/%m/%Y"),
+                    created_at.strftime("%H:%M"),
+                    item['user'].get('username', ''),
+                    item['user'].get('emisor', ''),
+                    origin
+                ]
+
+                # Write each data row with pipes as separators
+                report_file.write('|'.join(data) + '\n')
+
+        report.report = f"report/{report.id}/{filename}"
+        report.is_processed = True
+        report.save()
+
+        # Clean up to free memory
+        del queryset
+
     return True
 
 
