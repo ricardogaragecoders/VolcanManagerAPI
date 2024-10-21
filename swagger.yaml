@@ -3721,7 +3721,7 @@ paths:
             type: array
             items:
               type: string
-              enum: [logs,]
+              enum: ['logs','total_logs']
         - name: q
           description: Find by report_type,
           in: query
