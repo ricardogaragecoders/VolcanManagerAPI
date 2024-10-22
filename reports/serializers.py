@@ -54,9 +54,10 @@ class ReportSerializer(serializers.ModelSerializer):
             raise CustomValidationError(detail='Issuer ID es requerido', code='400')
 
         if not initial_date:
-            initial_date = make_day_start(now.astimezone(pytz.timezone(time_zone)))
+            initial_date = make_day_start(now).astimezone(pytz.timezone(time_zone))
         else:
             initial_date = make_day_start(initial_date).astimezone(pytz.timezone(time_zone))
+            
 
         if not final_date:
             final_date = make_day_end(now).astimezone(pytz.timezone(time_zone))

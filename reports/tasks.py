@@ -1,3 +1,4 @@
+import zipfile
 from io import BytesIO
 import re
 import os
@@ -56,11 +57,10 @@ def CreateReportExcelLogs(report_id: int, report: Report = None):
 
     if report and not report.is_processed:
         from_date, to_date = report.initial_date, report.final_date
-        tz_report = report.time_zone  # = "America/Mexico_City"
-        from_date = make_day_start(from_date)
-        to_date = make_day_end(to_date)
+        tz_report = pytz.timezone(report.time_zone)
+        from_date = from_date.astimezone(tz_report)
+        to_date = to_date.astimezone(tz_report)
 
-        # Formateamos las fechas a DD-MM-YYYY
         from_date_str = from_date.strftime("%d-%m-%Y")
         to_date_str = to_date.strftime("%d-%m-%Y")
 
@@ -195,13 +195,12 @@ def CreateReportTextLogs(report_id: int, report: Report = None):
 
     if report and not report.is_processed:
         from_date, to_date = report.initial_date, report.final_date
-        tz_report = report.time_zone  # "America/Mexico_City"
-        from_date = make_day_start(from_date)
-        to_date = make_day_end(to_date)
+        tz_report = pytz.timezone(report.time_zone)
+        from_date = from_date.astimezone(tz_report)
+        to_date = to_date.astimezone(tz_report)
 
-        # Format dates for inclusion in filename
-        from_date_str = from_date.strftime("%Y-%m-%d")
-        to_date_str = to_date.strftime("%Y-%m-%d")
+        from_date_str = from_date.strftime("%d-%m-%Y")
+        to_date_str = to_date.strftime("%d-%m-%Y")
 
         if from_date and to_date:
             filters['created_at'] = {
@@ -255,7 +254,18 @@ def CreateReportTextLogs(report_id: int, report: Report = None):
                 # Write each data row with pipes as separators
                 report_file.write('|'.join(data) + '\n')
 
-        report.report = f"report/{report.id}/{filename}"
+        # Compress the text file into a zip file
+        zip_filename = f"report_{from_date_str}_{to_date_str}_{issuer}.zip"
+        zip_filename_path = f"{report_directory}/{zip_filename}"
+        with zipfile.ZipFile(zip_filename_path, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            zip_file.write(filename_path, os.path.basename(filename_path))
+
+        # Clean up the original text file after compressing
+        if os.path.exists(filename_path):
+            os.remove(filename_path)
+
+        # Update report with the path of the zip file
+        report.report = f"report/{report.id}/{zip_filename}"
         report.is_processed = True
         report.save()
 
@@ -283,11 +293,10 @@ def CreateReportExcelLogsSummary(report_id: int, report: Report = None):
 
     if report and not report.is_processed:
         from_date, to_date = report.initial_date, report.final_date
-        tz_report = report.time_zone  # = "America/Mexico_City"
-        from_date = make_day_start(from_date)
-        to_date = make_day_end(to_date)
+        tz_report = pytz.timezone(report.time_zone)
+        from_date = from_date.astimezone(tz_report)
+        to_date = to_date.astimezone(tz_report)
 
-        # Formateamos las fechas a DD-MM-YYYY
         from_date_str = from_date.strftime("%d-%m-%Y")
         to_date_str = to_date.strftime("%d-%m-%Y")
 
