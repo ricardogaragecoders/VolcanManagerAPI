@@ -2722,15 +2722,15 @@ components:
           maxLength: 1
         tipo_identificacion:
           type: string
-          description: 'Tipo de identificación. Ver valores válidos del catálogo del sistema de crédito Volcán'
+          description: 'Mandatorio. Tipo de identificación. Ver valores válidos del catálogo del sistema de crédito Volcán'
           maxLength: 2
         documento_identificacion:
           type: string
-          description: "Mandatorio. Documento de ID"
+          description: "Mandatorio. Documento de Identificacion"
           maxLength: 20
         primer_nombre:
           type: string
-          description: 'Primero nombre. Valida que tenga al menos 3 caracteres'
+          description: 'Mandatorio. Primero nombre. Valida que tenga al menos 3 caracteres'
           minLength: 3
           maxLength: 15
         segundo_nombre:
@@ -2740,12 +2740,12 @@ components:
           maxLength: 15
         primer_apellido:
           type: string
-          description: 'Primer apellido. Valida que tenga al menos 3 caracteres'
+          description: 'Mandatorio. Primer apellido. Valida que tenga al menos 3 caracteres'
           minLength: 3
           maxLength: 15
         segundo_apellido:
           type: string
-          description: 'Segundo apellido. Valida que tenga al menos 3 caracteres'
+          description: 'Mandatorio. Segundo apellido. Valida que tenga al menos 3 caracteres'
           minLength: 3
           maxLength: 15
         apellido_casada:
@@ -2761,7 +2761,7 @@ components:
           maxLength: 8
         sexo:
           type: string
-          description: 'Sexo. F=Femenino/M=Masculino'
+          description: 'Mandatorio. Sexo. F=Femenino/M=Masculino'
           enum: ['F', 'M']
           maxLength: 1
         estado_civil:
@@ -2786,7 +2786,7 @@ components:
           maxLength: 3
         nacionalidad:
           type: string
-          description: 'Nacionalidad. Catálogo de ISO de 2 posiciones de paises'
+          description: 'Mandatorio. Nacionalidad. Catálogo de ISO de 2 posiciones de paises'
           maxLength: 3
         codigo_provincia:
           type: string
@@ -2805,21 +2805,21 @@ components:
           maxLength: 50
         direccion_2:
           type: string
-          description: 'Opcional. Dirección 2'
+          description: 'Mandatorio. Dirección 2'
           maxLength: 50
         codigo_postal:
           type: string
-          description: 'Opcional. Código postal'
+          description: 'Mandatorio. Código postal'
           maxLength: 10
         telefono_casa:
           type: string
-          description: 'Condicional. Teléfono de casa. Valida que el cliente reporte al menos 1 telefono'
+          description: 'Opcional. Teléfono de casa. Valida que el cliente reporte al menos 1 telefono'
         celular:
           type: string
-          description: 'Condicional. Celular. Valida que el cliente reporte al menos 1 telefono'
+          description: 'Mandatorio. Celular. Valida que el cliente reporte al menos 1 telefono'
         telefono_oficina:
           type: string
-          description: 'Condicional. Teléfono de oficina. Valida que el cliente reporte al menos 1 telefono'
+          description: 'Opcional. Teléfono de oficina. Valida que el cliente reporte al menos 1 telefono'
         email_personal:
           type: string
           description: 'Mandatorio. Email personal. Obligatorio para titular'
@@ -2895,9 +2895,18 @@ components:
           description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
           maxLength: 50
       required:
+        - tipo_identificacion
         - documento_identificacion
+        - primer_nombre
+        - primer_apellido
+        - segundo_apellido
         - direccion_1
+        - direccion_2
         - email_personal
+        - sexo
+        - nacionalidad
+        - codigo_postal
+        - celular
         - emisor
     CreacionEnteSectorizacion:
       type: object
@@ -2913,7 +2922,7 @@ components:
           maxLength: 1
         tipo_identificacion:
           type: string
-          description: 'Tipo de identificación. Ver valores válidos del catálogo del sistema de crédito Volcán'
+          description: 'Mandatorio. Tipo de identificación. Ver valores válidos del catálogo del sistema de crédito Volcán'
           maxLength: 2
         documento_identificacion:
           type: string
@@ -2921,7 +2930,7 @@ components:
           maxLength: 20
         primer_nombre:
           type: string
-          description: 'Primero nombre. Valida que tenga al menos 3 caracteres'
+          description: 'Mandatorio. Primero nombre. Valida que tenga al menos 3 caracteres'
           minLength: 3
           maxLength: 15
         segundo_nombre:
@@ -2931,12 +2940,12 @@ components:
           maxLength: 15
         primer_apellido:
           type: string
-          description: 'Primer apellido. Valida que tenga al menos 3 caracteres'
+          description: 'Mandatorio. Primer apellido. Valida que tenga al menos 3 caracteres'
           minLength: 3
           maxLength: 15
         segundo_apellido:
           type: string
-          description: 'Segundo apellido. Valida que tenga al menos 3 caracteres'
+          description: 'Mandatorio. Segundo apellido. Valida que tenga al menos 3 caracteres'
           minLength: 3
           maxLength: 15
         apellido_casada:
@@ -2952,7 +2961,7 @@ components:
           maxLength: 8
         sexo:
           type: string
-          description: 'Sexo. F=Femenino/M=Masculino'
+          description: 'Mandatorio. Sexo. F=Femenino/M=Masculino'
           enum: ['F', 'M']
           maxLength: 1
         estado_civil:
@@ -2977,7 +2986,7 @@ components:
           maxLength: 3
         nacionalidad:
           type: string
-          description: 'Nacionalidad. Catálogo de ISO de 2 posiciones de paises'
+          description: 'Mandatorio. Nacionalidad. Catálogo de ISO de 2 posiciones de paises'
           maxLength: 3
         codigo_provincia:
           type: string
@@ -2996,7 +3005,7 @@ components:
           maxLength: 50
         direccion_2:
           type: string
-          description: 'Opcional. Dirección 2'
+          description: 'Mandatorio. Dirección 2'
           maxLength: 50
         direccion_3:
           type: string
@@ -3012,17 +3021,17 @@ components:
           maxLength: 50
         codigo_postal:
           type: string
-          description: 'Opcional. Código postal'
+          description: 'Mandatorio. Código postal'
           maxLength: 10
         telefono_casa:
           type: string
-          description: 'Condicional. Teléfono de casa. Valida que el cliente reporte al menos 1 telefono'
+          description: 'Opcional. Teléfono de casa. Valida que el cliente reporte al menos 1 telefono'
         celular:
           type: string
-          description: 'Condicional. Celular. Valida que el cliente reporte al menos 1 telefono'
+          description: 'Mandatorio. Celular. Valida que el cliente reporte al menos 1 telefono'
         telefono_oficina:
           type: string
-          description: 'Condicional. Teléfono de oficina. Valida que el cliente reporte al menos 1 telefono'
+          description: 'Opcional. Teléfono de oficina. Valida que el cliente reporte al menos 1 telefono'
         email_personal:
           type: string
           description: 'Mandatorio. Email personal. Obligatorio para titular'
@@ -3119,9 +3128,18 @@ components:
           description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
           maxLength: 50
       required:
+        - tipo_identificacion
         - documento_identificacion
+        - primer_nombre
+        - primer_apellido
+        - segundo_apellido
         - direccion_1
+        - direccion_2
         - email_personal
+        - sexo
+        - nacionalidad
+        - codigo_postal
+        - celular
         - emisor
     CreacionCtaTar:
       type: object
