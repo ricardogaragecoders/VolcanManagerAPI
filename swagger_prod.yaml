@@ -2757,7 +2757,7 @@ components:
           type: string
           format: date
           pattern: '^\d{4}\d{2}\d{2}$'
-          description: 'Fecha de nacimiento. Formato: AAAAMMDD'
+          description: 'Mandatorio. Fecha de nacimiento. Formato: AAAAMMDD'
           maxLength: 8
         sexo:
           type: string
@@ -2782,7 +2782,7 @@ components:
           maxLength: 3
         pais_residencia:
           type: string
-          description: 'Pais de residencia. Catálogo de ISO de 2 posiciones de paises'
+          description: 'Mandatorio. Pais de residencia. Catálogo de ISO de 2 posiciones de paises'
           maxLength: 3
         nacionalidad:
           type: string
@@ -2900,11 +2900,13 @@ components:
         - primer_nombre
         - primer_apellido
         - segundo_apellido
+        - fecha_nacimiento
+        - sexo
+        - nacionalidad
+        - pais_residencia
         - direccion_1
         - direccion_2
         - email_personal
-        - sexo
-        - nacionalidad
         - codigo_postal
         - celular
         - emisor
@@ -2982,7 +2984,7 @@ components:
           maxLength: 3
         pais_residencia:
           type: string
-          description: 'Pais de residencia. Catálogo de ISO de 2 posiciones de paises'
+          description: 'Mandatorio. Pais de residencia. Catálogo de ISO de 2 posiciones de paises'
           maxLength: 3
         nacionalidad:
           type: string
@@ -2990,15 +2992,15 @@ components:
           maxLength: 3
         codigo_provincia:
           type: string
-          description: 'Código provincia. Enviar valores válidos de catálogo del sistema de crédito Volcán'
+          description: 'Código provincia. Enviar valores válidos de catálogo del sistema de crédito Volcán. Obligatorio para Costa Rica'
           maxLength: 3
         codigo_canton:
           type: string
-          description: 'Código canton. Enviar valores válidos de catálogo del sistema de crédito Volcán'
+          description: 'Código canton. Enviar valores válidos de catálogo del sistema de crédito Volcán. Obligatorio para Costa Rica'
           maxLength: 5
         codigo_distrito:
           type: string
-          description: 'Opcional. Código distrito. Enviar valores válidos de catálogo del sistema de crédito Volcán'
+          description: 'Opcional. Código distrito. Enviar valores válidos de catálogo del sistema de crédito Volcán. Obligatorio para Costa Rica'
         direccion_1:
           type: string
           description: 'Mandatorio. Dirección 1. Obligatorio para tarjeta titular'
@@ -3133,11 +3135,13 @@ components:
         - primer_nombre
         - primer_apellido
         - segundo_apellido
+        - pais_residencia
+        - fecha_nacimiento
+        - sexo
+        - nacionalidad
         - direccion_1
         - direccion_2
         - email_personal
-        - sexo
-        - nacionalidad
         - codigo_postal
         - celular
         - emisor
