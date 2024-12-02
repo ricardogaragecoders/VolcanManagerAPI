@@ -275,7 +275,7 @@ class TransaccionApiView(CustomViewSetWithPagination):
             reference = code_generator(10, option='num')
 
         request_data = {
-            "IDSolicitud": "1",
+            "IDSolicitud": str(code_generator(characters=8, option='num')),
             "Tarjeta": get_card_triple_des_process(transaction_corresponsalia.card_number, is_descript=True),
             "MedioAcceso": "",
             "TipoMedioAcceso": "",

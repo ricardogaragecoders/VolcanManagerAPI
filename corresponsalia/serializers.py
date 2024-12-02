@@ -248,7 +248,6 @@ class CreateTransaccionCorresponsaliaSerializer(serializers.ModelSerializer):
         except Corresponsalia.DoesNotExist:
             raise CustomValidationError(detail={'id_corresponsalia': _('Corresponsalia no encontrada.')},
                                         code='corresponsalia_not_found')
-
         if isinstance(card_number, str) and card_number.isnumeric() and len(card_number) == 16:
             card_number = get_card_triple_des_process(card_number, is_descript=False)
 
@@ -295,6 +294,7 @@ class CreateTransaccionCorresponsaliaSerializer(serializers.ModelSerializer):
         data['corresponsalia'] = corresponsalia
         data['currency'] = currency
         # data['card_real'] = card_real
+        data['card_number'] = card_number
         data['card_bin_config'] = card_bin_config
         data['reference'] = code_generator(10, option='num') if len(reference) == 0 else reference
         data['params'] = {'movement_code': movement_code_item}
@@ -346,6 +346,9 @@ class CreateTransaccionReversoCorresponsaliaSerializer(serializers.ModelSerializ
         corresponsalia_id = data.pop('corresponsalia_id', None)
         card_number = data.pop('card_number', None)
         authorization = data.pop('authorization', None)
+
+        if isinstance(card_number, str) and card_number.isnumeric() and len(card_number) == 16:
+            card_number = get_card_triple_des_process(card_number, is_descript=False)
 
         try:
             corresponsalia = Corresponsalia.objects.get(id=corresponsalia_id)
