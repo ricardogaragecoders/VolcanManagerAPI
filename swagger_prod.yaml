@@ -3083,7 +3083,7 @@ components:
         - nombre_tarjeta
         - referencia
         - emisor
-    GestionTransacciones:
+    GestionTransaccionesBase:
       type: object
       properties:
         tarjeta:
@@ -3093,7 +3093,7 @@ components:
         transaccion:
           type: string
           description: 'Mandatorio. Enviar lo siguiente: COM = Compras normales/ADE=Adelanto de Efectivo/PAG=Pagos a la TDC'
-          enum: [ 'COM', 'ADE', 'PAG' ]
+          enum: ['COM', 'ADE', 'PAG']
           maxLength: 6
         importe:
           type: string
@@ -3172,10 +3172,6 @@ components:
           type: string
           description: 'Mandatorio. Oficina, Sucursal/Terminal origen de la transacción'
           maxLength: 8
-        emisor:
-          type: string
-          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
-          maxLength: 3
       required:
         - tarjeta
         - transaccion
@@ -3188,7 +3184,32 @@ components:
         - ciudad
         - pais
         - sucursal
-        - emisor
+    GestionTransacciones:
+      allOf:
+        - $ref: '#/components/schemas/GestionTransaccionesBase'
+        - type: object
+          properties:
+            emisor:
+              type: string
+              description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+              maxLength: 3
+          required:
+            - emisor
+    GestionTransaccionesV2:
+      allOf:
+        - $ref: '#/components/schemas/GestionTransaccionesBase'
+        - type: object
+          properties:
+            razoncont:
+              type: string
+              description: 'Razon cont'
+              maxLength: 1
+            emisor:
+              type: string
+              description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+              maxLength: 3
+          required:
+            - emisor
     ConsultaEnte:
       type: object
       properties:
