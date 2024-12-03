@@ -454,27 +454,36 @@ URL_AZ7_CONSULTAR_ENTE = env.str('URL_AZ7_CONSULTAR_ENTE', '/web/services/Volcan
 URL_AZ7_CONSULTAR_MOVIMIENTOS = env.str('URL_AZ7_CONSULTAR_MOVIMIENTOS', '/web/services/Volcan_ConsultaMov_1')
 URL_AZ7_CONSULTAR_PUNTOS = env.str('URL_AZ7_CONSULTAR_PUNTOS', '/web/services/Volcan_ConsultaPuntos_1')
 URL_AZ7_INTRAS_EXTRAS = env.str('URL_AZ7_INTRAS_EXTRAS', '/web/services/Volcan_Intra_Extras')
-URL_AZ7_CONSULTA_INTRA_EXTRA = env.str('URL_AZ7_CONSULTA_INTRA_EXTRA', '/web/services/Volcan_ConsultaIntraExtraF1')
+URL_AZ7_CONSULTA_INTRA_EXTRA = env.str('URL_AZ7_CONSULTA_INTRA_EXTRA',
+                                       '/web/services/Volcan_ConsultaIntraExtraF1')
+
 URL_AZ7_CONSULTA_TRANSACCION_X_FECHA = env.str('URL_AZ7_CONSULTA_TRANSACCION_X_FECHA',
                                                '/web/services/Volcan_ConsultaTxnXFecha1')
-URL_AZ7_CONSULTA_CVV2 = env.str('URL_AZ7_CONSULTA_CVV2', '/web/services/Volcan_CVV2_1')
+
+URL_AZ7_CONSULTA_CVV2 = env.str('URL_AZ7_CONSULTA_CVV2',
+                                '/web/services/Volcan_CVV2_1')
 
 URL_AZ7_CONSULTA_ESTADO_CUENTA = env.str('URL_AZ7_CONSULTA_ESTADO_CUENTA',
                                          '/web/services/Volcan_ConsultaEstadoCta_1')
 
 URL_AZ7_CONSULTA_COBRANZA = env.str('URL_AZ7_CONSULTA_COBRANZA',
                                     '/web/services/Volcan_Consulta_cobranza_1')
+
 URL_AZ7_ALTA_POLIZA = env.str('URL_AZ7_ALTA_POLIZA',
                               '/web/services/Volcan_Alta_Poliza_1')
+
 URL_AZ7_CONSULTA_POLIZA = env.str('URL_AZ7_CONSULTA_POLIZA',
                                   '/web/services/Volcan_Consulta_Poliza_1')
 
 URL_AZ7_INTRA_EXTRA_ESPECIAL = env.str('URL_AZ7_INTRA_EXTRA_ESPECIAL',
                                        '/web/services/Volcan_Financiamientos_Especiales_1')
+
 URL_AZ7_CONSULTA_INTRA_EXTRA_ESQUEMA = env.str('URL_AZ7_CONSULTA_INTRA_EXTRA_ESQUEMA',
                                                '/web/services/Volcan_Consulta_Financiamiento_Esp_1')
+
 URL_AZ7_CONSULTA_ESQUEMAS_FINANCIAMIENTO = env.str('URL_AZ7_CONSULTA_ESQUEMAS_FINANCIAMIENTO',
                                                    '/web/services/Volcan_Consulta_Esquemas_Finan_1')
+
 URL_AZ7_REFINANCIAMIENTO = env.str('URL_AZ7_REFINANCIAMIENTO',
                                    '/web/services/Volcan_Traslado_Financiamientos_1')
 
