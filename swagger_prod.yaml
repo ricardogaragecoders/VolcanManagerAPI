@@ -852,6 +852,63 @@ paths:
       tags:
         - VolcanManager::Acciones
     parameters: []
+  /volcan/api/GestionTransaccionesV2/:
+    post:
+      operationId: api_control_gestion_transacciones_v2
+      description: Gestion de Transacciones v2
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/GestionTransaccionesV2"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GestionTransaccionesV2"
+        required: true
+      summary: Gestion de transacciones v2
+      responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
+        '200':
+          description: 'Gestion transacciones'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_cuenta": "1...6",
+                "rsp_importe": "1.00",
+                "rsp_moneda": "",
+                "rsp_operacion": "",
+                "rsp_referencia": "EXTRA VOLCAN",
+                "rsp_autoriz": "00124",
+                "rsp_doc_oper": "",
+                "rsp_disponible": "",
+                "rsp_disp_puntos": ""
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error gestion transacciones"
+              }
+      tags:
+        - VolcanManager::Acciones
+    parameters: []
   /volcan/api/ConsultaEnte/:
     post:
       operationId: api_control_consulta_ente
