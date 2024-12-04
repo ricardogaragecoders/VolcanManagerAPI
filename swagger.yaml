@@ -4074,7 +4074,7 @@ components:
           maxLength: 15
         segundo_apellido:
           type: string
-          description: 'Mandatorio. Segundo apellido. Valida que tenga al menos 3 caracteres'
+          description: 'Opcional. Segundo apellido. Valida que tenga al menos 3 caracteres'
           minLength: 3
           maxLength: 15
         apellido_casada:
@@ -4134,7 +4134,7 @@ components:
           maxLength: 50
         direccion_2:
           type: string
-          description: 'Mandatorio. Dirección 2'
+          description: 'Opcional. Dirección 2'
           maxLength: 50
         codigo_postal:
           type: string
@@ -4228,13 +4228,11 @@ components:
         - documento_identificacion
         - primer_nombre
         - primer_apellido
-        - segundo_apellido
         - fecha_nacimiento
         - sexo
         - nacionalidad
         - pais_residencia
         - direccion_1
-        - direccion_2
         - email_personal
         - codigo_postal
         - celular
@@ -4276,7 +4274,7 @@ components:
           maxLength: 15
         segundo_apellido:
           type: string
-          description: 'Mandatorio. Segundo apellido. Valida que tenga al menos 3 caracteres'
+          description: 'Opcional. Segundo apellido. Valida que tenga al menos 3 caracteres'
           minLength: 3
           maxLength: 15
         apellido_casada:
@@ -4336,7 +4334,7 @@ components:
           maxLength: 50
         direccion_2:
           type: string
-          description: 'Mandatorio. Dirección 2'
+          description: 'Opcional. Dirección 2'
           maxLength: 50
         direccion_3:
           type: string
@@ -4463,13 +4461,11 @@ components:
         - documento_identificacion
         - primer_nombre
         - primer_apellido
-        - segundo_apellido
         - pais_residencia
         - fecha_nacimiento
         - sexo
         - nacionalidad
         - direccion_1
-        - direccion_2
         - email_personal
         - codigo_postal
         - celular
