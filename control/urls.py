@@ -23,6 +23,7 @@ urlpatterns = [
     path('ConsultaTransacionesXFecha/', ControlApiView.as_view({'post': 'consulta_transaciones_x_fecha'})),
     path('ConsultaCvv2/', ControlApiView.as_view({'post': 'consulta_cvv2'})),
     path('ConsultaEstadoCta/', ControlApiView.as_view({'post': 'consulta_estado_cuenta'})),
+    path('ConsultaCobranza/', ControlApiView.as_view({'post': 'consulta_cobranza'})),
 
 
     path('issuers/',

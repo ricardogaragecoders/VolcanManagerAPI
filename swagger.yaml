@@ -1704,6 +1704,87 @@ paths:
       tags:
         - VolcanManager::Acciones
     parameters: []
+  /volcan/api/ConsultaCobranza/:
+    post:
+      operationId: api_control_consulta_cobranza
+      description: 'Consulta Cobranza'
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ConsultaCobranza"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConsultaCobranza"
+        required: true
+      summary: 'Consulta Cobranza'
+      responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
+        '200':
+          description: 'Consulta Cobranza'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_id_owner": "000000000000000",
+                "rsp_cuenta": "000000000000000",
+                "rsp_estatus": "00",
+                "rsp_plazo": "00",
+                "rsp_fecha_pm": "00000000",
+                "rsp_fecha_pc": "00000000",
+                "rsp_fecha_corte": "00000000",
+                "rsp_saldos": [
+                  {
+                    "rsp_moneda": "000",
+                    "rsp_tasa_interes": "00000",
+                    "rsp_tasa_mora": "00000",
+                    "rsp_saldo_flotante": "00.00",
+                    "rsp_saldo_intra": "00.00",
+                    "rsp_cuotas_intra": "00.00",
+                    "rsp_saldo_extra": "00.00",
+                    "rsp_cuotas_extra": "00.00",
+                    "rsp_saldo_revolvente": "00.00",
+                    "rsp_saldo_capital": "00.00",
+                    "rsp_cantidad_iv": "00000",
+                    "rsp_intereses_corrientes": "00.00",
+                    "rsp_intereses_bonificables": "00.00",
+                    "rsp_otros_cargos": "00.00",
+                    "rsp_saldo_seguros": "00.00",
+                    "rsp_pago_min": "00.00",
+                    "rsp_pago_contado": "00.00",
+                    "rsp_disponible": "00.00",
+                    "rsp_disp_adelantos": "00.00",
+                    "rsp_saldo_puntos": "00.00",
+                    "rsp_creditos_puntos": "00.00",
+                    "rsp_debitos_puntos": "00.00"
+                  }
+                ]
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error consulta cobranza"
+              }
+      tags:
+        - VolcanManager::Acciones
+    parameters: []
   /volcan/api/IntraExtras/:
     post:
       operationId: api_control_intra_extras_mock
@@ -4226,6 +4307,20 @@ components:
           maxLength: 3
       required:
         - tarjeta
+        - emisor
+    ConsultaCobranza:
+      type: object
+      properties:
+        cuenta:
+          type: string
+          description: 'Mandatorio. Número de cuenta que se desea consultar.'
+          maxLength: 15
+        emisor:
+          type: string
+          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+          maxLength: 3
+      required:
+        - cuenta
         - emisor
     EstadosCuenta:
       type: object
