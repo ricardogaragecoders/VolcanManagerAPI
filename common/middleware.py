@@ -59,7 +59,10 @@ class RequestLoggingMiddleware(MiddlewareMixin):
 
     def process_request(self, request):
         if any(keyword in request.path for keyword in self.skip_logging_keywords):
-            return
+            if request.method == 'POST' and "volcan/api/Notificaciones" in request.path:
+                pass
+            else:
+                return
 
         # Save the raw body for later use
         request._body = request.body
