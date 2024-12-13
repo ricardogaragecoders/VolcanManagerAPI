@@ -1,5 +1,7 @@
+import json
 import logging
 import time
+from urllib.parse import parse_qsl
 
 import pymongo
 from django.db.models import Q
@@ -115,6 +117,19 @@ class WebHookApiView(CustomViewSet):
         self.make_response_success(data=response_data, status=204)
 
 
+def log_transaction_error(request_body, error):
+    """
+        Guarda los detalles del error en TransactionErrorCollection.
+    """
+    db = TransactionErrorCollection()
+    db.insert_one({
+        'request_data': request_body,
+        'error': error,
+        'created_at': timezone.localtime(timezone.now()),
+    })
+    logger.info("Error registrado en TransactionErrorCollection.")
+
+
 class NotificationTransactionApiView(CustomViewSetWithPagination):
     """
     get:
@@ -211,9 +226,52 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
     def create(self, request, *args, **kwargs):
         try:
             logger.info(f"Request encoding: {request.encoding}")
+
+            # Configurar codificación predeterminada si no está definida
             if not request.encoding:
                 request.encoding = 'utf-8'
-            self.serializer = self.get_serializer(data=request.data)
+
+            request_data = dict()
+
+            # Validar tipo de contenido
+            if request.content_type not in ["application/json", "application/x-www-form-urlencoded"]:
+                error_msg = f"Unsupported Content-Type: {request.content_type}"
+                logger.error(error_msg)
+                log_transaction_error(
+                    request_body=request.body.decode('latin-1', errors='replace'),
+                    error=error_msg
+                )
+                self.resp = ["Unsupported Content-Type", {'code': 'error'}, 400]
+                return self.get_response()
+
+            # Decodificar datos de la solicitud
+            raw_body = request.body
+            try:
+                # Intentar decodificar como 'utf-8'
+                body_data = raw_body.decode('utf-8')
+            except UnicodeDecodeError as e_utf8:
+                logger.warning(f"UTF-8 decode failed, attempting latin-1: {e_utf8}")
+                # Intentar decodificar como 'latin-1'
+                body_data = raw_body.decode('latin-1', errors='replace')
+
+            try:
+                # Manejo de datos según el Content-Type
+                if request.content_type == "application/json":
+                    request_data = json.loads(body_data)
+                elif request.content_type == "application/x-www-form-urlencoded":
+                    request_data = dict(parse_qsl(body_data))
+            except json.JSONDecodeError as e_json:
+                error_msg = f"JSONDecodeError: {e_json}"
+                logger.error(error_msg)
+                log_transaction_error(
+                    request_body=body_data,
+                    error=error_msg
+                )
+                self.resp = [f"Invalid JSON format: {e_json}", {'code': 'error'}, 400]
+                return self.get_response()
+
+            # Procesar datos con el serializer
+            self.serializer = self.get_serializer(data=request_data)
             if self.serializer.is_valid():
                 db = NotificationCollection()
                 validated_data = self.serializer.validated_data
@@ -222,38 +280,27 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
                 send_notification_webhook_issuer.delay(notification_id=str(result.inserted_id))
                 self.make_response_success(data={'RSP_CODIGO': '00', 'RSP_DESCRIPCION': 'Aprobado'})
             else:
-                self.resp = get_response_data_errors(self.serializer.errors)
-                db = TransactionErrorCollection()
-                data = {
-                    'request_data': request.data,
-                    'error': self.resp[0],
-                    'created_at': timezone.localtime(timezone.now()),
-                }
-                db.insert_one(data=data)
+                validation_errors = self.serializer.errors
+                logger.error(f"Validation errors: {validation_errors}")
+                log_transaction_error(
+                    request_body=body_data,
+                    error=validation_errors
+                )
+                self.resp = get_response_data_errors(validation_errors)
         except ParseError as e:
-            from common.utils import handler_exception_general
-            db = TransactionErrorCollection()
-            logger.exception(e)
-            logger.error(f"Request: {request.body}")
-            data = {
-                'request_data': request.body,
-                'error': "%s" % e,
-                'created_at': timezone.localtime(timezone.now()),
-            }
-            db.insert_one(data=data)
-            self.resp = ["%s" % e, {'code': 'error'}, 400]
+            logger.error(f"ParseError: {e}")
+            log_transaction_error(
+                request_body=request.body.decode('latin-1', errors='replace'),
+                error=str(e)
+            )
+            self.resp = [f"{e}", {'code': 'error'}, 400]
         except Exception as e:
-            from common.utils import handler_exception_general
-            db = TransactionErrorCollection()
-            logger.exception(e)
-            logger.error(f"Request: {request.body}")
-            data = {
-                'request_data': request.data,
-                'error': self.resp[0],
-                'created_at': timezone.localtime(timezone.now()),
-            }
-            db.insert_one(data=data)
-            self.resp = ["%s" % e, {'code': 'error'}, 500]
+            logger.exception(f"Unexpected error: {e}")
+            log_transaction_error(
+                request_body=request.body.decode('latin-1', errors='replace'),
+                error=str(e)
+            )
+            self.resp = [f"Unexpected error: {e}", {'code': 'error'}, 500]
         finally:
             return self.get_response()
 
