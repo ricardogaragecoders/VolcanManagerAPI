@@ -159,4 +159,4 @@ class DeliverOtpCollection(MonitorCollection):
 
     def __init__(self):
         super(DeliverOtpCollection, self).__init__()
-        self.get_collection('deliver_otp')
+        self.collection_name = 'deliver_otp'
