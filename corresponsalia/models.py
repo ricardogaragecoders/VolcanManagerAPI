@@ -85,4 +85,4 @@ class TransaccionCorresponsaliaCollection(MonitorCollection):
 
     def __init__(self):
         super(TransaccionCorresponsaliaCollection, self).__init__()
-        self.get_collection('transaccion_corresponsalia')
+        self.collection_name = 'transaccion_corresponsalia'

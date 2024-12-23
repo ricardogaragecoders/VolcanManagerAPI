@@ -104,11 +104,8 @@ DATABASES = {
 }
 
 # mongodb
-MONGO_DB = {
-    'volcanmanagerapidb': {
-        'URL': env.str('MONGODB_URL')
-    }
-}
+MONGODB_URI = env.str('MONGODB_URL', 'mongodb://127.0.0.1:27017/')
+MONGODB_DATABASE_NAME = env.str('MONGODB_DATABASE_NAME', 'volcanmanagerapidb')
 
 CACHES = {
     "default": {
