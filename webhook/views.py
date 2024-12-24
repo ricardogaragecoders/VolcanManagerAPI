@@ -168,7 +168,7 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
         elif profile.is_operator(equal=True):
             issuer = profile.user.first_name
         else:
-            issuer = 'sin_emision'
+            issuer = ''
 
         s_from_date = self.request.query_params.get('from_date', None)
         s_to_date = self.request.query_params.get('to_date', None)
