@@ -170,7 +170,7 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
             operator = Operator.objects.filter(profile__user_id=profile.user.id).values('company__volcan_issuer_id').first()
             issuer = operator['company__volcan_issuer_id'] if operator else profile.user.first_name
         else:
-            issuer = 'sin_emision'
+            issuer = ''
 
         s_from_date = self.request.query_params.get('from_date', None)
         s_to_date = self.request.query_params.get('to_date', None)
