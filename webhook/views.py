@@ -37,12 +37,14 @@ class WebHookApiView(CustomViewSet):
     def get_queryset_filters(self, *args, **kwargs):
         active = self.request.query_params.get('active', 'all')
         profile = self.request.user.profile
+
         if profile.is_admin(equal=False):
             account_issuer = self.request.query_params.get('issuer_id', '')
-        elif profile.is_operator():
+        elif profile.is_operator(equal=False):
             account_issuer = profile.user.first_name
         else:
-            account_issuer = 'sin_emision'
+            account_issuer = 'sin_emisor'
+
         filters = {'deleted_at__isnull': True}
 
         if len(account_issuer) > 0:
@@ -163,14 +165,14 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
         filters = dict()
         profile = self.request.user.profile
         delivered = self.request.query_params.get('delivered', 'all')
-        if profile.is_admin():
+        if profile.is_admin(equal=False):
             issuer = self.request.query_params.get('emisor', '')
-        elif profile.is_operator(equal=True):
+        elif profile.is_operator(equal=False):
             from control.models import Operator
             operator = Operator.objects.filter(profile__user_id=profile.user.id).values('company__volcan_issuer_id').first()
             issuer = operator['company__volcan_issuer_id'] if operator else profile.user.first_name
         else:
-            issuer = ''
+            issuer = 'sin_emisor'
 
         s_from_date = self.request.query_params.get('from_date', None)
         s_to_date = self.request.query_params.get('to_date', None)
@@ -190,7 +192,6 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
 
         if delivered != 'all':
             filters['delivery.delivered'] = delivered == 'true'
-
         return filters
 
     def get_queryset(self, *args, **kwargs):
