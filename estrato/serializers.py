@@ -18,7 +18,7 @@ class EstadosCuentaSerializer(serializers.Serializer):
     def validate(self, data):
         data = super(EstadosCuentaSerializer, self).validate(data)
         issuer = data.get('iss', '').strip()
-        date_cutoff = data.get('dc', '').strip()
+        date_cutoff = data.get('coD', '').strip()
         page = int(data.pop('pg', 1))
 
         request = self.context['request']
@@ -31,7 +31,7 @@ class EstadosCuentaSerializer(serializers.Serializer):
             raise CustomValidationError(detail=u'Issuer es requerido', code='400')
 
         if len(date_cutoff) == 8:
-            data['dc'] = f"{date_cutoff[:4]}-{date_cutoff[4:6]}-{date_cutoff[6:]}"
+            data['coD'] = f"{date_cutoff[:4]}-{date_cutoff[4:6]}-{date_cutoff[6:]}"
 
         if page >= 1:
             limit = settings.ESTRATO_LIMIT_QUERY
