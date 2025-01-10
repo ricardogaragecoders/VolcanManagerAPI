@@ -169,8 +169,7 @@ class MonitorCollection:
     def insert_one(self, data):
         with MongoConnection() as db:
             collection = db[self.collection_name]
-            result = collection.insert_one(data)
-            return result.inserted_id
+            return collection.insert_one(data)
 
     def find(self, filters, sort='updated_at', direction=-1, per_page=20, page=0):
         with MongoConnection() as db:
