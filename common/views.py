@@ -465,6 +465,7 @@ class MonitorCollectionApiView(CustomViewSetWithPagination):
     def get_results(self, *args, **kwargs):
         username = self.request.query_params.get('username', '')
         issuer = self.request.query_params.get('issuer', '')
+        x_correlation_id = self.request.query_params.get('X-Correlation-Id', '')
         status_code = int(self.request.query_params.get('status_code', '0'))
         rsp_success = self.request.query_params.get('rsp_success', 'all')
         self._limit = int(self.request.query_params.get('limit', 20))
@@ -505,19 +506,18 @@ class MonitorCollectionApiView(CustomViewSetWithPagination):
         if rsp_success != "all":
             filters['response_data.rsp_success'] = rsp_success == "true"
 
-        if len(username) > 0:
+        if len(username):
             filters['user.username'] = username
 
-        if len(issuer) > 0:
+        if len(issuer):
             filters['user.emisor'] = issuer
+
+        if len(x_correlation_id):
+            filters['headers.X-Correlation-Id'] = x_correlation_id
 
         if q:
             filters['$or'] = [
-                {'url': {'$regex': q, '$options': 'i'}},
-                {'method': {'$regex': q, '$options': 'i'}},
-                {'user.username': {'$regex': q, '$options': 'i'}},
-                {'user.emisor': {'$regex': q, '$options': 'i'}},
-                {'headers.X-Correlation-Id': {'$regex': q, '$options': 'i'}}
+                {'$text': {'$search': q}},
             ]
 
         db = MonitorCollection()
