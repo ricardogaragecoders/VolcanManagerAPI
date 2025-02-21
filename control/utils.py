@@ -953,14 +953,15 @@ def consulta_estado_cuenta(request, **kwargs):
     if serializer.is_valid():
         tz_mx = pytz.timezone('America/Mexico_City')
         now_mx = datetime.now().astimezone(tz_mx)
-        cache_key = f"consulta_estado_cuenta:{now_mx.year}:{now_mx.month}:{now_mx.day}:" + ":".join(
+        cache_key = f"consulta_estado_cuenta:{now_mx.year}:{now_mx.month}:" + ":".join(
             str(value) for value in serializer.validated_data.values() if
             value is not None and len(str(value).strip()) > 0
         )
         respuesta_cacheada = cache.get(cache_key)
         if respuesta_cacheada is None:
             resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
-            set_cache_estados_cuenta(cache_key, now_mx, resp)
+            if 'RSP_ERROR' in resp[1] and resp[1]['RSP_ERROR'].upper() == 'OK':
+                set_cache_estados_cuenta(cache_key, now_mx, resp)
         else:
             resp = respuesta_cacheada
 
