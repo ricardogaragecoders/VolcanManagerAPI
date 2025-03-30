@@ -6,7 +6,7 @@ from rest_framework import serializers
 from common.exceptions import CustomValidationError
 from common.utils import code_generator
 from thalesapi.models import CardBinConfig, CardDetail
-from thalesapi.utils import get_or_create_card_client
+from thalesapi.utils import get_or_create_card_client, get_or_create_client_from_card
 
 logger = logging.getLogger(__name__)
 
@@ -129,12 +129,14 @@ class GetDataTokenizationSerializer(serializers.Serializer):
     EMISOR = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
     FOLIO = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
     IDENTIFICACION = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
+    TIPO_IDENTIFICACION = serializers.CharField(max_length=3, required=False, default="", allow_blank=True)
+    DOCUMENTO_IDENTIFICACION = serializers.CharField(max_length=20, required=False, default="", allow_blank=True)
     USUARIO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
     ACCESO_ATZ = serializers.CharField(max_length=50, required=False, default="", allow_blank=True)
 
     class Meta:
-        fields = ('TARJETA', 'FECHA_EXP', 'NOMBRE', 'CVV',
-                  'FOLIO', 'EMISOR', 'IDENTIFICATION',
+        fields = ('TARJETA', 'FECHA_EXP', 'NOMBRE', 'CVV', 'FOLIO', 'EMISOR',
+                  'IDENTIFICATION', 'TIPO_IDENTIFICACION', 'DOCUMENTO_IDENTIFICACION',
                   'USUARIO_ATZ', 'ACCESO_ATZ')
 
     def validate(self, data):
@@ -147,6 +149,8 @@ class GetDataTokenizationSerializer(serializers.Serializer):
         issuer = data.get('EMISOR', '').strip().upper()
         folio = data.get('FOLIO', '').strip()
         identification = data.pop('IDENTIFICACION', '').strip()
+        type_identification = data.pop('TIPO_IDENTIFICACION', '').strip()
+        document_identification = data.pop('DOCUMENTO_IDENTIFICACION', '').strip()
 
         if len(card) == 0:
             raise CustomValidationError(detail=u'TARJETA es requerido', code='400')
@@ -169,11 +173,11 @@ class GetDataTokenizationSerializer(serializers.Serializer):
         if len(folio) == 0:
             folio = code_generator(characters=12, option='num')
 
-        if len(identification) == 0:
+        if len(identification) == 0 or (len(type_identification) == 0 and len(document_identification) == 0):
             raise CustomValidationError(detail=u'IDENTIFICACION es requerida', code='400')
 
-        client = get_or_create_card_client(card_name=name, identification=identification)
-
+        # client = get_or_create_card_client(card_name=name, identification=identification)
+        client = get_or_create_client_from_card(card_number=card, issuer=issuer)
         data['FECHA_EXP'] = exp_date
         data['CVV'] = cvv
         data['FOLIO'] = folio
@@ -181,7 +185,6 @@ class GetDataTokenizationSerializer(serializers.Serializer):
         data['USUARIO_ATZ'] = settings.VOLCAN_USUARIO_ATZ
         data['ACCESO_ATZ'] = settings.VOLCAN_ACCESO_ATZ
         data['client'] = client
-
         return data
 
 

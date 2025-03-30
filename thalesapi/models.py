@@ -14,8 +14,16 @@ class Client(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
     card_name = models.CharField(max_length=50, blank=True, null=True)
     consumer_id = models.CharField(max_length=45, blank=True, null=True)
-    type_identification = models.CharField(max_length=2, blank=True, null=True)
-    document_identification = models.CharField(max_length=255, blank=True, null=True)
+    type_identification = models.CharField(max_length=3, blank=True, null=True)
+    document_identification = models.CharField(max_length=25, blank=True, null=True)
+    emisor = models.CharField(
+        max_length=3,
+        verbose_name=_('Volcan Emisor ID'),
+        help_text=_("Volcan Emisor ID"),
+        default='CMF',
+        null=True,
+        blank=True
+    )
 
     def __str__(self):
         return f"User: {self.card_name} consumerId: {self.consumer_id}"
@@ -27,6 +35,7 @@ class CardDetail(BaseModelWithDeleted, ModelDiffMixin):
     """
     id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
     client = models.ForeignKey(Client, on_delete=models.DO_NOTHING, blank=True, null=True, related_name='cards')
+    card_number = models.CharField(max_length=16, default="", blank=True, null=True)
     issuer_id = models.CharField(
         max_length=10,
         verbose_name=_('Issuer ID'),

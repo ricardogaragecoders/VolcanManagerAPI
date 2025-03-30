@@ -6,7 +6,9 @@ import requests
 from django.conf import settings
 from django.core.cache import cache
 from django.utils import timezone
+from django.db.models import Q
 
+from common.exceptions import CustomValidationError
 from common.utils import get_response_data_errors, model_code_generator, sanitize_log_headers
 from control.utils import mask_card
 from thalesapi.models import ISOCountry, DeliverOtpCollection, CardDetail, CardBinConfig, CardType, Client
@@ -58,12 +60,13 @@ def get_card_bin_config(key_cache: str = '', issuer_id: str = ''):
     key_cache_real = f"{key_cache}-{issuer_id}"
     if key_cache_real not in cache:
         values = CardBinConfig.objects.values('issuer_id', 'card_type', 'card_product_id', 'card_bin',
-                                              'emisor').filter(card_bin__startswith=key_cache, issuer_id=issuer_id).first()
+                                              'emisor').filter(card_bin__startswith=key_cache,
+                                                               issuer_id=issuer_id).first()
         cache.set(key_cache_real, values, 60 * 60 * 24)
     return cache.get(key_cache_real)
 
 
-def is_card_bin_valid(card_bin, issuer_id:str = ''):
+def is_card_bin_valid(card_bin, issuer_id: str = ''):
     return card_bin in get_cards_bin(length=len(card_bin), issuer_id=issuer_id)
 
 
@@ -142,6 +145,7 @@ def get_card_triple_des_process(card_data, is_descript=False):
         print_error(e=e)
         return None
 
+
 @newrelic.agent.background_task()
 def process_prepaid_api_request(data, url, request, http_verb='POST'):
     response_data = dict()
@@ -204,6 +208,7 @@ def process_prepaid_api_request(data, url, request, http_verb='POST'):
             ]
         )
         return response_data, response_status
+
 
 @newrelic.agent.background_task()
 def process_volcan_api_request(data, url, request=None, headers=None, method='POST', cert=None, times=0):
@@ -399,6 +404,7 @@ def post_verify_card_prepaid(request, *args, **kwargs):
         response_data['cardName'] = card_name
     return response_data, response_status
 
+
 def clean_dict_response_thalesapi(data):
     new_data = {}
     for key, value in data.items():
@@ -588,45 +594,91 @@ def get_url_deliver_otp(card_detail: CardDetail = None) -> str:
     return url
 
 
-def get_card_client(consumer_id=None, identification: str = ''):
+def get_card_client(consumer_id: str = None,
+                    type_identification: str = None,
+                    document_identification: str = ''):
     client = None
     if consumer_id:
         card_detail = CardDetail.objects.filter(consumer_id=consumer_id, client__isnull=False).first()
         client = card_detail.client if card_detail else None
-    elif len(identification) > 0:
-        client = Client.objects.filter(document_identification=identification).first()
+    elif len(document_identification) > 0:
+        client = Client.objects.filter(
+            Q(type_identification=type_identification) | Q(type_identification__isnull=True),
+            document_identification=document_identification).first()
     return client
 
 
-def create_card_client(card_name: str = '', identification: str = '', consumer_id=None):
-    assert len(card_name) > 0 or len(identification) > 0, 'Card name or identification is required'
-    # assert len(identification) > 0, 'Identification is required'
+def create_card_client(card_name: str = '',
+                       type_identification: str = None,
+                       document_identification: str = '',
+                       consumer_id: str = None):
+    assert len(card_name) > 0 or len(document_identification) > 0, 'Card name or document_identification is required'
     if not consumer_id:
         consumer_id = model_code_generator(Client, 8, code='consumer_id')
     client = Client.objects.filter(consumer_id=consumer_id).first()
     if not client:
         client = Client.objects.create(card_name=card_name,
-                                       document_identification=identification,
+                                       type_identification=type_identification,
+                                       document_identification=document_identification,
                                        consumer_id=consumer_id)
     else:
         client.card_name = card_name
-        client.document_identification = identification
+        client.type_identification = type_identification
+        client.document_identification = document_identification
         client.save()
     return client
 
 
-def get_or_create_card_client(consumer_id=None, card_name: str = '',
-                              identification: str = '', card_detail: CardDetail = None):
+def get_or_create_card_client(consumer_id:str = None,
+                              card_name: str = '',
+                              type_identification: str = None,
+                              document_identification: str = '',
+                              card_detail: CardDetail = None):
     if not consumer_id and card_detail:
         consumer_id = card_detail.consumer_id
-    client = get_card_client(consumer_id=consumer_id, identification=identification)
+    client = get_card_client(consumer_id=consumer_id, type_identification=type_identification,
+                             document_identification=document_identification)
     if card_detail and not client:
         client = card_detail.client
     if not client:
-        client = create_card_client(card_name=card_name, identification=identification)
+        client = create_card_client(card_name=card_name, type_identification=type_identification,
+                                    document_identification=document_identification)
         if card_detail:
             card_detail.client = client
             card_detail.save()
+    return client
+
+
+def get_or_create_client_from_card(card_number: str, issuer: str):
+    client = None
+    card_detail = CardDetail.objects.filter(card_number=card_number, emisor=issuer).first()
+    if not card_detail or not card_detail.client:
+        from control.utils import consulta_tarjetas
+        resp = consulta_tarjetas(request=None, request_data={
+            'tarjeta': card_number,
+            'emisor': issuer
+        })
+        if resp[1]['RSP_ERROR'].upper() == 'OK':
+            card_name = resp[1]['RSP_NOMBRE']
+            type_identification = resp[1]['RSP_TIPO_IDENTIFICACION']
+            document_identification = resp[1]['RSP_DOC_IDENTIFICACION']
+            client = Client.objects.filter(
+                Q(type_identification=type_identification) | Q(type_identification__isnull=True),
+                document_identification=document_identification).first()
+            if not client:
+                client = create_card_client(card_name, type_identification, document_identification)
+            else:
+                client.card_name = card_name
+                client.type_identification = type_identification
+                client.document_identification = document_identification
+                client.save()
+            if card_detail:
+                card_detail.client = client
+                card_detail.save()
+        else:
+            raise CustomValidationError('Tarjeta no encontrada con Emisor')
+    else:
+        client = card_detail.client
     return client
 
 

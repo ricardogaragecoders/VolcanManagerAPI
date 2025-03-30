@@ -2072,8 +2072,8 @@ paths:
   /volcan/api/obtenerDatosTokenizacion/:
     post:
       operationId: api_thales_api_get_card_data_tokenization
-      description: Thales API Endpoint V2 GetCardDataTokenization
-      summary: Thales API Endpoint V2 GetCardDataTokenization
+      description: Thales API endpoint V1 GetCardDataTokenization
+      summary: Thales API endpoint V1 GetCardDataTokenization
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -2121,11 +2121,63 @@ paths:
       tags:
         - VolcanManager::ThalesAPI
     parameters: []
+  /volcan/api/obtenerDatosTokenizacionV2/:
+    post:
+      operationId: api_thales_api_v2_get_card_data_tokenization
+      description: Thales API endpoint V2 GetCardDataTokenization
+      summary: Thales API endpoint V2 GetCardDataTokenization
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/GetCardDataTokenizationV2"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetCardDataTokenizationV2"
+        required: true
+      responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
+        '200':
+          description: 'Consulta datos tokenizacion'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_folio": "388929552430",
+                "cardId": "000000000000000000000",
+                "consumerId": "0000000",
+                "accountId": "000000000000000"
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error"
+              }
+      tags:
+        - VolcanManager::ThalesAPI
+    parameters: []
   /volcan/api/obtenerDatosTokenizacionPrepago/:
     post:
       operationId: api_thales_api_get_card_data_tokenization_paycard
-      description: Thales API Endpoint V2 GetCardDataTokenization Prepago
-      summary: Thales API Endpoint V2 GetCardDataTokenization Prepago
+      description: Thales API endpoint V1 GetCardDataTokenization Prepago
+      summary: Thales API endpoint V1 GetCardDataTokenization Prepago
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -2173,11 +2225,63 @@ paths:
       tags:
         - VolcanManager::ThalesAPI
     parameters: []
+  /volcan/api/obtenerDatosTokenizacionPrepagoV2/:
+    post:
+      operationId: api_thales_api_v2_get_card_data_tokenization_paycard
+      description: Thales API endpoint V2 GetCardDataTokenization Prepago
+      summary: Thales API endpoint V2 GetCardDataTokenization Prepago
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/GetCardDataTokenizationPaycardV2"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GetCardDataTokenizationPaycardV2"
+        required: true
+      responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
+        '200':
+          description: 'Consulta datos tokenizacion prepago'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_folio": "388929552430",
+                "cardId": "000000000000000000000",
+                "consumerId": "0000000",
+                "accountId": "000000000000000"
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error"
+              }
+      tags:
+        - VolcanManager::ThalesAPI
+    parameters: []
   /thales/api/registerConsumerCards/:
     post:
       operationId: api_thales_api_register_consumer_cards
-      description: Thales API Endpoint Register consumer Cards
-      summary: Thales API Endpoint Register Consuer Cards
+      description: Thales API endpoint V1 Register consumer cards
+      summary: Thales API endpoint V1 Register consumer cards
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -2221,7 +2325,56 @@ paths:
               }
       tags:
         - VolcanManager::ThalesAPI
-    parameters: [ ]
+    parameters: []
+  /thales/api/registerConsumerCardsV2/:
+    post:
+      operationId: api_thales_api_v2_register_consumer_cards
+      description: Thales API endpoint V2 Register consumer cards
+      summary: Thales API endpoint V2 Register consumer cards
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/RegisterConsumerCardsV2"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterConsumerCardsV2"
+        required: true
+      responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
+        '200':
+          description: 'Register consumer cards'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_folio": "388929552430"
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error"
+              }
+      tags:
+        - VolcanManager::ThalesAPI
+    parameters: []
   /volcan/api/Webhooks/:
     get:
       operationId: api_webhooks_read
@@ -4497,7 +4650,7 @@ components:
         - RSP_VENCIMIENTO
         - RSP_NOMBRE
         - RSP_CVV
-    GetCardDataTokenization:
+    GetCardDataTokenizationBase:
       type: object
       properties:
         tarjeta:
@@ -4516,21 +4669,48 @@ components:
           type: string
           description: 'Opcional. Folio de la operacion'
           maxLength: 30
-        identificacion:
-          type: string
-          description: 'Obligatorio. Identificacion del cliente'
-          maxLength: 20
-        emisor:
-          type: string
-          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
-          maxLength: 3
       required:
         - tarjeta
         - fecha_exp
         - nombre
-        - identificacion
-        - emisor
-    GetCardDataTokenizationPaycard:
+    GetCardDataTokenization:
+      allOf:
+        - $ref: '#/components/schemas/GetCardDataTokenizationBase'
+        - type: object
+          properties:
+            identificacion:
+              type: string
+              description: 'Obligatorio. Identificación del cliente'
+              maxLength: 20
+            emisor:
+              type: string
+              description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+              maxLength: 3
+          required:
+            - identificacion
+            - emisor
+    GetCardDataTokenizationV2:
+      allOf:
+        - $ref: '#/components/schemas/GetCardDataTokenizationBase'
+        - type: object
+          properties:
+            tipo_identificacion:
+              type: string
+              description: 'Obligatorio. Tipo de identificación del cliente'
+              maxLength: 3
+            documento_identificacion:
+              type: string
+              description: 'Obligatorio. Documento de identificación del cliente'
+              maxLength: 25
+            emisor:
+              type: string
+              description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+              maxLength: 3
+          required:
+            - tipo_identificacion
+            - documento_identificacion
+            - emisor
+    GetCardDataTokenizationPaycardBase:
       type: object
       properties:
         tarjeta:
@@ -4546,20 +4726,47 @@ components:
           type: string
           description: 'Mandatorio. Fecha de expiracion formato MMAA'
           maxLength: 4
-        identificacion:
-          type: string
-          description: 'Obligatorio. Identificacion del cliente'
-          maxLength: 20
-        emisor:
-          type: string
-          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
-          maxLength: 3
       required:
         - tarjeta
         - manufactura
-        - identificacion
-        - emisor
-    RegisterConsumerCards:
+    GetCardDataTokenizationPaycard:
+      allOf:
+        - $ref: '#/components/schemas/GetCardDataTokenizationPaycardBase'
+        - type: object
+          properties:
+            identificacion:
+              type: string
+              description: 'Obligatorio. Identificación del cliente'
+              maxLength: 20
+            emisor:
+              type: string
+              description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+              maxLength: 3
+          required:
+            - identificacion
+            - emisor
+    GetCardDataTokenizationPaycardV2:
+      allOf:
+        - $ref: '#/components/schemas/GetCardDataTokenizationPaycardBase'
+        - type: object
+          properties:
+            tipo_identificacion:
+              type: string
+              description: 'Obligatorio. Tipo de identificación del cliente'
+              maxLength: 3
+            documento_identificacion:
+              type: string
+              description: 'Obligatorio. Documento de identificación del cliente'
+              maxLength: 25
+            emisor:
+              type: string
+              description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+              maxLength: 3
+          required:
+            - tipo_identificacion
+            - documento_identificacion
+            - emisor
+    RegisterConsumerCardsBase:
       type: object
       properties:
         tarjeta:
@@ -4600,14 +4807,6 @@ components:
           type: string
           description: 'Opcional. Folio de la operacion'
           maxLength: 30
-        identificacion:
-          type: string
-          description: 'Obligatorio. Identificacion del cliente'
-          maxLength: 20
-        emisor:
-          type: string
-          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
-          maxLength: 3
       required:
         - tarjeta
         - fecha_exp
@@ -4617,8 +4816,43 @@ components:
         - issuer_id
         - card_product_id
         - state
-        - identificacion
-        - emisor
+    RegisterConsumerCards:
+      allOf:
+        - $ref: '#/components/schemas/RegisterConsumerCardsBase'
+        - type: object
+          properties:
+            identificacion:
+              type: string
+              description: 'Obligatorio. Identificación del cliente'
+              maxLength: 20
+            emisor:
+              type: string
+              description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+              maxLength: 3
+          required:
+            - identificacion
+            - emisor
+    RegisterConsumerCardsV2:
+      allOf:
+        - $ref: '#/components/schemas/RegisterConsumerCardsBase'
+        - type: object
+          properties:
+            tipo_identificacion:
+              type: string
+              description: 'Obligatorio. Tipo de identificación del cliente'
+              maxLength: 3
+            documento_identificacion:
+              type: string
+              description: 'Obligatorio. Documento de identificación del cliente'
+              maxLength: 25
+            emisor:
+              type: string
+              description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+              maxLength: 3
+          required:
+            - tipo_identificacion
+            - documento_identificacion
+            - emisor
     CardBinConfig:
       type: object
       properties:
