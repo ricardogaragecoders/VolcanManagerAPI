@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  volcan_manager_mongo_db:
+    container_name: volcan_manager_mongo_db
+    image: mongo:7.0
+    restart: always
+    ports:
+      - 27018:27017
+    volumes:
+      - volcan_manager_mongo_data:/data/db
+    networks:
+      - volcan_manager_network
+
+  volcan_manager_redis:
+    container_name: volcan_manager_redis
+    image: redis:7.2
+    ports:
+      - 6380:6379
+    networks:
+      - volcan_manager_network
+
+  volcan_manager_rabbitmq:
+    container_name: volcan_manager_rabbitmq
+    restart: always
+    image: rabbitmq:3-management
+    ports:
+      - "5673:5672"
+      - "15673:15672"
+    env_file:
+      - ./.env
+    networks:
+      - volcan_manager_network
+
+  volcan_manager_laravel:
+    build:
+      context: /home/richpolis/Proyectos/php/blog
+      dockerfile: Dockerfile
+    container_name: volcan_manager_laravel
+    working_dir: /app
+    volumes:
+      - /home/richpolis/Proyectos/php/blog:/app
+    ports:
+      - "8001:8000"
+    command: php artisan serve --host=0.0.0.0 --port=8000
+    networks:
+      - volcan_manager_network
+
+  volcan_manager_app:
+    container_name: volcan_manager_app
+    restart: always
+    build:
+      context: .
+      dockerfile: ./docker/backend/Dockerfile
+    entrypoint: /app/docker/backend/server-entrypoint.sh
+    volumes:
+      - .:/app
+      - volcan_manager_static_volume:/app/static
+    env_file:
+      - ./.env
+    ports:
+      - 8002:8000
+    networks:
+      - volcan_manager_network
+    depends_on:
+      - volcan_manager_laravel
+      - volcan_manager_mongo_db
+      - volcan_manager_redis
+      - volcan_manager_rabbitmq
+
+  volcan_manager_celery:
+    container_name: volcan_manager_celery
+    restart: always
+    build:
+      context: .
+      dockerfile: ./docker/backend/Dockerfile
+    entrypoint: /app/docker/backend/worker-entrypoint.sh
+    volumes:
+      - .:/app
+      - volcan_manager_static_volume:/app/static
+    env_file:
+      - ./.env
+    networks:
+      - volcan_manager_network
+    depends_on:
+      - volcan_manager_laravel
+      - volcan_manager_redis
+      - volcan_manager_app
+      - volcan_manager_rabbitmq
+
+networks:
+  volcan_manager_network:
+    driver: bridge
+
+volumes:
+  volcan_manager_mongo_data: {}
+  volcan_manager_static_volume: {}
