@@ -1,101 +1,97 @@
-version: '3'
+version: '3.8'
 
 services:
-  backend:
-    build:
-      context: .
-    image: volcan_manager_api
-    container_name: backend
-    hostname: backend
-    restart: on-failure
+  volcan_manager_mongo_db:
+    container_name: volcan_manager_mongo_db
+    image: mongo:7.0
+    restart: always
     ports:
-      - "8000:8000"
+      - 27018:27017
     volumes:
-      - .:/opt/apps/volcanmanagerapi
-    command: >
-      sh -c "python3 manage.py migrate &&
-             python3 manage.py wait_for_db &&
-             python3 manage.py runserver 0.0.0.0:8000"
-    stdin_open: true
-    tty: true
-    env_file:
-      - ./.env
-    depends_on:
-      - db
-      - redis
-      - mongodb
-      - rabbit
+      - volcan_manager_mongo_data:/data/db
     networks:
-      - volcan_manager_api_network
+      - volcan_manager_network
 
-  db:
-    image: postgres:14-alpine
+  volcan_manager_redis:
+    container_name: volcan_manager_redis
+    image: redis:7.2
     ports:
-      - "5433:5432"
-    env_file:
-      - ./.env
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+      - 6380:6379
     networks:
-      - volcan_manager_api_network
+      - volcan_manager_network
 
-
-  # RabbitMQ - queue
-  rabbit:
+  volcan_manager_rabbitmq:
+    container_name: volcan_manager_rabbitmq
+    restart: always
     image: rabbitmq:3-management
-    container_name: rabbit
-    hostname: rabbit
-    environment:
-      - RABBITMQ_DEFAULT_USER=volcan_manager_api
-      - RABBITMQ_DEFAULT_PASS=S0m3P4ssw0rd
-      - RABBITMQ_DEFAULT_VHOST=/volcan_manager_api_host
     ports:
-      - "5682:5672"
-      - "15682:15672"
+      - "5673:5672"
+      - "15673:15672"
+    env_file:
+      - ./.env
     networks:
-      - volcan_manager_api_network
+      - volcan_manager_network
 
-
-  redis:
-    image: redis:alpine
-    ports:
-      - "6378:6379"
-    networks:
-      - volcan_manager_api_network
-
-
-  mongodb:
-    image: mongo:6-jammy
-    ports:
-      - '27018:27017'
+  volcan_manager_laravel:
+    build:
+      context: /home/richpolis/Proyectos/php/blog
+      dockerfile: Dockerfile
+    container_name: volcan_manager_laravel
+    working_dir: /app
     volumes:
-      - mongodata:/data/db
+      - /home/richpolis/Proyectos/php/blog:/app
+    ports:
+      - "8001:8000"
+    command: php artisan serve --host=0.0.0.0 --port=8000
     networks:
-      - volcan_manager_api_network
+      - volcan_manager_network
 
-
-  celery:
+  volcan_manager_app:
+    container_name: volcan_manager_app
     restart: always
     build:
       context: .
-    command: celery -A volcanmanagerapi worker -l INFO
+      dockerfile: ./docker/backend/Dockerfile
+    entrypoint: /app/docker/backend/server-entrypoint.sh
     volumes:
-      - .:/opt/apps/volcanmanagerapi
+      - .:/app
+      - volcan_manager_static_volume:/app/static
     env_file:
       - ./.env
-    depends_on:
-      - db
-      - redis
-      - rabbit
-      - mongodb
-      - backend
+    ports:
+      - 8002:8000
     networks:
-      - volcan_manager_api_network
+      - volcan_manager_network
+    depends_on:
+      - volcan_manager_laravel
+      - volcan_manager_mongo_db
+      - volcan_manager_redis
+      - volcan_manager_rabbitmq
 
-volumes:
-  pgdata:
-  mongodata:
+  volcan_manager_celery:
+    container_name: volcan_manager_celery
+    restart: always
+    build:
+      context: .
+      dockerfile: ./docker/backend/Dockerfile
+    entrypoint: /app/docker/backend/worker-entrypoint.sh
+    volumes:
+      - .:/app
+      - volcan_manager_static_volume:/app/static
+    env_file:
+      - ./.env
+    networks:
+      - volcan_manager_network
+    depends_on:
+      - volcan_manager_laravel
+      - volcan_manager_redis
+      - volcan_manager_app
+      - volcan_manager_rabbitmq
 
 networks:
-  volcan_manager_api_network:
+  volcan_manager_network:
     driver: bridge
+
+volumes:
+  volcan_manager_mongo_data: {}
+  volcan_manager_static_volume: {}
