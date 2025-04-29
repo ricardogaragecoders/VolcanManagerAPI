@@ -114,3 +114,4 @@ GitHub.sublime-settings
 .history
 
 keys/*
+/static/

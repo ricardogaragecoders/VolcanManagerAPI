@@ -168,7 +168,7 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
         elif profile.is_operator(equal=True):
             issuer = profile.user.first_name
         else:
-            issuer = 'sin_emision'
+            issuer = ''
 
         s_from_date = self.request.query_params.get('from_date', None)
         s_to_date = self.request.query_params.get('to_date', None)
@@ -219,7 +219,7 @@ class NotificationTransactionApiView(CustomViewSetWithPagination):
             pass
 
         db = NotificationCollection()
-        self._total = db.collection.count_documents(filters)
+        self._total = db.count_all(filters)
 
         return db.find(filters, sort, direction, self._limit, self._page)
 
@@ -498,7 +498,7 @@ class TransactionErrorApiView(CustomViewSetWithPagination):
             ]
 
         db = self.model_class()
-        self._total = db.collection.count_documents(filters)
+        self._total = db.count_all(filters)
 
         return db.find(filters, sort, direction, self._limit, self._page)
 

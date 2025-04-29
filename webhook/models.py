@@ -27,7 +27,7 @@ class TransactionCollection(MonitorCollection):
 
     def __init__(self):
         super(TransactionCollection, self).__init__()
-        self.get_collection('transactions')
+        self.collection_name = 'transactions'
 
 
 class NotificationCollection(MonitorCollection):
@@ -73,18 +73,18 @@ class NotificationCollection(MonitorCollection):
 
     def __init__(self):
         super(NotificationCollection, self).__init__()
-        self.get_collection('notifications')
+        self.collection_name = 'notifications'
 
 
 class TransactionErrorCollection(MonitorCollection):
 
     def __init__(self):
         super(TransactionErrorCollection, self).__init__()
-        self.get_collection('transactions_error')
+        self.collection_name = 'transactions_error'
 
 
 class DeliveryErrorCollection(MonitorCollection):
 
     def __init__(self):
         super(DeliveryErrorCollection, self).__init__()
-        self.get_collection('delivery_transactions_error')
+        self.collection_name = 'delivery_transactions_error'

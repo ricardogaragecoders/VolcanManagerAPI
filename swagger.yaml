@@ -2859,10 +2859,16 @@ paths:
           description: Username
           required: false
           schema:
-            type: integer
+            type: string
         - name: issuer
           in: query
           description: Issuer
+          required: false
+          schema:
+            type: string
+        - name: X-Correlation-Id
+          in: query
+          description: X-Correlation-Id
           required: false
           schema:
             type: string
