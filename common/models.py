@@ -8,6 +8,7 @@ from django.forms import model_to_dict
 from django.utils.text import slugify
 
 from common.managers import SoftDeletionManager
+from volcanmanagerapi import settings
 
 logger = logging.getLogger(__name__)
 
@@ -140,66 +141,77 @@ class ModelDiffMixin(object):
 #     def __str__(self):
 #         return 'Action: {} Endpoint: {} Description: {}'.format(self.action, self.endpoint, self.description)
 
-
-class MongoConnection(object):
+class MongoConnection:
     def __init__(self):
-        from volcanmanagerapi import DB_MONGO_CLIENT as client
-        time_zone = pytz.timezone('America/Mexico_City')
-        codec_options = CodecOptions(tz_aware=True, tzinfo=time_zone)
-        self.db = client.get_database('volcanmanagerapidb', codec_options=codec_options)
+        self.uri = settings.MONGODB_URI
+        self.db_name = settings.MONGODB_DATABASE_NAME
         self.collection = None
 
+    def __enter__(self):
+        from pymongo import MongoClient
+        time_zone = pytz.timezone('America/Mexico_City')
+        codec_options = CodecOptions(tz_aware=True, tzinfo=time_zone)
+        self.client = MongoClient(self.uri)
+        self.db = self.client.get_database(self.db_name, codec_options=codec_options)
+        return self.db
+
     def get_collection(self, name):
-        self.collection = self.db[name]
+       return self.db[name]
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.client.close()
 
 
-class MonitorCollection(MongoConnection):
-
+class MonitorCollection:
     def __init__(self):
-        super(MonitorCollection, self).__init__()
-        self.get_collection('monitor')
+        self.collection_name = 'monitor'
 
     def insert_one(self, data):
-        return self.collection.insert_one(data)
+        with MongoConnection() as db:
+            collection = db[self.collection_name]
+            return collection.insert_one(data)
 
     def find(self, filters, sort='updated_at', direction=-1, per_page=20, page=0):
-        try:
-            data = self.collection.find(filters).limit(per_page).skip(per_page * page).sort(sort, direction)
-        except Exception as e:
-            logger.error(e.args.__str__())
-            data = {}
-        return data
+        with MongoConnection() as db:
+            collection = db[self.collection_name]
+            documents = collection.find(filters).limit(per_page).skip(per_page * page).sort(sort, direction)
+            return list(documents)
 
     def find_all(self, filters, sort='updated_at', direction=-1):
-        session = None
-        try:
-            # Inicia la sesión explícita
-            session = self.db.client.start_session()
+        with MongoConnection() as db:
+            collection = db[self.collection_name]
+            session = None
+            try:
+                # Inicia la sesión explícita
+                session = db.client.start_session()
+                # Ejecuta la consulta con no_cursor_timeout dentro de la sesión
+                data = collection.find(filters, no_cursor_timeout=True, session=session) \
+                                    .sort(sort, direction).batch_size(1000)
+                for item in data:
+                    yield item  # Puedes cambiar el procesamiento según sea necesario
 
-            # Ejecuta la consulta con no_cursor_timeout dentro de la sesión
-            data = self.collection.find(filters, no_cursor_timeout=True, session=session) \
-                .sort(sort, direction) \
-                .batch_size(1000)
+            except Exception as e:
+                logger.error(e.args.__str__())
+            finally:
+                # Asegúrate de cerrar la sesión
+                if session:
+                    session.end_session()
 
-            # Itera sobre los datos (si es necesario)
-            for item in data:
-                yield item  # Puedes cambiar el procesamiento según sea necesario
-
-        except Exception as e:
-            logger.error(e.args.__str__())
-        finally:
-            # Asegúrate de cerrar la sesión
-            if session:
-                session.end_session()
 
     def find_one(self, filters):
-        return self.collection.find_one(filters)
+        with MongoConnection() as db:
+            collection = db[self.collection_name]
+            return collection.find_one(filters)
 
     def count_all(self, filters):
-        return self.collection.count_documents(filters)
+        with MongoConnection() as db:
+            collection = db[self.collection_name]
+            return collection.count_documents(filters)
 
     def update_one(self, filters, data):
-        if self.collection.count_documents(filters):
-            return self.collection.update_one(filters, data)
-        return False
+        with MongoConnection() as db:
+            collection = db[self.collection_name]
+            if collection.count_documents(filters):
+                return collection.update_one(filters, data)
+            return False
 
