@@ -1077,6 +1077,63 @@ paths:
       tags:
         - VolcanManager::Acciones
     parameters: []
+  /volcan/api/GestionTransaccionesV2/:
+    post:
+      operationId: api_control_gestion_transacciones_v2
+      description: Gestion de Transacciones v2
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/GestionTransaccionesV2"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GestionTransaccionesV2"
+        required: true
+      summary: Gestion de transacciones v2
+      responses:
+        '401':
+          description: 'No autentificado o Token invalido'
+          examples:
+            not_authenticated:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "not_authenticated",
+                "rsp_descripcion": "Authentication credentials were not provided."
+              }
+            token_not_valid:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "token_not_valid",
+                "rsp_descripcion": "Given token not valid for any token type"
+              }
+        '200':
+          description: 'Gestion transacciones'
+          examples:
+            exitosa:
+              {
+                "rsp_success": true,
+                "rsp_codigo": "00",
+                "rsp_descripcion": "Transacción aprobada",
+                "rsp_cuenta": "1...6",
+                "rsp_importe": "1.00",
+                "rsp_moneda": "",
+                "rsp_operacion": "",
+                "rsp_referencia": "EXTRA VOLCAN",
+                "rsp_autoriz": "00124",
+                "rsp_doc_oper": "",
+                "rsp_disponible": "",
+                "rsp_disp_puntos": ""
+              }
+            no_exitosa:
+              {
+                "rsp_success": false,
+                "rsp_codigo": "45",
+                "rsp_descripcion": "Error gestion transacciones"
+              }
+      tags:
+        - VolcanManager::Acciones
+    parameters: []
   /volcan/api/ConsultaEnte/:
     post:
       operationId: api_control_consulta_ente
@@ -2266,7 +2323,7 @@ paths:
           schema:
             type: boolean
             enum: [ true, false ]
-            default: false
+            default: 'false'
       responses:
         '200':
           description: 'Return all webhooks'
@@ -2389,7 +2446,7 @@ paths:
           schema:
             type: boolean
             enum: [ true, false ]
-            default: false
+            default: 'false'
       responses:
         '200':
           description: 'Return all notifications'
@@ -2542,7 +2599,7 @@ paths:
           schema:
             type: boolean
             enum: [ true, false ]
-            default: false
+            default: 'false'
       responses:
         '200':
           description: 'Return all notifications'
@@ -2690,7 +2747,7 @@ paths:
           schema:
             type: boolean
             enum: [ true, false ]
-            default: false
+            default: 'false'
       responses:
         '200':
           description: 'Return all apikeys'
@@ -2821,14 +2878,14 @@ paths:
           schema:
             type: integer
             enum: [0, 200, 201, 203, 204, 400, 401, 403, 500]
-            default: 0
+            default: '0'
         - name: rsp_success
           description: Solicitud no exitosa
           in: query
           schema:
             type: boolean
             enum: [false, true]
-            default: false
+            default: 'false'
         - name: q
           in: query
           description: Search for Keyword
@@ -2842,14 +2899,14 @@ paths:
           schema:
             type: string
             enum: ['url', 'method', 'status_code', 'created_at']
-            default: action
+            default: 'url'
         - name: orderByDesc
           description: Order desc
           in: query
           schema:
             type: boolean
             enum: [true, false]
-            default: false
+            default: 'false'
         - name: export
           description: Type of export data
           in: query
@@ -2911,7 +2968,7 @@ paths:
           schema:
             type: boolean
             enum: [true, false]
-        - name: rtts
+        - name: 'rtts'
           in: query
           description: Report type
           required: false
@@ -2958,7 +3015,7 @@ paths:
           schema:
             type: boolean
             enum: [ true, false ]
-            default: false
+            default: 'false'
       responses:
         '200':
           description: 'Return reports'
@@ -3338,7 +3395,7 @@ components:
         emisor:
           type: string
           description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
-          maxLength: 50
+          maxLength: 3
       required:
         - documento_identificacion
         - direccion_1
@@ -3562,7 +3619,7 @@ components:
         emisor:
           type: string
           description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
-          maxLength: 50
+          maxLength: 3
       required:
         - documento_identificacion
         - direccion_1
@@ -3989,7 +4046,7 @@ components:
         - nombre_tarjeta
         - referencia
         - emisor
-    GestionTransacciones:
+    GestionTransaccionesBase:
       type: object
       properties:
         tarjeta:
@@ -4078,10 +4135,6 @@ components:
           type: string
           description: 'Mandatorio. Oficina, Sucursal/Terminal origen de la transacción'
           maxLength: 8
-        emisor:
-          type: string
-          description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
-          maxLength: 3
       required:
         - tarjeta
         - transaccion
@@ -4094,7 +4147,32 @@ components:
         - ciudad
         - pais
         - sucursal
-        - emisor
+    GestionTransacciones:
+      allOf:
+        - $ref: '#/components/schemas/GestionTransaccionesBase'
+        - type: object
+          properties:
+            emisor:
+              type: string
+              description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+              maxLength: 3
+          required:
+            - emisor
+    GestionTransaccionesV2:
+      allOf:
+        - $ref: '#/components/schemas/GestionTransaccionesBase'
+        - type: object
+          properties:
+            razoncont:
+              type: string
+              description: 'Razon cont'
+              maxLength: 1
+            emisor:
+              type: string
+              description: 'Mandatorio. Código de Identificación del Emisor este es asignado por Volcán'
+              maxLength: 3
+          required:
+            - emisor
     ConsultaEnte:
       type: object
       properties:
