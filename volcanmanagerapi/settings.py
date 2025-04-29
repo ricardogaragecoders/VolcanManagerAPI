@@ -234,10 +234,10 @@ SECURE_HSTS_SECONDS = 3600
 if DEBUG:
     SWAGGER_YAML_FILE = os.path.join(BASE_DIR, "swagger.yaml")
 
-    REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = (
+    REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = [
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication'
-    )
+    ]
 
     REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] = [
         'rest_framework.renderers.JSONRenderer',
