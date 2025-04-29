@@ -2323,7 +2323,7 @@ paths:
           schema:
             type: boolean
             enum: [ true, false ]
-            default: false
+            default: 'false'
       responses:
         '200':
           description: 'Return all webhooks'
@@ -2446,7 +2446,7 @@ paths:
           schema:
             type: boolean
             enum: [ true, false ]
-            default: false
+            default: 'false'
       responses:
         '200':
           description: 'Return all notifications'
@@ -2599,7 +2599,7 @@ paths:
           schema:
             type: boolean
             enum: [ true, false ]
-            default: false
+            default: 'false'
       responses:
         '200':
           description: 'Return all notifications'
@@ -2747,7 +2747,7 @@ paths:
           schema:
             type: boolean
             enum: [ true, false ]
-            default: false
+            default: 'false'
       responses:
         '200':
           description: 'Return all apikeys'
@@ -2872,14 +2872,14 @@ paths:
           schema:
             type: integer
             enum: [0, 200, 201, 203, 204, 400, 401, 403, 500]
-            default: 0
+            default: '0'
         - name: rsp_success
           description: Solicitud no exitosa
           in: query
           schema:
             type: boolean
             enum: [false, true]
-            default: false
+            default: 'false'
         - name: q
           in: query
           description: Search for Keyword
@@ -2893,14 +2893,14 @@ paths:
           schema:
             type: string
             enum: ['url', 'method', 'status_code', 'created_at']
-            default: action
+            default: 'url'
         - name: orderByDesc
           description: Order desc
           in: query
           schema:
             type: boolean
             enum: [true, false]
-            default: false
+            default: 'false'
         - name: export
           description: Type of export data
           in: query
@@ -2962,7 +2962,7 @@ paths:
           schema:
             type: boolean
             enum: [true, false]
-        - name: rtts
+        - name: 'rtts'
           in: query
           description: Report type
           required: false
@@ -3009,7 +3009,7 @@ paths:
           schema:
             type: boolean
             enum: [ true, false ]
-            default: false
+            default: 'false'
       responses:
         '200':
           description: 'Return reports'

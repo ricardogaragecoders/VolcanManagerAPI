@@ -58,8 +58,7 @@ INSTALLED_APPS = [
     'thalesapi',
     'webhook',
     'estrato',
-    'reports',
-    'corresponsalia'
+    'reports'
 ]
 
 MIDDLEWARE = [
