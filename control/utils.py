@@ -2,17 +2,12 @@ import json
 
 import newrelic.agent
 import requests
+from asgiref.sync import async_to_sync
+import httpx
 from django.conf import settings
 import logging
 from common.utils import get_response_data_errors
-from control.serializers import ConsultaCuentaSerializer, ConsultaTarjetaSerializer, \
-    CambioPINSerializer, ExtrafinanciamientoSerializer, CambioLimitesSerializer, CambioEstatusTDCSerializer, \
-    ReposicionTarjetasSerializer, CreacionEnteSerializer, GestionTransaccionesSerializer, ConsultaMovimientosSerializer, \
-    IntraExtrasSerializer, ConsultaPuntosSerializer, AltaCuentaTarjetaSerializer, ConsultaIntraExtraF1Serializer, \
-    ConsultaTransaccionesXFechaSerializer, ConsultaCVV2Serializer, CreacionEnteSectorizacionSerializer, \
-    ConsultaEnteSerializer, ConsultaEstadoCuentaSerializer, ConsultaCobranzaSerializer, AltaPolizaSerializer, \
-    ConsultaPolizaSerializer, IntraExtraEspecialSerializer, ConsultaIntraExtraEsquemaSerializer, \
-    ConsultaEsquemasFinanciamientoSerializer, RefinanciamientoSerializer
+from control.serializers import *
 
 logger = logging.getLogger(__name__)
 
@@ -68,10 +63,16 @@ def mask_card(card):
                 separator = 4
             else:
                 separator -= 1
-
         return data_means_access.strip()
     return ''
 
+def get_az7_url_server(request_data):
+    if 'EMISOR' in request_data and 'VLC' not in request_data['EMISOR']:
+        url_server = settings.SERVER_VOLCAN_AZ7_URL
+    else:
+        url_server = settings.SERVER_VOLCAN_AZ7_VLC_URL
+        request_data['EMISOR'] = 'CMF'
+    return url_server
 
 def get_volcan_api_headers():
     return {
@@ -80,71 +81,78 @@ def get_volcan_api_headers():
 
 
 @newrelic.agent.background_task()
-def process_volcan_api_request(data, url, request, headers=None, times=0):
+async def process_volcan_api_request(data, url, request, headers=None, times=0):
     response_data = dict()
     response_status = 0
     response_message = ''
+
     if not headers:
         headers = get_volcan_api_headers()
+
     data_json = json.dumps(data)
     logger.info(f"Request: {url}")
     logger.info(f"Request json: {data_json}")
-    try:
-        r = requests.post(url=url, data=data_json, headers=headers)
-        response_status = r.status_code
-        if 'Content-Type' in r.headers:
-            if 'application/json' in r.headers['Content-Type']:
-                response_data = r.json() if response_status != 204 else {}
-            else:
-                logger.info(f"Response headers: {r.headers}")
-                response_data = r.content
-        logger.info(f"Response {str(response_status)}: {response_data}")
-        logger.info(f"Response encoding: {r.encoding}")
 
-        if 200 <= response_status <= 299:
-            if len(response_data) == 0:
-                logger.info(f"Response: empty")
-                response_data = {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}
-        elif response_status == 404:
-            response_data = {'RSP_CODIGO': '404', 'RSP_DESCRIPCION': 'Recurso no disponible'}
-            logger.info(f"Response: 404 Recurso no disponible")
-        else:
-            response_data = {'RSP_CODIGO': str(response_status), 'RSP_DESCRIPCION': 'Error desconocido'}
-        response_message = ''
-    except requests.exceptions.Timeout:
-        response_data = {'RSP_CODIGO': "408",
-                         'RSP_DESCRIPCION': 'Error de conexion con servidor VOLCAN (Timeout)'}
-        response_status = 408
-        response_message = 'Error de conexion con servidor VOLCAN (Timeout)'
-        print_error_control(response_data=response_data)
-    except requests.exceptions.TooManyRedirects:
-        response_data = {'RSP_CODIGO': "429",
-                         'RSP_DESCRIPCION': 'Error de conexion con servidor VOLCAN (TooManyRedirects)'}
-        response_status = 429
-        response_message = 'Error de conexion con servidor VOLCAN (TooManyRedirects)'
-        print_error_control(response_data=response_data)
-    except requests.exceptions.RequestException as e:
-        response_data = {'RSP_CODIGO': "400",
-                         'RSP_DESCRIPCION': 'Error de conexion con servidor VOLCAN (RequestException)'}
-        response_status = 400
-        response_message = 'Error de conexion con servidor VOLCAN (RequestException)'
-        print_error_control(response_data=response_data, e=e)
-    except Exception as e:
-        print("Error peticion")
-        response_status = 500
-        response_message = 'error'
-        response_data = {'RSP_CODIGO': '500', 'RSP_DESCRIPCION': e.args.__str__()}
-        print_error_control(response_data=response_data, e=e)
-    finally:
-        newrelic.agent.add_custom_attributes(
-            [
-                ("request.url", url),
-                ("request.emisor", data['EMISOR'] if 'EMISOR' in data else ''),
-                ("response.code", response_status),
-                # ("response.json", response_data),
-            ]
-        )
-        return response_message, response_data, response_status
+    async with httpx.AsyncClient() as client:
+        try:
+            # Realizamos la petición de manera asincrónica
+            r = await client.post(url, data=data_json, headers=headers)
+            response_status = r.status_code
+
+            if 'Content-Type' in r.headers:
+                if 'application/json' in r.headers['Content-Type']:
+                    response_data = r.json() if response_status != 204 else {}
+                else:
+                    logger.info(f"Response headers: {r.headers}")
+                    response_data = r.content
+
+            logger.info(f"Response {str(response_status)}: {response_data}")
+            logger.info(f"Response encoding: {r.encoding}")
+
+            if 200 <= response_status <= 299:
+                if len(response_data) == 0:
+                    logger.info(f"Response: empty")
+                    response_data = {'RSP_CODIGO': '400', 'RSP_DESCRIPCION': 'Error en datos de origen'}
+            elif response_status == 404:
+                response_data = {'RSP_CODIGO': '404', 'RSP_DESCRIPCION': 'Recurso no disponible'}
+                logger.info(f"Response: 404 Recurso no disponible")
+            else:
+                response_data = {'RSP_CODIGO': str(response_status), 'RSP_DESCRIPCION': 'Error desconocido'}
+            response_message = ''
+        except httpx.TimeoutException:
+            response_data = {'RSP_CODIGO': "408",
+                             'RSP_DESCRIPCION': 'Error de conexion con servidor VOLCAN (Timeout)'}
+            response_status = 408
+            response_message = 'Error de conexion con servidor VOLCAN (Timeout)'
+            print_error_control(response_data=response_data)
+        except httpx.TooManyRedirects:
+            response_data = {'RSP_CODIGO': "429",
+                             'RSP_DESCRIPCION': 'Error de conexion con servidor VOLCAN (TooManyRedirects)'}
+            response_status = 429
+            response_message = 'Error de conexion con servidor VOLCAN (TooManyRedirects)'
+            print_error_control(response_data=response_data)
+        except httpx.RequestError as e:
+            response_data = {'RSP_CODIGO': "400",
+                             'RSP_DESCRIPCION': 'Error de conexion con servidor VOLCAN (RequestException)'}
+            response_status = 400
+            response_message = 'Error de conexion con servidor VOLCAN (RequestException)'
+            print_error_control(response_data=response_data, e=e)
+        except Exception as e:
+            print("Error peticion")
+            response_status = 500
+            response_message = 'error'
+            response_data = {'RSP_CODIGO': '500', 'RSP_DESCRIPCION': e.args.__str__()}
+            print_error_control(response_data=response_data, e=e)
+        finally:
+            newrelic.agent.add_custom_attributes(
+                [
+                    ("request.url", url),
+                    ("request.emisor", data['EMISOR'] if 'EMISOR' in data else ''),
+                    ("response.code", response_status),
+                    # ("response.json", response_data),
+                ]
+            )
+            return response_message, response_data, response_status
 
 
 def creation_ente(request, **kwargs):
@@ -156,11 +164,11 @@ def creation_ente(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_ALTA_ENTE}'
     serializer = CreacionEnteSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK':
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
@@ -188,11 +196,11 @@ def creation_ente_sectorizacion(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_ALTA_ENTE_SECTORIZACION}'
     serializer = CreacionEnteSectorizacionSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK':
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
@@ -220,11 +228,11 @@ def creation_cta_tar(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_ALTA_CUENTA}'
     serializer = AltaCuentaTarjetaSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK':
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
@@ -252,11 +260,11 @@ def consulta_cuenta(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_CONSULTA_CUENTA}'
     serializer = ConsultaCuentaSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK':
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
@@ -309,11 +317,11 @@ def extrafinanciamientos(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_EXTRA_FINANCIAMIENTO}'
     serializer = ExtrafinanciamientoSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK' or (
                     resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
@@ -348,11 +356,11 @@ def intrafinanciamientos(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_INTRA_FINANCIAMIENTO}'
     serializer = ExtrafinanciamientoSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK' or (
                     resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
@@ -387,11 +395,11 @@ def consulta_tarjetas(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_CONSULTA_TARJETAS}'
     serializer = ConsultaTarjetaSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK':
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
@@ -425,11 +433,11 @@ def cambio_pin(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_CAMBIO_PIN}'
     serializer = CambioPINSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK' and int(resp[1]['RSP_CODIGO']) == 0:
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
@@ -457,11 +465,11 @@ def cambio_limites(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_CAMBIO_LIMITES}'
     serializer = CambioLimitesSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK' and int(resp[1]['RSP_CODIGO']) == 0:
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
@@ -495,11 +503,11 @@ def cambio_estatus_tdc(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_CAMBIO_ESTATUS_TDC}'
     serializer = CambioEstatusTDCSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK' and int(resp[1]['RSP_CODIGO']) == 0:
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
@@ -527,11 +535,11 @@ def reposicion_tarjetas(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_REPOSICION_TARJETAS}'
     serializer = ReposicionTarjetasSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK' and int(resp[1]['RSP_CODIGO']) == 0:
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
@@ -559,11 +567,11 @@ def gestion_transacciones(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_GESTION_TRANSACCIONES}'
     serializer = GestionTransaccionesSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK' or (
                     resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
@@ -594,11 +602,11 @@ def consulta_ente(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_CONSULTAR_ENTE}'
     serializer = ConsultaEnteSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK':
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
@@ -626,11 +634,11 @@ def consulta_movimientos(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_CONSULTAR_MOVIMIENTOS}'
     serializer = ConsultaMovimientosSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK':
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
@@ -670,11 +678,11 @@ def consulta_puntos(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_CONSULTAR_PUNTOS}'
     serializer = ConsultaPuntosSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK' or (
                     resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
@@ -705,11 +713,11 @@ def intra_extras(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_INTRAS_EXTRAS}'
     serializer = IntraExtrasSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK' or (
                     resp[1]['RSP_CODIGO'].isnumeric() and int(resp[1]['RSP_CODIGO']) == 0):
@@ -744,7 +752,7 @@ def intra_extras_mock(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_INTRAS_EXTRAS}'
     serializer = IntraExtrasSerializer(data=data)
     if serializer.is_valid():
@@ -805,11 +813,11 @@ def consulta_intra_extra_f1(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_CONSULTA_INTRA_EXTRA}'
     serializer = ConsultaIntraExtraF1Serializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK':
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
@@ -859,11 +867,11 @@ def consulta_transaciones_x_fecha(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_CONSULTA_TRANSACCION_X_FECHA}'
     serializer = ConsultaTransaccionesXFechaSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK':
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
@@ -913,11 +921,11 @@ def consulta_cvv2(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_CONSULTA_CVV2}'
     serializer = ConsultaCVV2Serializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK':
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
@@ -945,11 +953,11 @@ def consulta_estado_cuenta(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_CONSULTA_ESTADO_CUENTA}'
     serializer = ConsultaEstadoCuentaSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK':
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
@@ -989,11 +997,11 @@ def consulta_cobranza(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_CONSULTA_COBRANZA}'
     serializer = ConsultaCobranzaSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK':
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
@@ -1046,11 +1054,11 @@ def alta_poliza(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_ALTA_POLIZA}'
     serializer = AltaPolizaSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK':
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
@@ -1078,11 +1086,11 @@ def consulta_poliza(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_CONSULTA_POLIZA}'
     serializer = ConsultaPolizaSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK':
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
@@ -1122,11 +1130,11 @@ def intra_extra_especial(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_INTRA_EXTRA_ESPECIAL}'
     serializer = IntraExtraEspecialSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK':
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
@@ -1157,11 +1165,11 @@ def consulta_intra_extra_esquema(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_CONSULTA_INTRA_EXTRA_ESQUEMA}'
     serializer = ConsultaIntraExtraEsquemaSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK':
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
@@ -1201,11 +1209,11 @@ def consulta_esquemas_financiamiento(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_CONSULTA_ESQUEMAS_FINANCIAMIENTO}'
     serializer = ConsultaEsquemasFinanciamientoSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK':
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
@@ -1245,11 +1253,11 @@ def refinanciamiento(request, **kwargs):
     request_data['usuario_atz'] = settings.VOLCAN_USUARIO_ATZ
     request_data['acceso_atz'] = settings.VOLCAN_ACCESO_ATZ
     data = {k.upper(): v for k, v in request_data.items()}
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(data)
     api_url = f'{url_server}{settings.URL_AZ7_REFINANCIAMIENTO}'
     serializer = RefinanciamientoSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK':
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
@@ -1277,11 +1285,11 @@ def corresponsalia(request, **kwargs):
         request_data = request.data.copy()
     else:
         request_data = kwargs['request_data'].copy()
-    url_server = settings.SERVER_VOLCAN_AZ7_URL
+    url_server = get_az7_url_server(request_data)
     api_url = f'{url_server}{settings.URL_AZ7_CORRESPONSALIA}'
     serializer = ConsultaPolizaSerializer(data=request_data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        resp = async_to_sync(process_volcan_api_request)(data=serializer.validated_data, url=api_url, request=request, times=times)
     else:
         resp = get_response_data_errors(serializer.errors)
     return resp
