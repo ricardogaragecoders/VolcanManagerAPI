@@ -145,18 +145,18 @@ class MongoConnection:
     def __init__(self):
         self.uri = settings.MONGODB_URI
         self.db_name = settings.MONGODB_DATABASE_NAME
-        self.collection = None
 
     def __enter__(self):
         from pymongo import MongoClient
         time_zone = pytz.timezone('America/Mexico_City')
         codec_options = CodecOptions(tz_aware=True, tzinfo=time_zone)
-        self.client = MongoClient(self.uri)
-        self.db = self.client.get_database(self.db_name, codec_options=codec_options)
-        return self.db
-
-    def get_collection(self, name):
-       return self.db[name]
+        try:
+            self.client = MongoClient(self.uri)
+            self.db = self.client.get_database(self.db_name, codec_options=codec_options)
+            return self.db
+        except Exception as e:
+            logger.error(f"Error connecting to MongoDB: {e}")
+            raise
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.client.close()
@@ -180,23 +180,14 @@ class MonitorCollection:
     def find_all(self, filters, sort='updated_at', direction=-1):
         with MongoConnection() as db:
             collection = db[self.collection_name]
-            session = None
             try:
-                # Inicia la sesión explícita
-                session = db.client.start_session()
-                # Ejecuta la consulta con no_cursor_timeout dentro de la sesión
-                data = collection.find(filters, no_cursor_timeout=True, session=session) \
-                                    .sort(sort, direction).batch_size(1000)
+                data = collection.find(filters, no_cursor_timeout=True).sort(sort, direction).batch_size(1000)
                 for item in data:
-                    yield item  # Puedes cambiar el procesamiento según sea necesario
-
+                    yield item
             except Exception as e:
-                logger.error(e.args.__str__())
+                logger.error(f"Error in find_all: {e}")
             finally:
-                # Asegúrate de cerrar la sesión
-                if session:
-                    session.end_session()
-
+                data.close()
 
     def find_one(self, filters):
         with MongoConnection() as db:
@@ -215,3 +206,7 @@ class MonitorCollection:
                 return collection.update_one(filters, data)
             return False
 
+    def aggregate(self, pipeline):
+        with MongoConnection() as db:
+            collection = db[self.collection_name]
+            return collection.aggregate(pipeline)
