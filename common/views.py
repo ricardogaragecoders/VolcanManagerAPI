@@ -510,7 +510,7 @@ class MonitorCollectionApiView(CustomViewSetWithPagination):
             filters['user.username'] = username
 
         if len(issuer):
-            filters['user.emisor'] = issuer
+            filters['user.emisor'] = issuer.upper()
 
         if len(x_correlation_id):
             filters['headers.X-Correlation-Id'] = x_correlation_id

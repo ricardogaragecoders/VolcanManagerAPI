@@ -363,7 +363,7 @@ def CreateReportExcelLogsSummary(report_id: int, report: Report = None):
             }}
         ]
 
-        report_data = db.collection.aggregate(pipeline)
+        report_data = db.aggregate(pipeline)
 
         # Inicializamos variables para las sumas
         total_successful = 0
