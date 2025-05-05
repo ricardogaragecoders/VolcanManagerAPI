@@ -1,9 +1,13 @@
 import json
+import logging
+from datetime import datetime
 
 import newrelic.agent
+import pytz
 import requests
 from django.conf import settings
-import logging
+from django.core.cache import cache
+
 from common.utils import get_response_data_errors
 from control.serializers import ConsultaCuentaSerializer, ConsultaTarjetaSerializer, \
     CambioPINSerializer, ExtrafinanciamientoSerializer, CambioLimitesSerializer, CambioEstatusTDCSerializer, \
@@ -949,7 +953,20 @@ def consulta_estado_cuenta(request, **kwargs):
     api_url = f'{url_server}{settings.URL_AZ7_CONSULTA_ESTADO_CUENTA}'
     serializer = ConsultaEstadoCuentaSerializer(data=data)
     if serializer.is_valid():
-        resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+        tz_mx = pytz.timezone('America/Mexico_City')
+        now_mx = datetime.now().astimezone(tz_mx)
+        cache_key = f"consulta_estado_cuenta:{now_mx.year}:{now_mx.month}:" + ":".join(
+            str(value) for value in serializer.validated_data.values() if
+            value is not None and len(str(value).strip()) > 0
+        )
+        respuesta_cacheada = cache.get(cache_key)
+        if respuesta_cacheada is None:
+            resp = process_volcan_api_request(data=serializer.validated_data, url=api_url, request=request, times=times)
+            if 'RSP_ERROR' in resp[1] and resp[1]['RSP_ERROR'].upper() == 'OK':
+                set_cache_estados_cuenta(cache_key, now_mx, resp)
+        else:
+            resp = respuesta_cacheada
+
         if 'RSP_ERROR' in resp[1]:
             if resp[1]['RSP_ERROR'].upper() == 'OK':
                 resp[1]['RSP_DESCRIPCION'] = u'Transacción aprobada'
@@ -978,6 +995,22 @@ def consulta_estado_cuenta(request, **kwargs):
     else:
         resp = get_response_data_errors(serializer.errors)
     return resp
+
+def set_cache_estados_cuenta(cache_key, now_mx, resp):
+    if now_mx.day in [11, 23] and now_mx.hour >= 4:
+        timeout = 0  # Invalida la cache al establecer timeout a 0, forzando una nueva consulta la próxima vez.
+    else:
+        # Calcula el timeout hasta las 4:00 am del día 11 o 23
+        proximo_dia_invalidacion = 11 if now_mx.day < 11 else (23 if now_mx.day < 23 else None)
+
+        if proximo_dia_invalidacion:
+            fecha_invalidacion = now_mx.replace(day=proximo_dia_invalidacion, hour=4, minute=0, second=0, microsecond=0)
+            timeout = (fecha_invalidacion - now_mx).total_seconds()
+        else:
+            timeout = 86400 * 10  # 10 dias. Ajusta si es necesario.
+    cache.set(cache_key, resp, timeout)
+    return True
+
 
 
 def consulta_cobranza(request, **kwargs):
