@@ -3,7 +3,7 @@ import logging
 from rest_framework.exceptions import ParseError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from asgiref.sync import async_to_sync
+
 from common.views import CustomViewSet
 from control.utils import mask_card
 from thalesapi.models import CardType, CardDetail, CardBinConfig, Client
@@ -277,7 +277,7 @@ class ThalesApiViewPrivate(ThalesApiView):
             api_url = f'{url_server}{settings.URL_THALES_API_VERIFY_CARD}'
             validated_data = serializer.validated_data.copy()
             client = validated_data.pop('client', None)
-            resp_msg, resp_data, response_status = async_to_sync(process_volcan_api_request)(
+            resp_msg, resp_data, response_status = process_volcan_api_request(
                 data=validated_data,
                 url=api_url,
                 request=request,
@@ -362,7 +362,7 @@ class ThalesApiViewPrivate(ThalesApiView):
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             }
-            resp_msg, resp_data, response_status = async_to_sync(process_volcan_api_request)(
+            resp_msg, resp_data, response_status = process_volcan_api_request(
                 data=validated_data,
                 headers=headers,
                 url=api_url,
